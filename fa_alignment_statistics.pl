@@ -119,8 +119,7 @@ for my $file (@ARGV){
 			}
    		}
 
-		# "Title:#\tFile\tNum_seq\tSeqID1\tSeqID2\t#_Ident\t#_Mismatch\t#_Gap\t#_Gap_open\tI+M+G\tI/(I+M+G)%\tM/(I+M+G)%\tG/(I+M+G)%\tI+M\tI/
-(I+M)%\tM/(I+M)%\n"
+		# "Title:#\tFile\tNum_seq\tSeqID1\tSeqID2\t#_Ident\t#_Mismatch\t#_Gap\t#_Gap_open\tI+M+G\tI/(I+M+G)%\tM/(I+M+G)%\tG/(I+M+G)%\tI+M\tI/(I+M)%\tM/(I+M)%\n"
 		printf 	"%d\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%d\t%.2f\t%.2f\n",
 			$c,
 			$file,
