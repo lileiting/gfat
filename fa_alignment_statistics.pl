@@ -60,8 +60,10 @@ $format = do {
 
 my $c;
 
-print "#\tFile\tNum_seq\tSeqID1\tSeqID2\t#_Ident\t#_Mismatch\t#_Gap\t#_Gap_open\tI+M+G\tI/(I+M+G)%\tM/(I+M+G)%\tG/(I+M+G)%\tI+M\tI/(I+M)%\tM/(I+M)%\n
-";
+print join("\t", "#",          "File",       "Num_seq",    "SeqID1",     "SeqID2", 
+                 "#_Ident",    "#_Mismatch", "#_Gap\t",    "#_Gap_open", "I+M+G", 
+                 "I/(I+M+G)%", "M/(I+M+G)%", "G/(I+M+G)%", "I+M",        "I/(I+M)%", 
+                 "M/(I+M)%"), \n";
 
 for my $file (@ARGV){
 	my $alignio = Bio::AlignIO->new(-format => $format,
@@ -119,8 +121,16 @@ for my $file (@ARGV){
 			}
    		}
 
-		# "Title:#\tFile\tNum_seq\tSeqID1\tSeqID2\t#_Ident\t#_Mismatch\t#_Gap\t#_Gap_open\tI+M+G\tI/(I+M+G)%\tM/(I+M+G)%\tG/(I+M+G)%\tI+M\tI/(I+M)%\tM/(I+M)%\n"
-		printf 	"%d\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%d\t%.2f\t%.2f\n",
+		# Title:
+		# #          File       Num_seq    SeqID1     SeqID2  
+		# #_Ident    #_Mismatch #_Gap      #_Gap_open 
+		# I+M+G      I/(I+M+G)% M/(I+M+G)% G/(I+M+G)% 
+		# I+M        I/(I+M)%   M/(I+M)%
+		printf 	join("\t", "%d",   "%s",   "%d",   "%s", "%s", 
+		                   "%d",   "%d",   "%d",   "%d", 
+		                   "%d",   "%.2f", "%.2f", "%.2f", 
+		                   "%d",   "%.2f", "%.2f"              
+		            )."\n",
 			$c,
 			$file,
 			$num_seq,
@@ -136,7 +146,6 @@ for my $file (@ARGV){
 			$col_ident / ($col_ident + $col_mismatch + $col_gap) * 100,
 			$col_mismatch / ($col_ident + $col_mismatch + $col_gap) * 100,
 			$col_gap / ($col_ident + $col_mismatch + $col_gap) * 100,
-			
 
 			$col_ident + $col_mismatch,
 			$col_ident / ($col_ident + $col_mismatch) * 100,
