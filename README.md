@@ -1,4 +1,4 @@
 njau
 ====
 
-Perl utilities on biology sequence processing
+Perl utilities on processing biology sequence
