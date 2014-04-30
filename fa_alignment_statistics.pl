@@ -6,7 +6,7 @@ use File::Basename;
 use Bio::AlignIO;
 
 sub usage{
-  die "Usage: ", basename($0), " {format} <ALIGNMENT> [<ALIGNMENT> ...]
+       die "Usage: ", basename($0), " {format} <ALIGNMENT> [<ALIGNMENT> ...]
        format
            Specify the format of the file.  Supported formats include:
 
@@ -36,22 +36,22 @@ letter or first few letters of a format are sufficient\n"
 my $format = shift @ARGV;
 $format = do {
 	$_ = $format;
-	if(   /^b/){	'bl2seq'}
-	elsif(/^c/){	'clustalw'}
-	elsif(/^e/){	'emboss'}
-	elsif(/^f/){	'fasta'}
-	elsif(/^maf/){	'maf'}
-	elsif(/^mas/){	'mase'}
-	elsif(/^meg/){	'mega'}
-	elsif(/^mem/){	'meme'}
-	elsif(/^ms/){	'msf'}
-	elsif(/^n/){	'nexus'}
-	elsif(/^pf/){	'pfam'}
-	elsif(/^ph/){	'phylip'}
-	elsif(/^pr/){	'prodom'}
-	elsif(/^ps/){	'psi'}
-	elsif(/^se/){	'selex'}
-	elsif(/^st/){	'stockholm'}
+	if(   /^b/i   and 'bl2seq'    =~ /^$_/i){'bl2seq'}
+	elsif(/^c/i   and 'clustalw'  =~ /^$_/i){'clustalw'}
+	elsif(/^e/i   and 'emboss'    =~ /^$_/i){'emboss'}
+	elsif(/^f/i   and 'fasta'     =~ /^$_/i){'fasta'}
+	elsif(/^maf/i and 'maf'       =~ /^$_/i){'maf'}
+	elsif(/^mas/i and 'mase'      =~ /^$_/i){'mase'}
+	elsif(/^meg/i and 'mega'      =~ /^$_/i){'mega'}
+	elsif(/^mem/i and 'meme'      =~ /^$_/i){'meme'}
+	elsif(/^ms/i  and 'msf'       =~ /^$_/i){'msf'}
+	elsif(/^n/i   and 'nexus'     =~ /^$_/i){'nexus'}
+	elsif(/^pf/i  and 'pfam'      =~ /^$_/i){'pfam'}
+	elsif(/^ph/i  and 'phylip'    =~ /^$_/i){'phylip'}
+	elsif(/^pr/i  and 'prodom'    =~ /^$_/i){'prodom'}
+	elsif(/^ps/i  and 'psi'       =~ /^$_/i){'psi'}
+	elsif(/^se/i  and 'selex'     =~ /^$_/i){'selex'}
+	elsif(/^st/i  and 'stockholm' =~ /^$_/i){'stockholm'}
 	else{
 		print "ERROR: Unsurpported alignment file format: $_!\n";
 		&usage;
