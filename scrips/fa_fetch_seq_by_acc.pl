@@ -47,15 +47,17 @@ if(@acc){
 		push @seqs, get_sequence($db, $_);
 	}
 }
-for my $file (@files){
-	open my $fh, $file or die "ERROR in opening file $file ...\n";
-	while(<$fh>){
-		next if /^\s*$/ or /^\s*#/;
-		chomp;
-		warn "Fetching $_ ...\n";
-		push @seqs, get_sequence($db, $_);
+if(@files){
+	for my $file (@files){
+		open my $fh, $file or die "ERROR in opening file $file ...\n";
+		while(<$fh>){
+			next if /^\s*$/ or /^\s*#/;
+			s/[\r\n]//g;
+			warn "Fetching $_ ...\n";
+			push @seqs, get_sequence($db, $_);
+		}
+		close $fh;
 	}
-	close $fh;
 }
 
 write_sequence(">-", $format, @seqs);
