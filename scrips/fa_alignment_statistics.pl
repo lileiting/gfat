@@ -61,9 +61,9 @@ $format = do {
 my $c;
 
 print join("\t", "#",          "File",       "Num_seq",    "SeqID1",     "SeqID2", 
-                 "#_Ident",    "#_Mismatch", "#_Gap\t",    "#_Gap_open", "I+M+G", 
-                 "I/(I+M+G)%", "M/(I+M+G)%", "G/(I+M+G)%", "I+M",        "I/(I+M)%", 
-                 "M/(I+M)%"
+                 "#_Ident",    "#_Mismatch", "#_Gap\t",    "#_Gap_open", 
+                 "I+M+G",      "I/(I+M+G)%", "M/(I+M+G)%", "G/(I+M+G)%", 
+                 "I+M",        "I/(I+M)%",   "M/(I+M)%"
            )."\n";
 
 for my $file (@ARGV){
