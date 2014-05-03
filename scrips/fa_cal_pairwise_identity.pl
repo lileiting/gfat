@@ -62,7 +62,7 @@ sub cal_identity{
 	my $tmp_file = $tmp_pre.".fasta";
 	write_sequence(">$tmp_file", 'fasta', $seq1, $seq2);
 	system("clustalw2 -INFILE=$tmp_file -ALIGN 2>/dev/null >/dev/null");
-	system("muscle -in $tmp_file -out $tmp_pre.aln -clw -clwstrict 2>/dev/null >/dev/null");
+	#system("muscle -in $tmp_file -out $tmp_pre.aln -clw -clwstrict 2>/dev/null >/dev/null");
 	my $alignio = Bio::AlignIO->new(-format => 'clustalw',
                               		-file => "$tmp_pre.aln");
 	unlink $tmp_file,"$tmp_pre.aln","$tmp_pre.dnd";
