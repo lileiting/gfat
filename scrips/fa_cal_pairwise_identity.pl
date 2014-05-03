@@ -22,7 +22,6 @@ if($ARGV[-1] eq '-pair'){
                         &cal_identity($seq1, $seq2);
                 }
         }
-	exit;
 }else{
 	&print_input_info(@ARGV);
 
@@ -36,9 +35,9 @@ if($ARGV[-1] eq '-pair'){
 	}
 }
 
-##############
-# Subroutine #
-##############
+###############
+# Subroutines #
+###############
 
 sub print_input_info{
 	my @files = @_;
