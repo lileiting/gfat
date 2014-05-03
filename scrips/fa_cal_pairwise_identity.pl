@@ -1,6 +1,4 @@
-#!/usr/bin/perl
-#
-# LL, 12/25/2013
+#!/usr/bin/env perl
 
 use warnings;
 use strict;
