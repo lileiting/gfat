@@ -13,7 +13,7 @@ sub usage{
 OPTIONS
 	-help|?     Print usage
 	-pair       Two files are required, and only comparison sequences between two files
-" unless @ARGV;
+";
 }
 
 my $help;
