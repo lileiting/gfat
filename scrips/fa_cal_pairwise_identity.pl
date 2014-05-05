@@ -22,12 +22,10 @@ my $pair;
 GetOptions ("help|?" => \$help,
             "pair"   => \$pair);
 
-&usage if $help or @ARGV == 0;
+&usage if $help or @ARGV == 0 or ($pair and @ARGV != 2);
 
 ###############
 if($pair){
-	warn "Two files are required with -p\n" and &usage unless @ARGV == 2;
-
 	&print_input_info(@ARGV);
 
 	my @seq0 = read_all_sequences($ARGV[0], 'fasta');
