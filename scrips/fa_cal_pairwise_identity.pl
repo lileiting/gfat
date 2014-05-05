@@ -5,13 +5,28 @@ use strict;
 use Bio::Perl;
 use Bio::AlignIO;
 use File::Basename;
+use Getopt::Long;
 
-die "Usage: ",basename($0)," <FASTA> [<FASTA> ...] [-pair]\n" unless @ARGV;
+sub usage{
+	die "Usage: ",basename($0)," [OPTIONS] <FASTA> [<FASTA> ...]
+
+OPTIONS
+	-help|?     Print usage
+	-pair       Two files are required, and only comparison sequences between two files
+" unless @ARGV;
+}
+
+my $help;
+my $pair;
+
+GetOptions ("help|?" => \$help,
+            "pair"   => \$pair);
+
+&usage if $help or @ARGV == 0;
 
 ###############
-if($ARGV[-1] eq '-pair'){
-	pop @ARGV;
-	die "Usage: ", basename($0)," <FASTA> <FASTA> -pair\n" unless @ARGV == 2;
+if($pair){
+	die "Usage: ", basename($0)," -p <FASTA> <FASTA>\n" unless @ARGV == 2;
 
 	&print_input_info(@ARGV);
 
