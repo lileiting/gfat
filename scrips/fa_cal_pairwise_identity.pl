@@ -26,7 +26,7 @@ GetOptions ("help|?" => \$help,
 
 ###############
 if($pair){
-	die "Usage: ", basename($0)," -p <FASTA> <FASTA>\n" unless @ARGV == 2;
+	warn "Two files are required with -p\n" and &usage unless @ARGV == 2;
 
 	&print_input_info(@ARGV);
 
