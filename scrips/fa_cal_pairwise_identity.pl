@@ -12,7 +12,7 @@ sub usage{
 
 OPTIONS
 	-help|?     Print usage
-	-pair       Two files are required, and only comparison sequences between two files
+	-pair       Two files are required, and only compare sequences between two files
 ";
 }
 
