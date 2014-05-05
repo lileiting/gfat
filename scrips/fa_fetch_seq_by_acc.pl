@@ -8,7 +8,7 @@ use Getopt::Long;
 
 sub usage{
 	die "Usage: ",basename($0), 
-" [-h|?] [-d DB] [-f FORMAT] [-a ACC[,ACC ...]] LISTFILE [LISTFILE ...]
+" [-h|?] [-d DB] [-f FORMAT] [-a ACC[,ACC ...]] [LISTFILE [LISTFILE ...]]
 Supported databases (Default: genbank):
     genbank
     genpept
