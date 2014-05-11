@@ -8,7 +8,7 @@ use Getopt::Long;
 
 sub usage{
 	die "Usage: ",basename($0), 
-" [-h|?] [-d DB] [-f FORMAT] [-a ACC[,ACC ...]] [LISTFILE [LISTFILE ...]]
+" [-h|?] [-o outfile] [-d DB] [-f FORMAT] [-a ACC[,ACC ...]] [LISTFILE [LISTFILE ...]]
 Supported databases (Default: genbank):
     genbank
     genpept
@@ -28,8 +28,10 @@ my $db = 'genbank';
 my $format = 'fasta';
 my @acc = ();
 my @files;
+my $outfile;
 
 GetOptions("help|?"     =>  \$help,
+           "outfile=s"  =>  \$outfile,
            "db=s"       =>  \$db,
            "format=s"   =>  \$format,
            "acc=s"      =>  \@acc);
@@ -40,11 +42,18 @@ GetOptions("help|?"     =>  \$help,
 @files = @ARGV;
 &usage unless(@acc or @files);
 
-my @seqs;
+my $fh;
+if($outfile){
+        open $fh, ">", $outfile or die "Couldn't open output file: $outfile";
+}else{
+        $fh = \*STDOUT;
+}
+my $out = Bio::SeqIO->new(-fh => $fh, -format => $format);
+
 if(@acc){
 	for(@acc){
 		warn "Fetching $_ ...\n";
-		push @seqs, get_sequence($db, $_);
+		$out->write_seq(get_sequence($db, $_));
 	}
 }
 if(@files){
@@ -54,10 +63,8 @@ if(@files){
 			next if /^\s*$/ or /^\s*#/;
 			s/[\r\n]//g;
 			warn "Fetching $_ ...\n";
-			push @seqs, get_sequence($db, $_);
+			$out->write_seq(get_sequence($db, $_));
 		}
 		close $fh;
 	}
 }
-
-write_sequence(">-", $format, @seqs);
