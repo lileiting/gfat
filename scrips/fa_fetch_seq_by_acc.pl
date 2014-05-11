@@ -7,7 +7,7 @@ use File::Basename;
 use Getopt::Long;
 
 sub usage{
-	die "Usage: ",basename($0), 
+	die "Usage:\n    ",basename($0), 
 " [-h|?] [-o outfile] [-d DB] [-f FORMAT] [-a ACC[,ACC ...]] [LISTFILE [LISTFILE ...]]
 Supported databases (Default: genbank):
     genbank
@@ -19,7 +19,7 @@ Supported databases (Default: genbank):
 Default format:fasta
 Other formats please refer to 
 http://www.bioperl.org/wiki/HOWTO:SeqIO#Formats
-	\n";
+\n";
 }
 &usage unless @ARGV;
 
