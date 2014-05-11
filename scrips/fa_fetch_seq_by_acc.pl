@@ -38,7 +38,7 @@ GetOptions("help|?"     =>  \$help,
 
 &usage if($help);
 &usage unless($db =~ /genbank|genpept|swiss|embl|refseq/i);
-@acc = split(/,/,join(",", @acc));
+@acc = grep {!/^$/} (split(/,/,join(",", @acc)));
 @files = @ARGV;
 &usage unless(@acc or @files);
 
