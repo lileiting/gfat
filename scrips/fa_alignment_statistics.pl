@@ -4,10 +4,12 @@ use warnings;
 use strict;
 use File::Basename;
 use Bio::AlignIO;
+use Getopt::Long;
 
 sub usage{
-       die "Usage: ", basename($0), " {format} <ALIGNMENT> [<ALIGNMENT> ...]
-       format
+       die "Usage: ", basename($0), " [-t] [-f format] <ALIGNMENT> [<ALIGNMENT> ...]
+    -t print title
+    -f format
            Specify the format of the file.  Supported formats include:
 
               bl2seq      Bl2seq Blast output
@@ -33,7 +35,10 @@ letter or first few letters of a format are sufficient\n"
 
 &usage unless @ARGV;
 
-my $format = shift @ARGV;
+my ($title, $format) = (undef, 'fasta');
+GetOptions("title"    => \$title,
+           "format=s" => \$format);
+
 $format = do {
 	$_ = $format;
 	if(   /^b/i   and 'bl2seq'    =~ /^$_/i){'bl2seq'}
@@ -53,7 +58,7 @@ $format = do {
 	elsif(/^se/i  and 'selex'     =~ /^$_/i){'selex'}
 	elsif(/^st/i  and 'stockholm' =~ /^$_/i){'stockholm'}
 	else{
-		print "ERROR: Unsurpported alignment file format: $_!\n";
+		print "ERROR: Unsupported alignment file format: $_!\n";
 		&usage;
 	}
 };
@@ -64,7 +69,7 @@ print join("\t", "#",          "File",       "Num_seq",    "SeqID1",     "SeqID2
                  "#_Ident",    "#_Mismatch", "#_Gap\t",    "#_Gap_open", 
                  "I+M+G",      "I/(I+M+G)%", "M/(I+M+G)%", "G/(I+M+G)%", 
                  "I+M",        "I/(I+M)%",   "M/(I+M)%"
-           )."\n";
+           )."\n" if $title;
 
 for my $file (@ARGV){
 	my $alignio = Bio::AlignIO->new(-format => $format,
