@@ -9,7 +9,7 @@ use Getopt::Long;
 sub usage{
        die "Usage: ", basename($0), " [-t] [-f format] <ALIGNMENT> [<ALIGNMENT> ...]
     -t print title
-    -f format
+    -f format [Default: fasta]
            Specify the format of the file.  Supported formats include:
 
               bl2seq      Bl2seq Blast output
