@@ -70,12 +70,6 @@ for my $id (sort {$a cmp $b} @lst){
 	my @border;
 	for my $element (keys %hash){
 		for my $i (@{$hash{$element}}){
-			#my $end = $info{$id}->{$element}->{$i}->{'end'} // "Uninitiate";
-			#my $start = $info{$id}->{$element}->{$i}->{'sta'} // "Uninitiate";
-			#warn "Element: $element\n";
-			#warn "Hash: $hash{$element}\n";
-			#warn "End: $end\n";
-			#warn "Start: $start\n";
 
 			$len_exons += $info{$id}->{$element}->{$i}->{'end'} 
 					- $info{$id}->{$element}->{$i}->{'sta'} + 1;
@@ -102,5 +96,4 @@ for my $id (sort {$a cmp $b} @lst){
 		$no_of_exons, # No. of CDSs
 		$avg_exon, 
 		$avg_intron;
-	#exit;
 }
