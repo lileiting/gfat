@@ -1,4 +1,5 @@
 njau
 ====
 
-Perl utilities on Bioinformatics
+Practice on Perl and Python programming
+Leiting Li @ NJAU(2014-2014)
