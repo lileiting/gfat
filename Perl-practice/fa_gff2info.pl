@@ -80,10 +80,10 @@ for my $id (sort {$a cmp $b} @lst){
 	}
 	my $avg_exon = $len_exons / $no_of_exons;
 
-	my($cds_start,$cds_end) = (sort {$a <=> $b} @border)[0,-1];
+	my($mRNA_start,$mRNA_end) = (sort {$a <=> $b} @border)[0,-1];
 	my $avg_intron;
 	if($no_of_exons > 1){
-		$avg_intron = ($cds_end - $cds_start + 1 - $len_exons) 
+		$avg_intron = ($mRNA_end - $mRNA_start + 1 - $len_exons) 
 				/ ($no_of_exons - 1) ; # No. of introns
 	}else{
 		$avg_intron = 0;
