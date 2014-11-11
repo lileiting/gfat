@@ -29,7 +29,7 @@ seqlen.sort()
 min_len = seqlen[0]
 max_len = seqlen[-1]
 
-print("Number of sequences: " + str(num_of_seq))
-print("Total length: " + str(total_len))
-print("Max length: " + str(max_len))
-print("Min length: " + str(min_len))
+print('Number of sequences: ' + str(num_of_seq))
+print('Total length: ' + str(total_len))
+print('Max length: ' + str(max_len))
+print('Min length: ' + str(min_len))
