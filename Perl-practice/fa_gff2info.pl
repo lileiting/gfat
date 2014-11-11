@@ -56,16 +56,33 @@ print "#------------------------------------------------------------------------
 ";
 for my $id (sort {$a cmp $b} @lst){
 	my $len_exons;
-	my @n = keys %{$info{$id}->{'CDS'}};
+	my %hash;
+
+	for my $element (qw/CDS UTR_5 UTR_3/){
+		if($info{$id}->{$element}){
+			$hash{$element} = [keys %{$info{$id}->{$element}}];
+		}
+	}
+
 	my $no_of_exons = $info{$id}->{'count'}->{'CDS'};
 	die "ID: $id\n" unless $no_of_exons;
 
-
 	my @border;
-	for my $i (@n){
-		$len_exons += $info{$id}->{'CDS'}->{$i}->{'end'} 
-				- $info{$id}->{'CDS'}->{$i}->{'sta'} + 1;
-		push @border, $info{$id}->{'CDS'}->{$i}->{'end'}, $info{$id}->{'CDS'}->{$i}->{'sta'};
+	for my $element (keys %hash){
+		for my $i (@{$hash{$element}}){
+			#my $end = $info{$id}->{$element}->{$i}->{'end'} // "Uninitiate";
+			#my $start = $info{$id}->{$element}->{$i}->{'sta'} // "Uninitiate";
+			#warn "Element: $element\n";
+			#warn "Hash: $hash{$element}\n";
+			#warn "End: $end\n";
+			#warn "Start: $start\n";
+
+			$len_exons += $info{$id}->{$element}->{$i}->{'end'} 
+					- $info{$id}->{$element}->{$i}->{'sta'} + 1;
+			push @border, 
+				$info{$id}->{$element}->{$i}->{'end'}, 
+				$info{$id}->{$element}->{$i}->{'sta'};
+		}
 	}
 	my $avg_exon = $len_exons / $no_of_exons;
 
@@ -85,4 +102,5 @@ for my $id (sort {$a cmp $b} @lst){
 		$no_of_exons, # No. of CDSs
 		$avg_exon, 
 		$avg_intron;
+	#exit;
 }
