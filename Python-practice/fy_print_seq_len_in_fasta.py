@@ -2,11 +2,7 @@
 
 '''
 Script: fy_print_seq_len_in_fasta.py
-Function: Print sequence length to STDOUT in fasta file
-Note: Python3 is not default installed for most computer, 
-      and the extra-installed module like Biopython could
-      not be directly used by python3. So, it's not the
-      righ time to use Python3 now.
+Function: Print sequence length to STDOUT in fasta format file
 Date: 2014/11/11
 '''
 
