@@ -81,6 +81,6 @@ sub cal_identity{
 	my $aln = $alignio->next_aln;
 	print $seq1->display_id,"\t",
 		$seq2->display_id, "\t", 
-		$aln->percentage_identity,"\n";
+		sprintf("%.1f",$aln->percentage_identity),"\n";
 	
 }
