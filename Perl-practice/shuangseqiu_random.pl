@@ -11,7 +11,7 @@ sub main{
         my %hash;
         $hash{int(rand($red_max) + 1)}++ until keys %hash == 6;
         printf "%4d%4d%4d%4d%4d%4d%4d\n",
-            sort{$a <=> $b}(keys %hash), int(rand($blue_max) + 1);
+            (sort{$a <=> $b}(keys %hash)), int(rand($blue_max) + 1);
     }
 }
 
