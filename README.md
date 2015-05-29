@@ -1,6 +1,6 @@
-njau
+leiting
 ====
 
-Practice on Perl and Python programming
+Some scripts to handle bioinformatics problems
 
-Leiting Li @ NJAU(2014-2014)
+
