@@ -45,4 +45,7 @@ Print the sum of a list of numbers
     seq 1 100 | perl -ne 'BEGIN {print qq/Sum: /} $sum += $_; END{print "$sum\n"}'
     seq 1 100 | perl -nE 'BEGIN {print qq/Sum: /} $sum += $_; END{say $sum}'
 
+Min, max, sum, mean of a list of number using [datamash](http://www.gnu.org/software/datamash/)
+
+    seq 1 100 | datamash --header-out min 1 max 1 sum 1 mean 1
 
