@@ -9,7 +9,10 @@ sub usage{
 
 perl randseq.pl LENGTH [OPTIONS]
 
-  -h,--help
+  Default print nuleotide sequences 100 bp
+
+  -a,--aa    print amino acid sequences
+  -h,--help  print help
 
 USAGE
     exit;
@@ -51,12 +54,12 @@ sub main{
 
     print qq/>Random_Sequence_$length$unit\n/;
     my $count = 0;
-    foreach(1..$length){
+    for(1..$length){
         print $char[int(rand(scalar(@char)))];
         $count++;
         print qq/\n/ if $count % 60 == 0;
     } 
-    print qq/\n/;
+    print qq/\n/ if $count % 60 != 0;
 }
 
 main;
