@@ -2,7 +2,7 @@ leiting
 ====
 
 * Author: [Leiting Li](https://github.com/lileiting)
-* Licence: [MIT](http://opensource.org/licenses/MIT)
+* Licence: [BSD](http://opensource.org/licenses/BSD-2-Clause)
 
 Some scripts to handle bioinformatics problems
 
