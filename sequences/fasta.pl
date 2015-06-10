@@ -32,15 +32,7 @@ sub read_commands{
 
 sub main{
     my $cmd = read_commands;
-    if($cmd eq q/idlist/){
-        idlist_fasta;
-    }elsif($cmd eq q/length/){
-        length_fasta;
-    }elsif($cmd eq q/sort/){
-        sort_fasta;
-    }elsif($cmd eq q/rmdesc/){
-        rmdesc_fasta;
-    }
+    fasta_cmd($cmd);
 }
 
 main;
