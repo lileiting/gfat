@@ -5,12 +5,14 @@ use Getopt::Long;
 use Bio::Perl;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
-@EXPORT = qw(idlist_fasta sort_fasta rmdesc_fasta);
+@EXPORT = qw(idlist_fasta length_fasta sort_fasta rmdesc_fasta);
 @EXPORT_OK = @EXPORT;
 
 sub print_fasta_usage{
     my $cmd = shift;
-    my $sizes = $cmd eq q/sort/ ? qq/\n  -s,--sizes/ : '';
+    my $sizes = $cmd eq q/sort/ ? 
+        qq/\n  -s,--sizes          Sort sequences by sizes/ 
+        : '';
     print <<USAGE;
 
 $FindBin::Script $cmd [OPTIONS]
@@ -44,11 +46,32 @@ sub read_commands{
     return ($in_fh, $out_fh, $sizes);
 }
 
+#----------------------------------------------------------#
+
+sub format_seqstr{
+    my $str = shift;
+    my $len = length($str);
+    $str =~ s/(.{60})/$1\n/g;
+    chomp $str;
+    return $str;
+}
+
+#----------------------------------------------------------#
+
 sub idlist_fasta{
     my($in_fh, $out_fh) = read_commands(q/idlist/);
     my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
     while(my $seq = $in->next_seq){
-        print $out_fh $seq->display_id, "\n";
+        print $out_fh $seq->display_id,"\n";
+    }
+    exit;
+}
+
+sub length_fasta{
+    my($in_fh, $out_fh) = read_commands(q/length/);
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
+    while(my $seq = $in->next_seq){
+        print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
     exit;
 }
@@ -71,14 +94,6 @@ sub sort_fasta{
     exit;
 }
 
-sub format_seqstr{
-    my $str = shift;
-    my $len = length($str);
-    $str =~ s/(.{60})/$1\n/g;
-    chomp $str;
-    return $str;
-}
-
 sub rmdesc_fasta{
     my ($in_fh, $out_fh) = read_commands(q/rmdesc/);
     my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
@@ -87,6 +102,7 @@ sub rmdesc_fasta{
         my $seqstr = format_seqstr($seq->seq);
         print $out_fh qq/>$seqid\n$seqstr\n/;
     }
+    exit;
 }
 
 1;
