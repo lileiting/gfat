@@ -12,9 +12,9 @@ sub usage{
 $FindBin::Script CMD [OPTIONS]
 
 CMD:
-  idlist Get ID list of a sequence file
-  sort   Sort sequences by name
-  rmdesc Remove sequence descriptions
+  idlist | Get ID list of a sequence file
+  sort   | Sort sequences by name
+  rmdesc | Remove sequence descriptions
 
 USAGE
     exit;

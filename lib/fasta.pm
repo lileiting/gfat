@@ -10,31 +10,64 @@ use base qw(Exporter);
 
 sub print_fasta_usage{
     my $cmd = shift;
+    my $sizes = $cmd eq q/sort/ ? qq/\n  -s,--sizes/ : '';
     print <<USAGE;
 
-$FindBin::Script $cmd <FASTA>
+$FindBin::Script $cmd [OPTIONS]
+
+  [-i,--input] <FILE>
+  -o,--output  <FILE>$sizes
+  -h,--help
 
 USAGE
     exit;
 }
 
+sub read_commands{
+    my $cmd = shift;
+    my $help;
+    my $infile;
+    my $outfile;
+    my $sizes;
+    my ($in_fh, $out_fh);
+    GetOptions(
+        "i|input=s"  => \$infile,
+        "o|output=s" => \$outfile,
+        "s|sizes"     => \$sizes,
+        "h|help"      => \$help
+    );
+    print_fasta_usage($cmd) if $help or (!$infile and @ARGV == 0);
+    $infile = shift @ARGV unless $infile;
+    open $in_fh, "<", $infile or die "$infile: $!";
+    $out_fh = \*STDOUT;
+    open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
+    return ($in_fh, $out_fh, $sizes);
+}
+
 sub idlist_fasta{
-    print_fasta_usage(q/idlist/) unless @ARGV;
-    my $infile = shift @ARGV;
-    my $outfh = \*STDOUT;
-    my $in = Bio::SeqIO->new(-file=>$infile, -format=>q/fasta/);
+    my($in_fh, $out_fh) = read_commands(q/idlist/);
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
     while(my $seq = $in->next_seq){
-        print $outfh $seq->display_id, "\n";
+        print $out_fh $seq->display_id, "\n";
     }
+    exit;
 }
 
 sub sort_fasta{
-    print_fasta_usage(q/sort/) unless @ARGV;
-    my $infile = shift @ARGV;
-    my $outfh = \*STDOUT;
-    my @seqobjs = read_all_sequences($infile, q/fasta/);
-    my $out = Bio::SeqIO->new(-fh => $outfh, -format=>q/fasta/);
-    map{$out->write_seq($_)}(sort{$a->display_id cmp $b->display_id}@seqobjs);
+    my ($in_fh, $out_fh, $sizes) = read_commands(q/sort/);
+    my @seqobjs;
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
+    while(my $seq = $in->next_seq){push @seqobjs, $seq}
+    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
+    if($sizes){
+        map{$out->write_seq($_)}(
+            sort{$b->length <=> $a->length}
+            @seqobjs);
+    }else{
+        map{$out->write_seq($_)}(
+            sort{$a->display_id cmp $b->display_id}
+            @seqobjs);
+    }
     exit;
 }
 
@@ -47,14 +80,12 @@ sub format_seqstr{
 }
 
 sub rmdesc_fasta{
-    print_fasta_usage(q/rmdesc/) unless @ARGV;
-    my $infile = shift @ARGV;
-    my $outfh = \*STDOUT;
-    my $in = Bio::SeqIO->new(-file=>$infile, -format=>q/fasta/);
+    my ($in_fh, $out_fh) = read_commands(q/rmdesc/);
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
         my $seqstr = format_seqstr($seq->seq);
-        print $outfh qq/>$seqid\n$seqstr\n/;
+        print $out_fh qq/>$seqid\n$seqstr\n/;
     }
 }
 
