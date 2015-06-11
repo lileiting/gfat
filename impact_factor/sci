@@ -2,8 +2,8 @@
 
 use warnings;
 use strict;
-use File::Basename;
 use File::Spec;
+use FindBin;
 
 sub usage{
 
@@ -33,7 +33,7 @@ sub read_commands{
 
 sub sci_data_file_name{
     my $filename = q/data.sci.2014.csv/;
-    my $dirname = dirname($0);
+    my $dirname = $FindBin::RealBin;
     my $fullname = File::Spec->catfile($dirname, $filename);
     return $fullname;
 }
