@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use Getopt::Long;
 use Bio::Perl;
+use FormatSeqStr;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = qw(fasta_cmd);
@@ -47,18 +48,6 @@ sub read_commands{
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
     return ($in_fh, $out_fh, $sizes, $desc);
 }
-
-#----------------------------------------------------------#
-
-sub format_seqstr{
-    my $str = shift;
-    my $len = length($str);
-    $str =~ s/(.{60})/$1\n/g;
-    chomp $str;
-    return $str;
-}
-
-#----------------------------------------------------------#
 
 sub idlist_fasta{
     my($in_fh, $out_fh, undef, $desc) = read_commands(q/idlist/);
