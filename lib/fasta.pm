@@ -8,19 +8,6 @@ use base qw(Exporter);
 @EXPORT = qw(fasta_cmd);
 @EXPORT_OK = @EXPORT;
 
-sub fasta_cmd{
-    my $cmd = shift;
-    if($cmd eq q/idlist/){
-        &idlist_fasta;
-    }elsif($cmd eq q/length/){
-        &length_fasta;
-    }elsif($cmd eq q/sort/){
-        &sort_fasta;
-    }elsif($cmd eq q/rmdesc/){
-        &rmdesc_fasta;
-    }
-}
-
 sub print_fasta_usage{
     my $cmd = shift;
     my $sizes = $cmd eq q/sort/ ? 
@@ -124,6 +111,16 @@ sub rmdesc_fasta{
         print $out_fh qq/>$seqid\n$seqstr\n/;
     }
     exit;
+}
+
+#----------------------------------------------------------#
+
+sub fasta_cmd{
+    my $cmd = shift;
+    if(   $cmd eq q/idlist/){ idlist_fasta }
+    elsif($cmd eq q/length/){ length_fasta }
+    elsif($cmd eq q/sort/  ){ sort_fasta   }
+    elsif($cmd eq q/rmdesc/){ rmdesc_fasta }
 }
 
 1;
