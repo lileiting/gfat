@@ -30,12 +30,8 @@ USAGE
 
 sub read_commands{
     my $cmd = shift;
-    my $help;
-    my $infile;
-    my $outfile;
-    my $sizes;
-    my $desc;
-    my ($in_fh, $out_fh);
+    my ($infile, $outfile, $in_fh, $out_fh);
+    my ($sizes, $desc, $help);
     GetOptions(
         "i|input=s"  => \$infile,
         "o|output=s" => \$outfile,
