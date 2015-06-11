@@ -9,7 +9,7 @@ sub usage{
 
 print <<USAGE;
 
-perl sci [JOURNAL NAME PATTERN]
+perl sci PATTERN
 
   This is a program to list sci journals and their impact 
   factor. The JOURNAL NAME PATTERN is actually considered 
@@ -32,7 +32,7 @@ sub read_commands{
 }
 
 sub sci_data_file_name{
-    my $filename = q/data.sci.2014.csv/;
+    my $filename = q/data_sci_2014.csv/;
     my $dirname = $FindBin::RealBin;
     my $fullname = File::Spec->catfile($dirname, $filename);
     return $fullname;
