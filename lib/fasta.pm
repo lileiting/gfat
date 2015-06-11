@@ -26,12 +26,15 @@ sub print_fasta_usage{
     my $sizes = $cmd eq q/sort/ ? 
         qq/\n  -s,--sizes          Sort sequences by sizes/ 
         : '';
+    my $desc = $cmd eq q/idlist/ ?
+        qq/\n  -d,--desc           With description/
+        : '';
     print <<USAGE;
 
 $FindBin::Script $cmd [OPTIONS]
 
   [-i,--input] <FILE>
-  -o,--output  <FILE>$sizes
+  -o,--output  <FILE>$sizes$desc
   -h,--help
 
 USAGE
@@ -44,12 +47,14 @@ sub read_commands{
     my $infile;
     my $outfile;
     my $sizes;
+    my $desc;
     my ($in_fh, $out_fh);
     GetOptions(
         "i|input=s"  => \$infile,
         "o|output=s" => \$outfile,
-        "s|sizes"     => \$sizes,
-        "h|help"      => \$help
+        "s|sizes"    => \$sizes,
+        "d|desc"     => \$desc,
+        "h|help"     => \$help
     );
     print_fasta_usage($cmd) if $help or (!$infile and @ARGV == 0 and -t STDIN);
     $in_fh = \*STDIN;
@@ -57,7 +62,7 @@ sub read_commands{
     open $in_fh, "<", $infile or die "$infile: $!" if $infile;
     $out_fh = \*STDOUT;
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
-    return ($in_fh, $out_fh, $sizes);
+    return ($in_fh, $out_fh, $sizes, $desc);
 }
 
 #----------------------------------------------------------#
@@ -73,10 +78,12 @@ sub format_seqstr{
 #----------------------------------------------------------#
 
 sub idlist_fasta{
-    my($in_fh, $out_fh) = read_commands(q/idlist/);
+    my($in_fh, $out_fh, undef, $desc) = read_commands(q/idlist/);
     my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
     while(my $seq = $in->next_seq){
-        print $out_fh $seq->display_id,"\n";
+        print $out_fh $seq->display_id,
+                      $desc ? ' '.$seq->desc : '',
+                      "\n";
     }
     exit;
 }
