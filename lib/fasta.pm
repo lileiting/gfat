@@ -52,14 +52,9 @@ sub read_commands{
         "h|help"      => \$help
     );
     print_fasta_usage($cmd) if $help or (!$infile and @ARGV == 0 and -t STDIN);
-    if($infile){
-        open $in_fh, "<", $infile or die "$infile: $!";
-    }elsif(!$infile and @ARGV > 0){
-        $infile = shift @ARGV;
-        open $in_fh, "<", $infile or die "$infile: $!";
-    }else{
-        $in_fh = \*STDIN;
-    }
+    $in_fh = \*STDIN;
+    $infile = shift @ARGV if !$infile and @ARGV > 0;
+    open $in_fh, "<", $infile or die "$infile: $!" if $infile;
     $out_fh = \*STDOUT;
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
     return ($in_fh, $out_fh, $sizes);
