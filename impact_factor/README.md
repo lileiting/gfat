@@ -7,16 +7,17 @@ Multidiscipline
 * [Nature](http://www.nature.com/nature/current_issue.html)
 * [Science](http://www.sciencemag.org/content/current)
 * [PNAS](http://www.pnas.org/content/current)
-* [Scientific Reports](www.nature.com/srep)
-* [PLoS One](www.plosone.org)
+* [Nature Communications](http://www.nature.com/ncomms/)
+* [Scientific Reports](http://www.nature.com/srep)
+* [PLoS One](http://www.plosone.org)
 
 Medicine and Cell Biology
 ------
 
-* [New England Journal of Medicine](www.nejm.org)
+* [New England Journal of Medicine](http://www.nejm.org)
 * [Cell](http://www.cell.com/cell/current)
-* [Cell Research](www.cell-research.com)
-* [Lancet](www.thelancet.com)
+* [Cell Research](http://www.cell-research.com)
+* [Lancet](http://www.thelancet.com)
 
 Genetics
 ------
