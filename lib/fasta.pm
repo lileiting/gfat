@@ -140,16 +140,60 @@ sub translate_cds{
     }
 }
 
+sub count_gc{
+    my $str = shift;
+    my @char = split //, $str;
+    my %char;
+    map{$char{$_}++}@char;
+    my $gc = ($char{G} // 0) + ($char{C} // 0);
+    my $at = ($char{A} // 0) + ($char{T} // 0);
+    my $non_atgc = length($str) - ($gc + $at);
+    return ($gc, $non_atgc);
+}
+
+sub gc_content{
+    my $options = get_options(q/gc/);
+    my $in = $options->{in_io};
+    my $out = $options->{out_fh};
+    my $total_len = 0;
+    my $gc = 0;
+    my $non_atgc = 0;
+    while(my $seq = $in->next_seq){
+        $total_len += $seq->length;
+        my ($seq_gc, $seq_non_atgc) = count_gc($seq->seq);
+        $gc += $seq_gc;
+        $non_atgc += $seq_non_atgc;
+    }
+    printf $out "GC content: %.2f %%\n", $gc / $total_len * 100;
+    printf $out "Non-ATGC characters: %d of %d (%.2f %%)\n", 
+               $non_atgc, $total_len, $non_atgc / $total_len * 100
+           if $non_atgc;
+}
+
+sub clean{
+    my $options = get_options(q/clean/);
+    my $in = $options->{in_io};
+    my $out= $options->{out_io};
+    while(my $seq = $in->next_seq){
+        $out->write_seq(
+            Bio::PrimarySeq->new(-display_id => $seq->display_id,
+                                 -description => $seq->desc,
+                                 -seq => join('', grep{/[A-Za-z*]/}split(//, $seq->seq))));
+    }
+}
+
 #----------------------------------------------------------#
 
 sub fasta_cmd{
     my $cmd = shift;
-    if(   $cmd eq q/idlist/){ idlist_fasta }
-    elsif($cmd eq q/length/){ length_fasta }
-    elsif($cmd eq q/sort/  ){ sort_fasta   }
-    elsif($cmd eq q/rmdesc/){ rmdesc_fasta }
-    elsif($cmd eq q/getseq/){ getseq_fasta }
+    if(   $cmd eq q/idlist/   ){ idlist_fasta }
+    elsif($cmd eq q/length/   ){ length_fasta }
+    elsif($cmd eq q/sort/     ){ sort_fasta   }
+    elsif($cmd eq q/rmdesc/   ){ rmdesc_fasta }
+    elsif($cmd eq q/getseq/   ){ getseq_fasta }
     elsif($cmd eq q/translate/){ translate_cds}
+    elsif($cmd eq q/gc/       ){ gc_content   }
+    elsif($cmd eq q/clean/    ){ clean        }
     else{die "Unrecognized command: $cmd!\n".
              "Use -h or --help for help!\n"}
 }

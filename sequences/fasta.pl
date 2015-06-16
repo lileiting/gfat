@@ -18,6 +18,8 @@ CMD:
   rmdesc    | Remove sequence descriptions
   getseq    | Get sequences by ID pattern
   translate | Translate CDS to protein sequence
+  gc        | GC content
+  clean     | Clean irregular chars
 
 USAGE
     exit;
