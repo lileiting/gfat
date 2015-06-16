@@ -131,6 +131,15 @@ sub getseq_fasta{
     }
 }
 
+sub translate_cds{
+    my $options = get_options(q/translate/);
+    my $in = $options->{in_io};
+    my $out = $options->{out_io};
+    while(my $seq = $in->next_seq){
+        $out->write_seq(translate($seq));
+    }
+}
+
 #----------------------------------------------------------#
 
 sub fasta_cmd{
@@ -140,6 +149,7 @@ sub fasta_cmd{
     elsif($cmd eq q/sort/  ){ sort_fasta   }
     elsif($cmd eq q/rmdesc/){ rmdesc_fasta }
     elsif($cmd eq q/getseq/){ getseq_fasta }
+    elsif($cmd eq q/translate/){ translate_cds}
     else{die "Unrecognized command: $cmd!\n"}
 }
 
