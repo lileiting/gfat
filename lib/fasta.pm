@@ -11,48 +11,65 @@ use base qw(Exporter);
 
 sub print_fasta_usage{
     my $cmd = shift;
-    my $sizes = $cmd eq q/sort/ ? 
-        qq/\n  -s,--sizes          Sort sequences by sizes/ 
-        : '';
-    my $desc = $cmd eq q/idlist/ ?
-        qq/\n  -d,--desc           With description/
-        : '';
+    my %opt_desc = (
+        sort   => qq/\n  -s,--sizes          Sort sequences by sizes/, 
+        idlist => qq/\n  -d,--desc           With description/,
+        getseq => qq/\n  -p,--pattern STR    Pattern for sequence IDs/
+    );
+
+    my $opt_desc = $opt_desc{$cmd};
+
     print <<USAGE;
 
 $FindBin::Script $cmd [OPTIONS]
 
   [-i,--input] <FILE>
-  -o,--output  <FILE>$sizes$desc
+  -o,--output  <FILE>$opt_desc
   -h,--help
 
 USAGE
     exit;
 }
 
-sub read_commands{
+sub get_options{
     my $cmd = shift;
     my ($infile, $outfile, $in_fh, $out_fh);
+    my $pattern;
     my ($sizes, $desc, $help);
     GetOptions(
         "i|input=s"  => \$infile,
         "o|output=s" => \$outfile,
         "s|sizes"    => \$sizes,
         "d|desc"     => \$desc,
+        "p|pattern=s"=> \$pattern,
         "h|help"     => \$help
     );
     print_fasta_usage($cmd) if $help or (!$infile and @ARGV == 0 and -t STDIN);
+    print_fasta_usage($cmd) if $cmd eq q/getseq/ and !$pattern;
+
     $in_fh = \*STDIN;
     $infile = shift @ARGV if !$infile and @ARGV > 0;
     open $in_fh, "<", $infile or die "$infile: $!" if $infile;
     $out_fh = \*STDOUT;
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
-    return ($in_fh, $out_fh, $sizes, $desc);
+
+    my $in_io = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
+
+    return {
+        in_io => $in_io,
+        out_fh => $out_fh, 
+        sizes => $sizes, 
+        desc => $desc,
+        pattern => $pattern
+    };
 }
 
 sub idlist_fasta{
-    my($in_fh, $out_fh, undef, $desc) = read_commands(q/idlist/);
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
-    while(my $seq = $in->next_seq){
+    my $options = get_options(q/idlist/);
+    my $in_io = $options->{in_io};
+    my $out_fh = $options->{out_fh};
+    my $desc = $options->{desc};
+    while(my $seq = $in_io->next_seq){
         print $out_fh $seq->display_id,
                       $desc ? ' '.$seq->desc : '',
                       "\n";
@@ -61,19 +78,22 @@ sub idlist_fasta{
 }
 
 sub length_fasta{
-    my($in_fh, $out_fh) = read_commands(q/length/);
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
-    while(my $seq = $in->next_seq){
+    my $options = get_options(q/length/);
+    my $in_io = $options->{in_io};
+    my $out_fh = $options->{out_fh};
+    while(my $seq = $in_io->next_seq){
         print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
     exit;
 }
 
 sub sort_fasta{
-    my ($in_fh, $out_fh, $sizes) = read_commands(q/sort/);
+    my $options = get_options(q/sort/);
+    my $in_io = $options->{in_io};
+    my $out_fh = $options->{out_fh};
+    my $sizes = $options->{sizes};
     my @seqobjs;
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
-    while(my $seq = $in->next_seq){push @seqobjs, $seq}
+    while(my $seq = $in_io->next_seq){push @seqobjs, $seq}
     my $out = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
     if($sizes){
         map{$out->write_seq($_)}(
@@ -88,14 +108,27 @@ sub sort_fasta{
 }
 
 sub rmdesc_fasta{
-    my ($in_fh, $out_fh) = read_commands(q/rmdesc/);
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>q/fasta/);
-    while(my $seq = $in->next_seq){
+    my $options = get_options(q/rmdesc/);
+    my $in_io = $options->{in_io};
+    my $out_fh = $options->{out_fh};
+    while(my $seq = $in_io->next_seq){
         my $seqid = $seq->display_id;
         my $seqstr = format_seqstr($seq->seq);
         print $out_fh qq/>$seqid\n$seqstr\n/;
     }
     exit;
+}
+
+sub getseq_fasta{
+    my $options = get_options(q/getseq/);
+    my $in_io = $options->{in_io};
+    my $out_fh = $options->{out_fh};
+    my $pattern = $options->{pattern};
+    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
+    while(my $seq = $in_io->next_seq){
+        my $seqid = $seq->display_id;
+        $out->write_seq($seq) if $seqid =~ /$pattern/;
+    }
 }
 
 #----------------------------------------------------------#
@@ -106,6 +139,8 @@ sub fasta_cmd{
     elsif($cmd eq q/length/){ length_fasta }
     elsif($cmd eq q/sort/  ){ sort_fasta   }
     elsif($cmd eq q/rmdesc/){ rmdesc_fasta }
+    elsif($cmd eq q/getseq/){ getseq_fasta }
+    else{die "Unrecognized command: $cmd!\n"}
 }
 
 1;

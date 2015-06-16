@@ -14,25 +14,18 @@ $FindBin::Script CMD [OPTIONS]
 CMD:
   idlist | Get ID list of a sequence file
   length | Print sequence length
-  sort   | Sort sequences by name
+  sort   | Sort sequences by name/sizes
   rmdesc | Remove sequence descriptions
+  getseq | Get sequences by ID pattern
 
 USAGE
     exit;
 }
 
-sub read_commands{
-    usage unless @ARGV;
-    my @cmd = qw/idlist length sort rmdesc/;
-    my %cmd = map{$_ => 1}@cmd;
-    my $cmd = shift @ARGV;
-    warn "Unrecognized command: $cmd!\n" and usage unless $cmd{$cmd};
-    return $cmd;
-}
-
 sub main{
-    my $cmd = read_commands;
+    usage unless @ARGV;
+    my $cmd = shift @ARGV;
     fasta_cmd($cmd);
 }
 
-main;
+main() unless caller;
