@@ -17,14 +17,14 @@ sub print_fasta_usage{
         getseq => qq/\n  -p,--pattern STR    Pattern for sequence IDs/
     );
 
-    my $opt_desc = $opt_desc{$cmd};
+    my $opt_desc = $opt_desc{$cmd} // '';
 
     print <<USAGE;
 
 $FindBin::Script $cmd [OPTIONS]
 
   [-i,--input] <FILE>
-  -o,--output  <FILE>$opt_desc
+  -o,--output  <FILE> Default to STDOUT$opt_desc
   -h,--help
 
 USAGE
