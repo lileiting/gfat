@@ -54,10 +54,12 @@ sub get_options{
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
 
     my $in_io = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
+    my $out_io= Bio::SeqIO->new(-fh => $out_fh,-format => q/fasta/);
 
     return {
         in_io => $in_io,
-        out_fh => $out_fh, 
+        out_fh => $out_fh,
+        out_io => $out_io, 
         sizes => $sizes, 
         desc => $desc,
         pattern => $pattern
@@ -66,10 +68,10 @@ sub get_options{
 
 sub idlist_fasta{
     my $options = get_options(q/idlist/);
-    my $in_io = $options->{in_io};
+    my $in = $options->{in_io};
     my $out_fh = $options->{out_fh};
     my $desc = $options->{desc};
-    while(my $seq = $in_io->next_seq){
+    while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,
                       $desc ? ' '.$seq->desc : '',
                       "\n";
@@ -79,9 +81,9 @@ sub idlist_fasta{
 
 sub length_fasta{
     my $options = get_options(q/length/);
-    my $in_io = $options->{in_io};
+    my $in = $options->{in_io};
     my $out_fh = $options->{out_fh};
-    while(my $seq = $in_io->next_seq){
+    while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
     exit;
@@ -89,12 +91,11 @@ sub length_fasta{
 
 sub sort_fasta{
     my $options = get_options(q/sort/);
-    my $in_io = $options->{in_io};
-    my $out_fh = $options->{out_fh};
+    my $in = $options->{in_io};
+    my $out = $options->{out_io};
     my $sizes = $options->{sizes};
     my @seqobjs;
-    while(my $seq = $in_io->next_seq){push @seqobjs, $seq}
-    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
+    while(my $seq = $in->next_seq){push @seqobjs, $seq}
     if($sizes){
         map{$out->write_seq($_)}(
             sort{$b->length <=> $a->length}
@@ -109,11 +110,10 @@ sub sort_fasta{
 
 sub rmdesc_fasta{
     my $options = get_options(q/rmdesc/);
-    my $in_io = $options->{in_io};
-    my $out_fh = $options->{out_fh};
-    my $out_io = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
-    while(my $seq = $in_io->next_seq){
-        $out_io->write_seq(
+    my $in = $options->{in_io};
+    my $out = $options->{out_io};
+    while(my $seq = $in->next_seq){
+        $out->write_seq(
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                  -seq => $seq->seq));
     }
@@ -122,11 +122,10 @@ sub rmdesc_fasta{
 
 sub getseq_fasta{
     my $options = get_options(q/getseq/);
-    my $in_io = $options->{in_io};
-    my $out_fh = $options->{out_fh};
+    my $in = $options->{in_io};
+    my $out = $options->{out_io};
     my $pattern = $options->{pattern};
-    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
-    while(my $seq = $in_io->next_seq){
+    while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
         $out->write_seq($seq) if $seqid =~ /$pattern/;
     }
