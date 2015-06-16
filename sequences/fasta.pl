@@ -26,6 +26,7 @@ USAGE
 sub main{
     usage unless @ARGV;
     my $cmd = shift @ARGV;
+    usage if $cmd eq q/-h/ or $cmd eq q/--help/;
     fasta_cmd($cmd);
 }
 

@@ -150,7 +150,8 @@ sub fasta_cmd{
     elsif($cmd eq q/rmdesc/){ rmdesc_fasta }
     elsif($cmd eq q/getseq/){ getseq_fasta }
     elsif($cmd eq q/translate/){ translate_cds}
-    else{die "Unrecognized command: $cmd!\n"}
+    else{die "Unrecognized command: $cmd!\n".
+             "Use -h or --help for help!\n"}
 }
 
 1;
