@@ -111,10 +111,11 @@ sub rmdesc_fasta{
     my $options = get_options(q/rmdesc/);
     my $in_io = $options->{in_io};
     my $out_fh = $options->{out_fh};
+    my $out_io = Bio::SeqIO->new(-fh => $out_fh, -format=>q/fasta/);
     while(my $seq = $in_io->next_seq){
-        my $seqid = $seq->display_id;
-        my $seqstr = format_seqstr($seq->seq);
-        print $out_fh qq/>$seqid\n$seqstr\n/;
+        $out_io->write_seq(
+            Bio::PrimarySeq->new(-display_id => $seq->display_id,
+                                 -seq => $seq->seq));
     }
     exit;
 }
