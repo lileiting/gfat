@@ -19,4 +19,4 @@ nytprof.out
 *.bs
 .*
 tmp.*
-/test/
+test/
