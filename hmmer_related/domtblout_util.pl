@@ -2,6 +2,7 @@
 
 use warnings;
 use strict;
+use Getopt::Long;
 use FindBin;
 use List::Util qw(max);
 
@@ -11,6 +12,9 @@ sub usage{
 perl $FindBin::Script <domtblout>
 
   Print uniq domains from a domtblout file
+
+  -d,--domain Print one domain per line [default]
+  -g,--gene   Print one gene per line
 
 USAGE
     exit;
@@ -78,8 +82,9 @@ sub print_domain{
     print "$gene\t$ali_from\t$ali_to\t$query\t$evalue\n";
 }
 
-sub print_uniq_domains {
+sub get_uniq_domains {
     my $data = shift;
+    my @uniq_domains;
     for my $gene (sort {$a cmp $b} keys %$data){
         my @domains = sort {$a->{ali_from} <=> 
                             $b->{ali_from}
@@ -91,16 +96,40 @@ sub print_uniq_domains {
             }
             my $end = $i;
             my $best = best_domain(@domains[$begin..$end]);
-            print_domain($best);
+            push @uniq_domains, $best;
         }
+    }
+    return \@uniq_domains;
+}
+
+sub print_domains{
+    my $domains = shift;
+    map{print_domain($_)}@$domains;
+}
+
+sub print_genes{
+    my $domains = shift;
+    my %genes;
+    map{push @{$genes{$_->{gene}}}, $_}@$domains;
+    for my $gene (sort {$a cmp $b} keys %genes){
+        my $pos = join(q/,/, map{$_->{ali_from}.q/-/.$_->{ali_to}}@{$genes{$gene}});
+        my $dom_info = join(q/,/, map{$_->{query}}@{$genes{$gene}});
+        print "$gene\t$pos\t$dom_info\n";
     }
 }
 
 sub main{
+    my ($print_domains, $print_genes);
+    GetOptions("domain" => \$print_domains, "gene" => \$print_genes);
+    $print_domains = 1 unless $print_domains or $print_genes;
+
     usage unless @ARGV;
     my $file = shift @ARGV;
     my $data = load_domtblout_file($file);
-    print_uniq_domains($data);
+    my $uniq_domains = get_uniq_domains($data);
+    print_domains($uniq_domains) if $print_domains;
+    print_genes($uniq_domains) if $print_genes;
+
 }
 
 main() unless caller;
