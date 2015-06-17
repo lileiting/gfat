@@ -12,14 +12,14 @@ sub usage{
 $FindBin::Script CMD [OPTIONS]
 
 CMD:
-  idlist    | Get ID list of a sequence file
-  length    | Print sequence length
-  sort      | Sort sequences by name/sizes
-  rmdesc    | Remove sequence descriptions
-  getseq    | Get sequences by ID pattern
+     idlist | Get ID list of a sequence file
+     length | Print sequence length
+       sort | Sort sequences by name/sizes
+     rmdesc | Remove sequence descriptions
+     getseq | Get sequences by ID pattern
   translate | Translate CDS to protein sequence
-  gc        | GC content
-  clean     | Clean irregular chars
+         gc | GC content
+      clean | Clean irregular chars
 
 USAGE
     exit;

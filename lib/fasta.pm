@@ -3,7 +3,6 @@ use warnings;
 use strict;
 use Getopt::Long;
 use Bio::Perl;
-use FormatSeqStr;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = qw(fasta_cmd);
@@ -147,8 +146,7 @@ sub count_gc{
     map{$char{$_}++}@char;
     my $gc = ($char{G} // 0) + ($char{C} // 0);
     my $at = ($char{A} // 0) + ($char{T} // 0);
-    my $non_atgc = length($str) - ($gc + $at);
-    return ($gc, $non_atgc);
+    return ($gc, $at);
 }
 
 sub gc_content{
@@ -157,14 +155,15 @@ sub gc_content{
     my $out = $options->{out_fh};
     my $total_len = 0;
     my $gc = 0;
-    my $non_atgc = 0;
+    my $at = 0;
     while(my $seq = $in->next_seq){
         $total_len += $seq->length;
-        my ($seq_gc, $seq_non_atgc) = count_gc($seq->seq);
+        my ($seq_gc, $seq_at) = count_gc($seq->seq);
         $gc += $seq_gc;
-        $non_atgc += $seq_non_atgc;
+        $at += $seq_at;
     }
-    printf $out "GC content: %.2f %%\n", $gc / $total_len * 100;
+    printf $out "GC content: %.2f %%\n", $gc / ($gc+$at) * 100;
+    my $non_atgc = $total_len - ($gc + $at);
     printf $out "Non-ATGC characters: %d of %d (%.2f %%)\n", 
                $non_atgc, $total_len, $non_atgc / $total_len * 100
            if $non_atgc;
