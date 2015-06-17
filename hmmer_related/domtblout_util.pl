@@ -15,15 +15,15 @@ perl $FindBin::Script <domtblout>
 
   -d,--domain Print one domain per line [default]
   -g,--gene   Print one gene per line
+  -h,--help   Print help
 
 USAGE
     exit;
 }
 
 sub load_domtblout_file{
-    my $file = shift;
-    my $data;
-    open my $fh, $file or die "$file: $!";
+    my $fh = shift;
+    my %data;
     while(<$fh>){
         next if /^\s*#/ or /^\s*$/;
         my @F            = split /\s+/;
@@ -41,7 +41,7 @@ sub load_domtblout_file{
         my $ali_to       = $F[18];
         my $env_from     = $F[19];
         my $env_to       = $F[20];
-        push @{$data->{$gene}},
+        push @{$data{$gene}},
             {gene     => $gene,
              query    => $query,
              evalue   => $evalue, 
@@ -49,8 +49,7 @@ sub load_domtblout_file{
              ali_from => $ali_from,
              ali_to   => $ali_to};
     }
-    close $fh;
-    return $data;
+    return \%data;
 }
 
 sub is_overlap{
@@ -119,13 +118,16 @@ sub print_genes{
 }
 
 sub main{
-    my ($print_domains, $print_genes);
-    GetOptions("domain" => \$print_domains, "gene" => \$print_genes);
+    GetOptions("domain" => \my $print_domains, 
+               "gene" => \my $print_genes,
+               "help" => \my $help);
+    usage if $help or (@ARGV == 0 and -t STDIN);
     $print_domains = 1 unless $print_domains or $print_genes;
 
-    usage unless @ARGV;
-    my $file = shift @ARGV;
-    my $data = load_domtblout_file($file);
+    my $fh = \*STDIN;
+    open $fh, "<", $ARGV[0] or die "$ARGV[0]: $!" if @ARGV;
+
+    my $data = load_domtblout_file($fh);
     my $uniq_domains = get_uniq_domains($data);
     print_domains($uniq_domains) if $print_domains;
     print_genes($uniq_domains) if $print_genes;
