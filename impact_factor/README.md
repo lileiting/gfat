@@ -52,9 +52,9 @@ Plant Science
 
 * [Nature Plants](http://www.nature.com/nplants/)
 * [Plant Cell](http://www.plantcell.org)
-* [Plant Journal](http://onlinelibrary.wiley.com/journal/10.1111/(ISSN\)1365-313X)
+* [Plant Journal](http://onlinelibrary.wiley.com/journal/10.1111/(ISSN)1365-313X)
 * [Plant Physiology](http://www.plantphysiology.org)
-* [New Phytologist](http://onlinelibrary.wiley.com/journal/10.1111/(ISSN\)1469-8137/)
+* [New Phytologist](http://onlinelibrary.wiley.com/journal/10.1111/(ISSN)1469-8137/)
 * [Trends in Plant Science](http://www.cell.com/trends/plant-science/home)
 * [Annual Review of Plant Biology](http://www.annualreviews.org/journal/arplant)
 * [Journal of Experimental Botany](http://jxb.oxfordjournals.org)
