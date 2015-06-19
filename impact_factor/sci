@@ -16,10 +16,10 @@ perl sci PATTERN
   as Perl regular expression, see the following examples.
 
   sci plant       # Means journals contain 'plant'
-  sci 'agri|hort'   # Means journal names contain 'agri' or 'hort'
+  sci 'agri|hort' # Means journal names contain 'agri' or 'hort'
   sci .           # Means all journals   
   sci ^nat        # Means journals start with 'nat'
-  sci sci\$        # Means journals end with 'sci'
+  sci sci\$       # Means journals end with 'sci'
 
 USAGE
     exit;
