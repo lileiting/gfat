@@ -6,6 +6,9 @@ The pattern will be considered as regular expression and is used to match journa
 names. Note that the pattern is case-insensitive and journal names are abbreviations,
 not full names.
 
+The year 2015 here means impact factor released in June 2015, the formal name of 
+this version of data is "2014 JCR Science Edition".
+
 Databases
 ------
 * [Google Scholar](https://scholar.google.com)
@@ -15,20 +18,30 @@ Databases
 Multidiscipline
 ------
 
-* [Nature](http://www.nature.com/nature/current_issue.html)
-* [Science](http://www.sciencemag.org/content/current)
-* [PNAS](http://www.pnas.org/content/current)
-* [Nature Communications](http://www.nature.com/ncomms/)
-* [Scientific Reports](http://www.nature.com/srep)
-* [PLoS One](http://www.plosone.org)
+* [Nature](http://www.nature.com/nature/current_issue.html) (IF:41.456, 2015)
+* [Science](http://www.sciencemag.org/content/current) (IF:33.611, 2015)
+* [PNAS](http://www.pnas.org/content/current) (IF:9.674, 2015)
+* [Nature Communications](http://www.nature.com/ncomms/) (IF:11.470, 2015)
+* [Scientific Reports](http://www.nature.com/srep) (IF:5.578, 2015)
+* [PLoS One](http://www.plosone.org) (IF:3.234, 2015)
+* [PeerJ](https://peerj.com) (IF:2.112, 2015)
+* [Chinese Science Bulletin](http://link.springer.com/journal/11434) (IF:1.579, 2015)
 
-Medicine and Cell Biology
+Medicine, General & Internal
 ------
 
-* [New England Journal of Medicine](http://www.nejm.org)
+* [New England Journal of Medicine](http://www.nejm.org) (IF:55.873, 2015)
+* [Lancet](http://www.thelancet.com) (IF:45.217, 2015)
+* [JAMA-J Am Med Assoc](http://jama.jamanetwork.com/journal.aspx) (IF:35.289, 2015)
+* [Plos Medicine](http://www.plosmedicine.orga) (IF:14.429, 2015)
+* [BMC Medicine](http://www.biomedcentral.com/bmcmed) (IF:7.249, 2015)
+
+
+Cell Biology
+------
+* [Nature Reviews in Molecular Cell Biology](http://www.nature.com/nrm/index.html)
 * [Cell](http://www.cell.com/cell/current)
 * [Cell Research](http://www.cell-research.com)
-* [Lancet](http://www.thelancet.com)
 
 Genetics
 ------
