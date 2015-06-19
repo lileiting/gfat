@@ -25,16 +25,14 @@ USAGE
     exit;
 }
 
-sub read_commands{
+sub get_pattern{
     usage unless @ARGV;
-    my $re = shift @ARGV;
-    return $re;
+    return $ARGV[0];
 }
 
 sub sci_data_file_name{
     my $filename = q/data_sci_2015.csv/;
-    my $dirname = $FindBin::RealBin;
-    my $fullname = File::Spec->catfile($dirname, $filename);
+    my $fullname = File::Spec->catfile($FindBin::RealBin, $filename);
     return $fullname;
 }
 
@@ -52,12 +50,12 @@ sub load_sci_data{
         $journal[$txt[0]]=[@txt];
     }
     close $fh;
-    return($title, @journal);
+    return($title, \@journal);
 }
 
-sub main{
-    my $re = read_commands;
-    my ($title, @journal) = load_sci_data;
+sub grep_journal{
+    my ($re, $title, $ref) = @_;
+    my @journal = @$ref;
 
     my @results;
     print STDERR "----Searching: $re\n";
@@ -66,16 +64,17 @@ sub main{
             push @results,$journal[$_];
         }
     }
-
-    unless(@results){
-        die "----WARNING: No journals found with names contain the text \"$re\"! Please specify another keyword.\n";
-    }
-
-    my $count=0;
+    die "----WARNING: No journals found with names contain the text \"$re\"! Please specify another keyword.\n" 
+        unless @results;
+    my $count = 0;
     foreach(sort{$b->[4] <=> $a->[4]}@results){
         $count++;
         printf("%4s:|IF=%8.3f |Articles=%6d |ISSN=$_->[2]|Name=$_->[1]\n",$count,$_->[4],$_->[7]?$_->[7]:0);
     }
 }
 
-main;
+sub main{
+    grep_journal(get_pattern(), load_sci_data());
+}
+
+main() unless caller;
