@@ -11,8 +11,18 @@ sub base_usage{
 perl $FindBin::Script CMD [OPTIONS]
 
   rmissing | remove rows with missing data("-")
+
   csv2tab  | Replace any comma to tab
   tab2csv  | Replace any tab to comma
+
+  win2linux| Replace \\r\\n to \\n
+  win2mac  | Replace \\r\\n to \\r
+  linux2win| Replace \\n to \\r\\n
+  linux2mac| Replace \\n to \\r
+  mac2win  | Replace \\r to \\r\\n
+  mac2linux| Replace \\r to \\n
+
+  maxlen   | Max line length
 
 USAGE
     exit;
@@ -21,9 +31,16 @@ USAGE
 sub base_main{
     base_usage unless @ARGV;
     my $cmd = shift @ARGV;
-    if(   $cmd eq q/rmissing/){ &rmissing } 
-    elsif($cmd eq q/csv2tab/ ){ &csv2tab  }
-    elsif($cmd eq q/tab2csv/ ){ &tab2csv  }
+    if(   $cmd eq q/rmissing/ ){ &rmissing  } 
+    elsif($cmd eq q/csv2tab/  ){ &csv2tab   }
+    elsif($cmd eq q/tab2csv/  ){ &tab2csv   }
+    elsif($cmd eq q/win2linux/){ &win2linux }
+    elsif($cmd eq q/win2mac/  ){ &win2mac   }
+    elsif($cmd eq q/linux2win/){ &linux2win }
+    elsif($cmd eq q/linux2mac/){ &linux2mac }
+    elsif($cmd eq q/mac2win/  ){ &mac2win   }
+    elsif($cmd eq q/mac2linux/){ &mac2linux }
+    elsif($cmd eq q/maxlen/   ){ &maxlen    }
     else{ warn "Unrecognized command: $cmd!\n"; base_usage }
 }
 
@@ -119,3 +136,40 @@ sub tab2csv{
         print $out_fh $_;
     }
 }
+
+#
+# Command win2linux, win2mac, linux2win, linux2mac, mac2win, mac2linux
+#
+
+sub new_line_convert{
+    my($from, $to) = @_;
+    my %new_line = (win   => "\r\n",
+                    linux => "\n",
+                    mac   => "\r");
+    my ($in_fh, $out_fh) = get_fh($from."2".$to);
+    local $/ = $new_line{$from};
+    local $\ = $new_line{$to};
+    while(<$in_fh>){ print $out_fh $_ }
+}
+
+sub win2linux { new_line_convert(qw/win linux/) }
+sub win2mac   { new_line_convert(qw/win mac/)   }
+sub linux2win { new_line_convert(qw/linux win/) }
+sub linux2mac { new_line_convert(qw/linux mac/) }
+sub mac2win   { new_line_convert(qw/mac win/)   }
+sub mac2linux { new_line_convert(qw/mac linux/) }
+
+# 
+# Max line length
+#
+
+sub maxlen{
+    my ($in_fh, $out_fh) = get_fh(q/maxlen/);
+    my $maxlen = 0;
+    while(<$in_fh>){
+        chomp;
+        $maxlen = length($_) if length($_) > $maxlen;
+    }
+    print $maxlen,"\n";
+}
+
