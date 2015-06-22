@@ -1,4 +1,4 @@
-package fasta;
+package Fasta;
 use warnings;
 use strict;
 use Getopt::Long;
