@@ -52,6 +52,7 @@ sub get_options{
     my $out_fh = \*STDOUT;
     open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
     $window_size ||= 1_000_000;
+    die "CAUTION: window size $window_size!\n" unless $window_size > 0;
 
     return {
         in_fh => $in_fh,
