@@ -74,7 +74,7 @@ sub load_file{
     my $count;
     while(<$in_fh>){
         $count++;
-        next unless /^(\S+)\s+(\S+)\s+(\d+)\s+(\d+)$/;
+        next unless /^(\S+)\s+(\S+)\s+(\d+)\s+(\d+)/;
         my ($id, $chr, $start, $end) = ($1,$2,$3,$4);
         my $type = get_type($id);
         %{$data{$id}} = (
