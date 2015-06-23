@@ -15,7 +15,7 @@ DESCRIPTION
     Assume the table contains four columns:
     ID    Chr    Start    End
     Particularly, the ID contains the type 
-    information, e.g. Pbr1_a2, underscore is required,
+    information, e.g. Gene1_a2, underscore is required,
     "a" is type, 2 will be ignored 
 
 SYNOPSIS
