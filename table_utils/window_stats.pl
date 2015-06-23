@@ -34,6 +34,10 @@ OPTIONS
     -w,--window    NUM
         Default: 1_000_000
 
+COPYRIGHT
+    Copyright (c) 2015 by Leiting Li
+    This program is part of GFATK (https://github.com/lileiting/gfatk)
+
 USAGE
     exit;
 }
