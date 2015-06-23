@@ -36,7 +36,8 @@ OPTIONS
 
 COPYRIGHT
     Copyright (c) 2015 by Leiting Li
-    This program is part of GFATK (https://github.com/lileiting/gfatk)
+    This program is part of GFATK, see https://github.com/lileiting/gfatk
+    for more information.
 
 USAGE
     exit;
