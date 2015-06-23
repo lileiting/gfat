@@ -12,45 +12,52 @@ sub usage{
 
 perl randseq.pl [OPTIONS]
 
-  Default print nuleotide sequences 100 bp
+  -n,--num NUM    
+     Number of sequences [default: 1]
 
-  -n,--num     Number of sequences [default: 1]
-  -a,--aa      Print amino acid sequences [default print nucleotides]
-  -p,--prefix  Prefix of sequence names [default: RandSeq]
-  -I,--min NUM Minimum length of sequence [defalt:100] 
-  -X,--max NUM Maximum length of sequence [defalt:100]
-  -h,--help    Print help
+  -m,--mode MODE  
+    Mode: nt|aa|cds, nucleotide sequences, amino acid sequences 
+                     or CDS [default nucleotide sequences]
+
+  -p,--prefix STR 
+    Prefix of sequence names [default: RandSeq]
+
+  -I,--min NUM 
+  -X,--max NUM 
+    Minimum and maximum length of sequence [both default:100]
+
+  -h,--help
+    Print help
 
 USAGE
     exit;
 }
 
-sub read_commands{
+sub get_options{
     my $help;
     my $num = 1;
-    my $aa;
     my $prefix = q/RandSeq/;
     my $min = 100;
     my $max = 100;
-    my $cds;
+    my $mode = q/nt/;
     GetOptions(
         "n|num=i"    => \$num,
-        "a|aa"       => \$aa,
         "p|prefix=s" => \$prefix,
         "I|min=i"    => \$min,
         "X|max=i"    => \$max,
-        "cds"        => \$cds,
+        "m|mode=s"   => \$mode,
         "h|help"     => \$help);
     usage if $help;
     die "ERROR: max length ($max), min length($min)\n" if $max < $min;
-    die "CAUTION: CDS and AA were both switched on!" if $cds and $aa;
+    my @modes = qw/nt cds aa/;
+    my %modes = map{$_, 1}@modes;
+    die "Undefined modes: $mode!\n" unless $modes{$mode};
     return {
         num    => $num,
         prefix => $prefix,
         min    => $min,
         max    => $max,
-        aa     => $aa,
-        cds    => $cds
+        mode   => $mode,
     };
 }
 
@@ -107,30 +114,38 @@ sub rand_seq{
     return join('', map{$char[int(rand(scalar(@char)))]}(1..$length));
 }
 
+sub get_unit_and_char{
+    my $mode = shift;
+    if($mode eq q/aa/){
+        return amino_acid
+    }elsif($mode eq q/cds/){
+        return non_stop_codon;
+    }elsif($mode eq q/nt/){
+        return nucleotide;
+    }else{die}
+}
+
+sub get_seqstr{
+    my ($mode, $length, @char) = @_;
+    my $seqstr    = rand_seq($mode eq 'cds' ? $length - 2 : $length, @char);
+    $seqstr = 'ATG'.$seqstr.rand_seq(1,stop_codon) if $mode eq 'cds';
+    $seqstr = format_seqstr($seqstr);
+    return $seqstr;
+}
+
 sub main{
-    my $para = read_commands;
-    my $num = $para->{num};
-    #my $length = $para->{seqlen};
-    my $min = $para->{min};
-    my $max = $para->{max};
-    my $aa = $para->{aa};
-    my $cds = $para->{cds};
-    my $prefix = $para->{prefix};
-    my ($unit, @char);
-    if($aa){
-        ($unit, @char) = amino_acid
-    }elsif($cds){
-        ($unit, @char) = non_stop_codon;
-    }else{
-        ($unit, @char) = nucleotide;
-    }
+    my $options = get_options;
+    my $num = $options->{num};
+    my $min = $options->{min};
+    my $max = $options->{max};
+    my $mode = $options->{mode};
+    my $prefix = $options->{prefix};
+    my ($unit, @char) = get_unit_and_char($mode);
 
     for my $n (1..$num){
         my $length = rand_length($min, $max);
         my $seqheader = qq/$prefix$n $length$unit/;
-        my $seqstr    = rand_seq( $cds ? $length - 2 : $length, @char);
-        $seqstr = 'ATG'.$seqstr.rand_seq(1,stop_codon) if $cds;
-        $seqstr = format_seqstr($seqstr);
+        my $seqstr = get_seqstr($mode, $length, @char);
         print ">$seqheader\n$seqstr\n";
     }
 }
