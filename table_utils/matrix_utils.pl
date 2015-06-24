@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Getopt::Long;
 use FindBin;
+use List::Util qw(sum max min);
 
 sub base_usage{
     print <<USAGE;
@@ -25,6 +26,18 @@ perl $FindBin::Script CMD [OPTIONS]
   length   | Print length of each line
   maxlen   | Max line length
 
+  rowsum   | Print sum for each row of a matrix (first row is title, 
+             first column is observation name)
+  rowmax   | Print maximum number for each row
+  rowmin   | Print minimum number for each row
+  colsum   | Print column sum of a matrix
+  colmax   | Print maximum number for each column
+  colmin   | Print minimum number for each column
+  sum      | Print sum for the whole matrix
+  max      | Print maximum for the whole matrix
+  min      | Print minimum for the whole matrix
+  size     | Print matrix size, number of rows, columns
+
 USAGE
     exit;
 }
@@ -41,8 +54,18 @@ sub base_main{
     elsif($cmd eq q/linux2mac/){ &linux2mac }
     elsif($cmd eq q/mac2win/  ){ &mac2win   }
     elsif($cmd eq q/mac2linux/){ &mac2linux }
-    elsif($cmd eq q/length/   ){ &length    }
+    elsif($cmd eq q/length/   ){ &line_length}
     elsif($cmd eq q/maxlen/   ){ &maxlen    }
+    elsif($cmd eq q/rowsum/   ){ &rowsum    }
+    elsif($cmd eq q/rowmax/   ){ &rowmax    }
+    elsif($cmd eq q/rowmin/   ){ &rowmin    }
+    elsif($cmd eq q/colsum/   ){ &colsum    }
+    elsif($cmd eq q/colmax/   ){ &colmax    }
+    elsif($cmd eq q/colmin/   ){ &colmin    }
+    elsif($cmd eq q/sum/      ){ &matrix_sum}
+    elsif($cmd eq q/max/      ){ &matrix_max}
+    elsif($cmd eq q/min/      ){ &matrix_min}   
+    elsif($cmd eq q/size/     ){ &matrix_size}
     else{ warn "Unrecognized command: $cmd!\n"; base_usage }
 }
 
@@ -165,11 +188,11 @@ sub mac2linux { new_line_convert(qw/mac linux/) }
 # Max line length
 #
 
-sub length{
-    my ($in_fh, $out_fh) = get_fh(q/maxlen/);
+sub line_length{
+    my ($in_fh, $out_fh) = get_fh(q/length/);
     while(<$in_fh>){
         chomp;
-        print length($_), "\n";
+        print $out_fh length($_), "\n";
     }
 }
 
@@ -180,6 +203,97 @@ sub maxlen{
         chomp;
         $maxlen = length($_) if length($_) > $maxlen;
     }
-    print $maxlen,"\n";
+    print $out_fh $maxlen,"\n";
 }
+
+#
+# Print min, max, sum, average etc ...
+#
+
+sub read_table{
+    my $in_fh = shift;
+    my %matrix;
+    $matrix{num_rows} = -1;
+    while(<$in_fh>){
+        next if /^\s*#/ or /^\s*$/;
+        $matrix{num_rows}++;
+        chomp;
+        my @F = split /\t/;
+        if($matrix{num_rows} == 0){
+            $matrix{num_cols} = scalar(@F) - 1;
+            $matrix{name}->{col} = [@F];
+            next;
+        }
+        $matrix{name}->{row}->[$matrix{num_rows}] = $F[0];
+        $matrix{row}->[$matrix{num_rows}] = [@F[1..$#F]];
+    }
+    return \%matrix;
+}
+
+sub apply{
+    my ($cmd, @num) = @_;
+    if($cmd eq q/sum/){
+        return sum(@num);
+    }elsif($cmd eq q/max/){
+        return max(@num);
+    }elsif($cmd eq q/min/){
+        return min(@num);
+    }else{die "CMD: $cmd"}
+}
+
+sub matrix_row_process{
+   my $cmd = shift;
+   my ($in_fh, $out_fh) = get_fh(qq/row$cmd/);
+   my $matrix = read_table($in_fh);
+   for my $row (1 .. $matrix->{num_rows}){
+       print $out_fh $matrix->{name}->{row}->[$row], "\t", 
+             apply($cmd, @{$matrix->{row}->[$row]}), 
+             "\n";
+   }
+}
+
+sub rowsum{&matrix_row_process(q/sum/)}
+sub rowmax{&matrix_row_process(q/max/)}
+sub rowmin{&matrix_row_process(q/min/)}
+
+sub matrix_col_process{
+   my $cmd = shift;
+   my ($in_fh, $out_fh) = get_fh(qq/col$cmd/);
+   my $matrix = read_table($in_fh);
+   for my $col (1 .. $matrix->{num_cols}){
+       print $out_fh $matrix->{name}->{col}->[$col], "\t",
+             apply($cmd, map{$matrix->{row}->[$_]->[$col-1]}(1..$matrix->{num_rows})),
+             "\n";
+   }
+}
+
+sub colsum{&matrix_col_process(q/sum/)}
+sub colmax{&matrix_col_process(q/max/)}
+sub colmin{&matrix_col_process(q/min/)}
+
+sub matrix_process_all{
+    my $cmd = shift;
+    my ($in_fh, $out_fh) = get_fh($cmd);
+    my $title = <$in_fh>;
+    my @array;
+    while(<$in_fh>){
+        chomp;
+        my @F = split /\t/;
+        push @array, @F[1..$#F];
+    }
+    print $out_fh apply($cmd, @array),"\n";
+    
+}
+
+sub matrix_sum{&matrix_process_all(q/sum/)}
+sub matrix_max{&matrix_process_all(q/max/)}
+sub matrix_min{&matrix_process_all(q/min/)}
+
+sub matrix_size{
+    my ($in_fh, $out_fh) = get_fh(qq/size/);
+    my $matrix = read_table($in_fh);
+    print $out_fh "Row\t", $matrix->{num_rows}, "\nColumn\t",$matrix->{num_cols},"\n";
+
+}
+
 
