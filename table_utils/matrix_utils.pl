@@ -11,8 +11,6 @@ sub base_usage{
 
 perl $FindBin::Script CMD [OPTIONS]
 
-  rmissing | remove rows with missing data("-")
-
   csv2tab  | Replace any comma to tab
   tab2csv  | Replace any tab to comma
 
@@ -37,6 +35,12 @@ perl $FindBin::Script CMD [OPTIONS]
   max      | Print maximum for the whole matrix
   min      | Print minimum for the whole matrix
   size     | Print matrix size, number of rows, columns
+
+  rmissing | Remove rows with missing data("-")
+  rm1      | Remove rows with value less than 1
+  groupbest| Get best observation for each group, group name is 
+             inside observation name, i.e. for Gene1|A, "A" is 
+             group name
 
 USAGE
     exit;
@@ -66,6 +70,8 @@ sub base_main{
     elsif($cmd eq q/max/      ){ &matrix_max}
     elsif($cmd eq q/min/      ){ &matrix_min}   
     elsif($cmd eq q/size/     ){ &matrix_size}
+    elsif($cmd eq q/rm1/      ){ &rm1       }
+    elsif($cmd eq q/groupbest/){ &groupbest }
     else{ warn "Unrecognized command: $cmd!\n"; base_usage }
 }
 
@@ -118,28 +124,6 @@ sub get_fh{
     my $in_fh = $options->{in_fh};
     my $out_fh = $options->{out_fh};
     return ($in_fh, $out_fh);
-}
-
-#
-# Command rmissing
-#
-
-sub present_missing{
-    my $line = shift;
-    chomp $line;
-    my @F = split /\s+/;
-    for my $i (@F){
-        return 1 if $i eq q/-/;
-    }
-    return 0;
-}
-
-sub rmissing{
-    my ($in_fh, $out_fh) = get_fh(q/rmissing/);
-    while(<$in_fh>){
-        next if present_missing($_);
-        print $out_fh $_;
-    }
 }
 
 #
@@ -296,4 +280,83 @@ sub matrix_size{
 
 }
 
+#
+# Command rmissing
+#
 
+sub present_missing{
+    my $line = shift;
+    chomp $line;
+    my @F = split /\t/;
+    for my $i (@F[1..$#F]){
+        return 1 if $i eq q/-/;
+    }
+    return 0;
+}
+
+sub less_than_1{
+    my $line = shift;
+    chomp $line;
+    my @F = split /\t/;
+    for my $i (@F[1..$#F]){
+        return 1 if $i < 1;
+    }
+    return 0;
+}
+
+sub rmissing{
+    my ($in_fh, $out_fh) = get_fh(q/rmissing/);
+    my $c = 0;
+    while(<$in_fh>){
+        $c++;
+        next if $c == 1; 
+        next if present_missing($_);
+        print $out_fh $_;
+    }
+}
+
+sub rm1{
+    my ($in_fh, $out_fh) = get_fh(q/rm1/);
+    my $c = 0;
+    while(<$in_fh>){
+        $c++;
+        next if $c == 1;
+        next if less_than_1($_);
+        print $out_fh $_;
+    }
+}
+
+sub get_group{
+    my $str = shift;
+    die "String: $str" unless $str =~ /^\S+?\|(\S+)$/;
+    return $1; 
+}
+
+sub by_sum{
+    my ($array_ref) = shift;
+    return sum(@$array_ref);
+}
+
+sub get_best_obs{
+    my ($matrix, @rows) = @_;
+    my @sorted = sort{by_sum($matrix->{row}->[$b]) <=> 
+                      by_sum($matrix->{row}->[$a])}@rows;
+    my $best = $sorted[0];
+    return join("\t", $matrix->{name}->{row}->[$best],
+                      @{$matrix->{row}->[$best]})."\n";
+}
+
+sub groupbest{
+    my ($in_fh, $out_fh) = get_fh(q/groupbest/);
+    my $matrix = read_table($in_fh);
+    my %groups;
+    for my $row (1..$matrix->{num_rows}){
+        my $id = $matrix->{name}->{row}->[$row];
+        my $group = get_group($id);
+        push @{$groups{$group}}, $row;
+    }
+    for my $group (sort {$a cmp $b} keys %groups){
+        my @rows = @{$groups{$group}};
+        print $out_fh get_best_obs($matrix, @rows);
+    }
+}
