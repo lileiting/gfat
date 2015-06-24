@@ -22,6 +22,7 @@ perl $FindBin::Script CMD [OPTIONS]
   mac2win  | Replace \\r to \\r\\n
   mac2linux| Replace \\r to \\n
 
+  length   | Print length of each line
   maxlen   | Max line length
 
 USAGE
@@ -40,6 +41,7 @@ sub base_main{
     elsif($cmd eq q/linux2mac/){ &linux2mac }
     elsif($cmd eq q/mac2win/  ){ &mac2win   }
     elsif($cmd eq q/mac2linux/){ &mac2linux }
+    elsif($cmd eq q/length/   ){ &length    }
     elsif($cmd eq q/maxlen/   ){ &maxlen    }
     else{ warn "Unrecognized command: $cmd!\n"; base_usage }
 }
@@ -162,6 +164,14 @@ sub mac2linux { new_line_convert(qw/mac linux/) }
 # 
 # Max line length
 #
+
+sub length{
+    my ($in_fh, $out_fh) = get_fh(q/maxlen/);
+    while(<$in_fh>){
+        chomp;
+        print length($_), "\n";
+    }
+}
 
 sub maxlen{
     my ($in_fh, $out_fh) = get_fh(q/maxlen/);
