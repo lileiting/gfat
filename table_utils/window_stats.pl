@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Getopt::Long;
 use FindBin;
+use List::Util qw(max);
 
 sub usage{
     print <<USAGE;
@@ -24,6 +25,7 @@ SYNOPSIS
     $FindBin::Script -i input.txt
     $FindBin::Script input.txt -o output.txt
     $FindBin::Script input.txt -w 500000
+    cat input.txt | $FindBin::Script
 
 OPTIONS
     [-i,--input]   FILE
@@ -68,9 +70,8 @@ sub get_options{
 
 sub get_type{
     my $str = shift;
-    my (undef, $type) = split /_/, $str;
-    $type =~ s/\d//g;
-    return $type;
+    die "ERROR in ID: $str\n" unless $str =~ /^[^_]+_([A-Za-z]+)/;
+    return $1;
 } 
 
 sub load_file{
@@ -115,8 +116,7 @@ sub by_number{
     my $chr = shift;
     die "CAUTION: Chromosome name $chr\n" 
         unless $chr =~ /^\S*?(\d+)$/; 
-    $chr =~ s/^\S*?(\d+)$/$1/;
-    return $chr;
+    return $1;
 }
 
 sub get_unit{
@@ -133,7 +133,8 @@ sub print_results{
     my $title = join("\t", qq/Chr Pos($unit)/, @types)."\n";  
     print $out_fh $title;
     for my $chr (sort {by_number($a) <=> by_number($b)} keys %{$results->{stats}}){
-        for my $pos (sort{$a <=> $b}(keys %{$results->{stats}->{$chr}})){
+        my $max_pos = max(keys %{$results->{stats}->{$chr}});
+        for my $pos (1..$max_pos){
             print $out_fh join("\t", $chr, $pos, 
                           map{$results->{stats}->{$chr}->{$pos}->{$_} // 0}
                           @types), "\n";
