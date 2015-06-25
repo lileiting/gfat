@@ -310,10 +310,8 @@ sub less_than_1{
 
 sub rmissing{
     my ($in_fh, $out_fh) = get_fh(q/rmissing/);
-    my $c = 0;
     while(<$in_fh>){
-        $c++;
-        next if $c == 1; 
+        print and next if $. == 1; 
         next if present_missing($_);
         print $out_fh $_;
     }
