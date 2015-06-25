@@ -293,7 +293,7 @@ sub present_missing{
     chomp $line;
     my @F = split /\t/;
     for my $i (@F[1..$#F]){
-        return 1 if $i eq q/-/;
+        return 1 if $i =~ /^\s*-\s*$/;
     }
     return 0;
 }
