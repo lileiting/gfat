@@ -9,25 +9,17 @@ use List::Util qw(max);
 sub usage{
     print <<USAGE;
 
-NAME
-    $FindBin::Script - A script to get window statistics from a gene positions file
-
-DESCRIPTION
+  $FindBin::Script [OPTIONS]
+    
+    A script to get window statistics from 
+    a gene positions file.
     Assume the table contains four columns:
     ID    Chr    Start    End
     Particularly, the ID contains the type 
-    information, e.g. Gene1_a2, underscore is required,
-    "a" is type, 2 will be ignored 
+    information, e.g. Gene1_a2, underscore 
+    is required, "a" is type, 2 will be 
+    ignored.
 
-SYNOPSIS
-    $FindBin::Script [OPTIONS]
-    $FindBin::Script input.txt
-    $FindBin::Script -i input.txt
-    $FindBin::Script input.txt -o output.txt
-    $FindBin::Script input.txt -w 500000
-    cat input.txt | $FindBin::Script
-
-OPTIONS
     [-i,--input]   FILE
 
     -o,--output    FILE
@@ -35,11 +27,6 @@ OPTIONS
 
     -w,--window    NUM
         Default: 1_000_000
-
-COPYRIGHT
-    Copyright (c) 2015 by Leiting Li
-    This program is part of GFATK, see https://github.com/lileiting/gfatk
-    for more information.
 
 USAGE
     exit;
