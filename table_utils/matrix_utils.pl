@@ -42,6 +42,8 @@ perl $FindBin::Script CMD [OPTIONS]
              inside observation name, i.e. for Gene1|A, "A" is 
              group name
 
+  log      | Print log for each number, e as base
+
 USAGE
     exit;
 }
@@ -72,6 +74,7 @@ sub base_main{
     elsif($cmd eq q/size/     ){ &matrix_size}
     elsif($cmd eq q/rm1/      ){ &rm1       }
     elsif($cmd eq q/groupbest/){ &groupbest }
+    elsif($cmd eq q/log/      ){ &math_log }
     else{ warn "Unrecognized command: $cmd!\n"; base_usage }
 }
 
@@ -204,18 +207,19 @@ sub read_table{
         chomp;
         my @F = split /\t/;
         if($matrix{num_rows} == 0){
+            $matrix{title} = "$_\n";
             $matrix{num_cols} = scalar(@F) - 1;
             $matrix{name}->{col} = [@F];
             next;
         }
         $matrix{name}->{row}->[$matrix{num_rows}] = $F[0];
-        $matrix{row}->[$matrix{num_rows}] = [@F[1..$#F]];
+        $matrix{row}->[$matrix{num_rows}] = [@F];
     }
     return \%matrix;
 }
 
 sub apply{
-    my ($cmd, @num) = @_;
+    my ($cmd, $id, @num) = @_;
     if($cmd eq q/sum/){
         return sum(@num);
     }elsif($cmd eq q/max/){
@@ -246,7 +250,7 @@ sub matrix_col_process{
    my $matrix = read_table($in_fh);
    for my $col (1 .. $matrix->{num_cols}){
        print $out_fh $matrix->{name}->{col}->[$col], "\t",
-             apply($cmd, map{$matrix->{row}->[$_]->[$col-1]}(1..$matrix->{num_rows})),
+             apply($cmd, map{$matrix->{row}->[$_]->[$col]}(1..$matrix->{num_rows})),
              "\n";
    }
 }
@@ -320,7 +324,7 @@ sub rm1{
     my $c = 0;
     while(<$in_fh>){
         $c++;
-        next if $c == 1;
+        print and next if $c == 1;
         next if less_than_1($_);
         print $out_fh $_;
     }
@@ -334,7 +338,7 @@ sub get_group{
 
 sub by_sum{
     my ($array_ref) = shift;
-    return sum(@$array_ref);
+    return sum(@{$array_ref}[1..$#{$array_ref}]);
 }
 
 sub get_best_obs{
@@ -342,8 +346,7 @@ sub get_best_obs{
     my @sorted = sort{by_sum($matrix->{row}->[$b]) <=> 
                       by_sum($matrix->{row}->[$a])}@rows;
     my $best = $sorted[0];
-    return join("\t", $matrix->{name}->{row}->[$best],
-                      @{$matrix->{row}->[$best]})."\n";
+    return join("\t",@{$matrix->{row}->[$best]})."\n";
 }
 
 sub groupbest{
@@ -355,8 +358,31 @@ sub groupbest{
         my $group = get_group($id);
         push @{$groups{$group}}, $row;
     }
+    print $out_fh $matrix->{title};
     for my $group (sort {$a cmp $b} keys %groups){
         my @rows = @{$groups{$group}};
         print $out_fh get_best_obs($matrix, @rows);
+    }
+}
+
+#
+# Operation 
+#
+
+sub math_log{
+    my $options = get_options(q/op/);
+    my $in_fh = $options->{in_fh};
+    my $out_fh = $options->{out_fh};
+    my $expression = $options->{expression};
+    my $matrix = read_table($in_fh);
+    print $out_fh $matrix->{title};
+    for my $row (1..$matrix->{num_rows}){
+        print $out_fh $matrix->{name}->{row}->[$row];
+        for my $col (1..$matrix->{num_cols}){
+            my $cell = $matrix->{row}->[$row]->[$col];
+            my $result = log($cell);
+            print $out_fh "\t$result";
+        }
+        print $out_fh "\n";
     }
 }
