@@ -11,18 +11,15 @@ sub base_usage{
 
 perl $FindBin::Script CMD [OPTIONS]
 
+  Dealing with matrix.
+  Matrix was defined as, 
+  1) one row per observation
+  2) one column per sample, 
+  3) frist row is sample names, 
+  4) first column is observation names
+
   csv2tab  | Replace any comma to tab
   tab2csv  | Replace any tab to comma
-
-  win2linux| Replace \\r\\n to \\n
-  win2mac  | Replace \\r\\n to \\r
-  linux2win| Replace \\n to \\r\\n
-  linux2mac| Replace \\n to \\r
-  mac2win  | Replace \\r to \\r\\n
-  mac2linux| Replace \\r to \\n
-
-  length   | Print length of each line
-  maxlen   | Max line length
 
   rowsum   | Print sum for each row of a matrix (first row is title, 
              first column is observation name)
@@ -54,14 +51,6 @@ sub base_main{
     if(   $cmd eq q/rmissing/ ){ &rmissing  } 
     elsif($cmd eq q/csv2tab/  ){ &csv2tab   }
     elsif($cmd eq q/tab2csv/  ){ &tab2csv   }
-    elsif($cmd eq q/win2linux/){ &win2linux }
-    elsif($cmd eq q/win2mac/  ){ &win2mac   }
-    elsif($cmd eq q/linux2win/){ &linux2win }
-    elsif($cmd eq q/linux2mac/){ &linux2mac }
-    elsif($cmd eq q/mac2win/  ){ &mac2win   }
-    elsif($cmd eq q/mac2linux/){ &mac2linux }
-    elsif($cmd eq q/length/   ){ &line_length}
-    elsif($cmd eq q/maxlen/   ){ &maxlen    }
     elsif($cmd eq q/rowsum/   ){ &rowsum    }
     elsif($cmd eq q/rowmax/   ){ &rowmax    }
     elsif($cmd eq q/rowmin/   ){ &rowmin    }
@@ -149,49 +138,6 @@ sub tab2csv{
     }
 }
 
-#
-# Command win2linux, win2mac, linux2win, linux2mac, mac2win, mac2linux
-#
-
-sub new_line_convert{
-    my($from, $to) = @_;
-    my %new_line = (win   => "\r\n",
-                    linux => "\n",
-                    mac   => "\r");
-    my ($in_fh, $out_fh) = get_fh($from."2".$to);
-    local $/ = $new_line{$from};
-    local $\ = $new_line{$to};
-    while(<$in_fh>){ print $out_fh $_ }
-}
-
-sub win2linux { new_line_convert(qw/win linux/) }
-sub win2mac   { new_line_convert(qw/win mac/)   }
-sub linux2win { new_line_convert(qw/linux win/) }
-sub linux2mac { new_line_convert(qw/linux mac/) }
-sub mac2win   { new_line_convert(qw/mac win/)   }
-sub mac2linux { new_line_convert(qw/mac linux/) }
-
-# 
-# Max line length
-#
-
-sub line_length{
-    my ($in_fh, $out_fh) = get_fh(q/length/);
-    while(<$in_fh>){
-        chomp;
-        print $out_fh length($_), "\n";
-    }
-}
-
-sub maxlen{
-    my ($in_fh, $out_fh) = get_fh(q/maxlen/);
-    my $maxlen = 0;
-    while(<$in_fh>){
-        chomp;
-        $maxlen = length($_) if length($_) > $maxlen;
-    }
-    print $out_fh $maxlen,"\n";
-}
 
 #
 # Print min, max, sum, average etc ...
