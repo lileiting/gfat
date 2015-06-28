@@ -29,20 +29,25 @@ USAGE
     exit;
 }
 
+sub functions_hash{
+    return (
+        win2linux  => &win2linux,
+        win2max    => &win2mac,
+        linux2win  => &linux2win,
+        linux2mac  => &linux2mac,
+        mac2win    => &mac2win,
+        mac2linux  => &mac2linux,
+        length     => &line_length,
+        maxlen     => &maxlen
+    );
+}
+
 sub base_main{
     base_usage unless @ARGV;
     my $cmd = shift @ARGV;
-       if($cmd eq q/win2linux/){ &win2linux }
-    elsif($cmd eq q/win2mac/  ){ &win2mac   }
-    elsif($cmd eq q/linux2win/){ &linux2win }
-    elsif($cmd eq q/linux2mac/){ &linux2mac }
-    elsif($cmd eq q/mac2win/  ){ &mac2win   }
-    elsif($cmd eq q/mac2linux/){ &mac2linux }
-
-    elsif($cmd eq q/length/   ){ &line_length}
-    elsif($cmd eq q/maxlen/   ){ &maxlen    }
-
-    else{ warn "Unrecognized command: $cmd!\n"; base_usage }
+    my %functions = functions_hash;
+    $functions{$cmd} //  warn "Unrecognized command: $cmd!\n" and base_usage;
+    exit;
 }
 
 base_main() unless caller;
