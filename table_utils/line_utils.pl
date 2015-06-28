@@ -25,6 +25,8 @@ perl $FindBin::Script CMD [OPTIONS]
   length   | Print length of each line
   maxlen   | Max line length
 
+  cc       | Character count
+
 USAGE
     exit;
 }
@@ -38,7 +40,8 @@ sub functions_hash{
         mac2win    => \&mac2win,
         mac2linux  => \&mac2linux,
         length     => \&line_length,
-        maxlen     => \&maxlen
+        maxlen     => \&maxlen,
+        cc         => \&char_count,
     );
 }
 
@@ -154,6 +157,42 @@ sub maxlen{
         $maxlen = length($_) if length($_) > $maxlen;
     }
     print $out_fh $maxlen,"\n";
+    close_fh($in_fh, $out_fh);
+}
+
+# 
+# Character count
+#
+
+sub get_char_count{
+    my $in_fh = shift;
+    my %char;
+    my $char = '';
+    while(read($in_fh, $char, 1)){
+        my $ord = ord($char);
+        $char{$ord}++;
+    }
+    return %char;
+}
+
+sub decode{
+    if($_[0] >= 33 and $_[0] <= 126){
+        return chr($_[0])
+    }else{
+        return "chr($_[0])";
+    }
+}
+
+sub char_count{
+    my ($in_fh, $out_fh) = get_fh(q/cc/);
+    my %char = get_char_count($in_fh);
+
+    for my $ord (sort {$a <=> $b} keys %char){
+        my $num = $char{$ord};
+        my $char = decode($ord);
+        print "$ord\t$char\t$num\n";
+    }
+
     close_fh($in_fh, $out_fh);
 }
 
