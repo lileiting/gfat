@@ -31,14 +31,14 @@ USAGE
 
 sub functions_hash{
     return (
-        win2linux  => &win2linux,
-        win2max    => &win2mac,
-        linux2win  => &linux2win,
-        linux2mac  => &linux2mac,
-        mac2win    => &mac2win,
-        mac2linux  => &mac2linux,
-        length     => &line_length,
-        maxlen     => &maxlen
+        win2linux  => \&win2linux,
+        win2max    => \&win2mac,
+        linux2win  => \&linux2win,
+        linux2mac  => \&linux2mac,
+        mac2win    => \&mac2win,
+        mac2linux  => \&mac2linux,
+        length     => \&line_length,
+        maxlen     => \&maxlen
     );
 }
 
@@ -46,8 +46,7 @@ sub base_main{
     base_usage unless @ARGV;
     my $cmd = shift @ARGV;
     my %functions = functions_hash;
-    $functions{$cmd} //  warn "Unrecognized command: $cmd!\n" and base_usage;
-    exit;
+    &{$functions{$cmd}} //  warn "Unrecognized command: $cmd!\n" and base_usage;
 }
 
 base_main() unless caller;
@@ -124,7 +123,7 @@ sub new_line_convert{
     local $/ = $new_line{$from};
     local $\ = $new_line{$to};
     while(<$in_fh>){ print $out_fh $_ }
-    close_fh ($in_fh, $out_fh);
+    close_fh($in_fh, $out_fh);
 }
 
 sub win2linux { new_line_convert(qw/win linux/) }
@@ -144,7 +143,7 @@ sub line_length{
         chomp;
         print $out_fh length($_), "\n";
     }
-    close_fh ($in_fh, $out_fh);
+    close_fh($in_fh, $out_fh);
 }
 
 sub maxlen{
@@ -155,6 +154,6 @@ sub maxlen{
         $maxlen = length($_) if length($_) > $maxlen;
     }
     print $out_fh $maxlen,"\n";
-    close_fh ($in_fh, $out_fh);
+    close_fh($in_fh, $out_fh);
 }
 
