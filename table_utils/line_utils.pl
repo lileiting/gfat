@@ -53,7 +53,7 @@ sub base_main{
     base_usage unless @ARGV;
     my $cmd = shift @ARGV;
     my %functions = functions_hash;
-    &{$functions{$cmd}} //  warn "Unrecognized command: $cmd!\n" and base_usage;
+    $functions{$cmd} ? &{$functions{$cmd}} : (warn "Unrecognized command: $cmd!\n" and base_usage);
 }
 
 base_main() unless caller;
