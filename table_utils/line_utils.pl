@@ -96,6 +96,16 @@ sub get_fh{
     return ($in_fh, $out_fh);
 }
 
+sub close_fh{
+    my @fhs = @_;
+    for my $fh (@fhs){
+        close $fh unless 
+               $fh eq \*STDIN  or 
+               $fh eq \*STDOUT or 
+               $fh eq \*STDERR;
+    }
+}
+
 #
 # Command win2linux, win2mac, linux2win, linux2mac, mac2win, mac2linux
 #
@@ -109,6 +119,7 @@ sub new_line_convert{
     local $/ = $new_line{$from};
     local $\ = $new_line{$to};
     while(<$in_fh>){ print $out_fh $_ }
+    close_fh ($in_fh, $out_fh);
 }
 
 sub win2linux { new_line_convert(qw/win linux/) }
@@ -128,6 +139,7 @@ sub line_length{
         chomp;
         print $out_fh length($_), "\n";
     }
+    close_fh ($in_fh, $out_fh);
 }
 
 sub maxlen{
@@ -138,5 +150,6 @@ sub maxlen{
         $maxlen = length($_) if length($_) > $maxlen;
     }
     print $out_fh $maxlen,"\n";
+    close_fh ($in_fh, $out_fh);
 }
 
