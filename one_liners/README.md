@@ -1,7 +1,7 @@
-Perl-one-liners
+Perl/Linux one-liners
 ======
 
-Collection of tricks of Perl one-liners
+Collection of tricks of Perl/Linux one-liners
 
 Print hello world
 
@@ -32,6 +32,13 @@ Print the length of each line
 
     cat input.txt | perl -lne 'print length($_)'
     seq 1 10 | perl -lne 'print length($_)'
+
+Print the maximum line lengths (available for GNU version 
+[wc](https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html), 
+not available for BSD version wc)
+
+    wc -L input.txt
+    wc --max-line-length input.txt
 
 Split a text file into characters and count the number of them
 
