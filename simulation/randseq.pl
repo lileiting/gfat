@@ -150,4 +150,4 @@ sub main{
     }
 }
 
-main;
+main() unless caller;
