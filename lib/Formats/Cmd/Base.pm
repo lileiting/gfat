@@ -22,30 +22,28 @@ USAGE
     exit;
 }
 
-sub get_options{
+sub get_opt{
     my $cmd = shift;
+    my %opt;
     GetOptions(
-        "input=s"  => \my $infile,
-        "output=s" => \my $outfile,
-        "help"     => \my $help
+        "input=s"  => \$opt{infile},
+        "output=s" => \$opt{outfile},
+        "help"     => \$opt{help}
     );
-    cmd_usage($cmd) if $help or (!$infile and @ARGV == 0 and -t STDIN);
-    my ($in_fh, $out_fh) = (\*STDIN, \*STDOUT);
-    $infile = shift @ARGV if (!$infile and @ARGV > 0);
-    open $in_fh, "<", $infile or die "$infile: $!" if $infile;
-    open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
+    cmd_usage($cmd) if $opt{help} or (!$opt{infile} and @ARGV == 0 and -t STDIN);
+    ($opt{in_fh}, $opt{out_fh}) = (\*STDIN, \*STDOUT);
+    $opt{infile} = shift @ARGV if (!$opt{infile} and @ARGV > 0);
+    open $opt{in_fh}, "<", $opt{infile} or die "$opt{infile}: $!" if $opt{infile};
+    open $opt{out_fh}, ">", $opt{outfile} or die "$opt{outfile}: $!" if $opt{outfile};
 
-    return {
-        in_fh => $in_fh,
-        out_fh => $out_fh
-    };
+    return \%opt;
 }
 
 sub get_fh{
     my $cmd = shift;
-    my $options = get_options($cmd);
-    my $in_fh = $options->{in_fh};
-    my $out_fh = $options->{out_fh};
+    my $opt = get_opt($cmd);
+    my $in_fh = $opt->{in_fh};
+    my $out_fh = $opt->{out_fh};
     return ($in_fh, $out_fh);
 }
 
