@@ -66,9 +66,8 @@ sub get_options{
 
 sub get_fh{
     my $cmd = shift;
-    my $opt = get_opt($cmd);
-    my $in_fh = $opt->{in_fh};
-    my $out_fh = $opt->{out_fh};
+    my $options = get_options($cmd);
+    my ($in_fh, $out_fh) = @{$options}{qw/in_fh out_fh/};
     return ($in_fh, $out_fh);
 }
 

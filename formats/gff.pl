@@ -152,7 +152,7 @@ sub print_intron_number      { print_gene_information(q/intronnum/) }
 #
 
 sub print_type_number{
-    my $options = get_options(q/type/, "H|header", "Print header");
+    my $options = get_options(q/type/, "H|header" => "Print header");
     my ($in_fh, $out_fh, $header) = @{$options}{qw/in_fh out_fh header/};
     my $data = load_gff_file($in_fh);
     my %types;
