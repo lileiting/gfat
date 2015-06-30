@@ -2,10 +2,10 @@
 
 use warnings;
 use strict;
-use Getopt::Long;
+#use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base qw(get_fh close_fh);
+use Formats::Cmd::Base qw(get_fh close_fh get_options);
 
 sub usage{
     print <<USAGE;
@@ -13,14 +13,18 @@ sub usage{
   $FindBin::Script CMD <GFF>
 
   Commands:
-    chrlist   | Print chromosome list   
+
+  Chromosome based output
+    chrlist   | Print chromosome list  
+
+  Gene based output 
     genelist  | Print gene list
     exonnum   | Print exon number for each gene
     intronnum | Print intron number for each gene
-
     geneinfo  | Print gene information, including gene
                 name, exon number, intron number, etc
 
+  Type based output
     type      | Print the number of entries for each type
 
 USAGE
@@ -148,7 +152,8 @@ sub print_intron_number      { print_gene_information(q/intronnum/) }
 #
 
 sub print_type_number{
-    my ($in_fh, $out_fh) = get_fh(q/type/);
+    my $options = get_options(q/type/, "H|header", "Print header");
+    my ($in_fh, $out_fh, $header) = @{$options}{qw/in_fh out_fh header/};
     my $data = load_gff_file($in_fh);
     my %types;
     for my $gene (sort {$a cmp $b} keys %$data){
@@ -156,11 +161,11 @@ sub print_type_number{
              $types{$type} += scalar( @{$data->{$gene}->{$type}} );
         }
     }
+    print "Type\tNumber\n" if $header;
     for my $type ( sort {$a cmp $b} keys %types){
         my $value = $types{$type};
         print $out_fh "$type\t$value\n";
     }
     close_fh($in_fh, $out_fh);
 }
-
 
