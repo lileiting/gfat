@@ -1,10 +1,10 @@
-package FormatSeqStr;
+package Formats::FormatSeqStr;
 use warnings;
 use strict;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
-@EXPORT = qw(format_seqstr);
-@EXPORT_OK = @EXPORT;
+@EXPORT = ();
+@EXPORT_OK = qw(format_seqstr);
 
 sub format_seqstr{
     my $str = shift;

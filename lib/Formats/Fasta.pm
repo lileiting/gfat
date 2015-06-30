@@ -1,12 +1,12 @@
-package Fasta;
+package Formats::Fasta;
 use warnings;
 use strict;
 use Getopt::Long;
 use Bio::Perl;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
-@EXPORT = qw(fasta_cmd);
-@EXPORT_OK = @EXPORT;
+@EXPORT = ();
+@EXPORT_OK = qw(fasta_cmd);
 
 sub print_fasta_usage{
     my $cmd = shift;

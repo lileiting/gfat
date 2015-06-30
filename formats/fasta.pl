@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Fasta;
+use Formats::Fasta qw(fasta_cmd);
 
 sub usage{
     print <<USAGE;
