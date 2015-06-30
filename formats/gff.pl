@@ -125,23 +125,16 @@ sub number_of_exons{
 sub number_of_introns{ return number_of_exons(@_) - 1; }
 
 sub print_gene_information{
-    my $cmd = shift // '';
+    my $cmd = shift // 'geneinfo';
+    my $exon = 1 if $cmd eq q/exonnum/ or $cmd eq q/geneinfo/;
+    my $intron = 1 if $cmd eq q/intronnum/ or $cmd eq q/geneinfo/;
     my ($in_fh, $out_fh) = get_fh($cmd);
     my $data = load_gff_file($in_fh);
     for my $gene (sort {by_number($a) <=> by_number($b)} keys %$data){
-        if($cmd eq q/genelist/){
-            print "$gene\n";
-        }elsif($cmd eq q/exonnum/){
-            my $exon_number = number_of_exons($data,$gene);
-            print $out_fh "$gene\t$exon_number\n";
-        }elsif($cmd eq q/intronnum/){
-            my $intron_number = number_of_introns($data, $gene);
-            print $out_fh "$gene\t$intron_number\n";
-        }else{
-            my $exon_number = number_of_exons($data,$gene);
-            my $intron_number = number_of_introns($data, $gene);
-            print $out_fh "$gene\t$exon_number\t$intron_number\n";
-        }
+        print $out_fh "$gene";
+        print $out_fh "\t",  number_of_exons($data,$gene) if $exon;
+        print $out_fh "\t",number_of_introns($data,$gene) if $intron;
+        print $out_fh "\n";
     }
     close_fh($in_fh, $out_fh);
 }
