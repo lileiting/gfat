@@ -5,8 +5,8 @@ use FindBin;
 use Getopt::Long;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
-@EXPORT = qw(get_fh close_fh);
-@EXPORT_OK = @EXPORT;
+@EXPORT = ();
+@EXPORT_OK = qw(get_fh close_fh);
 
 sub cmd_usage{
     my $cmd = shift;

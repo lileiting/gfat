@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base;
+use Formats::Cmd::Base qw(get_fh close_fh);
 
 sub usage{
     print <<USAGE;
