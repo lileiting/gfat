@@ -13,17 +13,25 @@ sub usage{
   $FindBin::Script CMD <GFF>
 
   Commands:
-    chrlist  | Print chromosome list   
-    genelist | Print gene list
+    chrlist   | Print chromosome list   
+    genelist  | Print gene list
+    exonnum   | Print exon number for each gene
+    intronnum | Print intron number for each gene
+
+    geneinfo  | Print gene information, including gene
+                name, exon number, intron number, etc
 
 USAGE
-   exit; 
+   exit;
 }
 
 sub get_functions{
     return (
         chrlist   => \&print_chromosome_list, 
         genelist  => \&print_gene_list,
+        exonnum   => \&print_exon_number,
+        intronnum => \&print_intron_number,
+        geneinfo  => \&print_gene_information,
     );
 }
 
@@ -77,6 +85,10 @@ sub load_gff_file{
     return \%data;
 }
 
+# 
+# Print by chromosome
+# 
+
 sub by_number{
     my $str = shift;
     die "Where is the number in Chromosome/scaffold name: $str???" 
@@ -98,13 +110,40 @@ sub print_chromosome_list{
     close_fh($in_fh, $out_fh);
 }
 
-sub print_gene_list{
-    my ($in_fh, $out_fh) = get_fh(q/chrlist/);
+#
+# Print by gene
+#
+
+sub number_of_exons{
+    my ($data, $gene) = @_;
+    return scalar(@{$data->{$gene}->{CDS}});
+}
+
+sub number_of_introns{ return number_of_exons(@_) - 1; }
+
+sub print_gene_information{
+    my $cmd = shift // '';
+    my ($in_fh, $out_fh) = get_fh($cmd);
     my $data = load_gff_file($in_fh);
-    my %genes;
     for my $gene (sort {by_number($a) <=> by_number($b)} keys %$data){
-        print "$gene\n";
+        if($cmd eq q/genelist/){
+            print "$gene\n";
+        }elsif($cmd eq q/exonnum/){
+            my $exon_number = number_of_exons($data,$gene);
+            print $out_fh "$gene\t$exon_number\n";
+        }elsif($cmd eq q/intronnum/){
+            my $intron_number = number_of_introns($data, $gene);
+            print $out_fh "$gene\t$intron_number\n";
+        }else{
+            my $exon_number = number_of_exons($data,$gene);
+            my $intron_number = number_of_introns($data, $gene);
+            print $out_fh "$gene\t$exon_number\t$intron_number\n";
+        }
     }
     close_fh($in_fh, $out_fh);
 }
+
+sub print_gene_list          { print_gene_information(q/genelist/ ) }
+sub print_exon_number        { print_gene_information(q/exonnum/  ) }
+sub print_intron_number      { print_gene_information(q/intronnum/) }
 
