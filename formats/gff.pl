@@ -21,6 +21,8 @@ sub usage{
     geneinfo  | Print gene information, including gene
                 name, exon number, intron number, etc
 
+    type      | Print the number of entries for each type
+
 USAGE
    exit;
 }
@@ -32,6 +34,7 @@ sub get_functions{
         exonnum   => \&print_exon_number,
         intronnum => \&print_intron_number,
         geneinfo  => \&print_gene_information,
+        type      => \&print_type_number,
     );
 }
 
@@ -146,4 +149,25 @@ sub print_gene_information{
 sub print_gene_list          { print_gene_information(q/genelist/ ) }
 sub print_exon_number        { print_gene_information(q/exonnum/  ) }
 sub print_intron_number      { print_gene_information(q/intronnum/) }
+
+#
+# Print by type
+#
+
+sub print_type_number{
+    my ($in_fh, $out_fh) = get_fh(q/type/);
+    my $data = load_gff_file($in_fh);
+    my %types;
+    for my $gene (sort {$a cmp $b} keys %$data){
+        for my $type (keys %{$data->{$gene}}){
+             $types{$type} += scalar( @{$data->{$gene}->{$type}} );
+        }
+    }
+    for my $type ( sort {$a cmp $b} keys %types){
+        my $value = $types{$type};
+        print $out_fh "$type\t$value\n";
+    }
+    close_fh($in_fh, $out_fh);
+}
+
 
