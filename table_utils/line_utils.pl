@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base qw(get_fh close_fh);
+use Formats::Cmd::Base qw(get_fh close_fh get_options);
 use List::Util qw(sum max min);
 
 sub base_usage{
@@ -14,15 +14,10 @@ sub base_usage{
 perl $FindBin::Script CMD [OPTIONS]
 
   Dealing with plain file formats line by line.
-  Convert line seperator among win, mac, and linux
+  Convert line separator among win, mac, and linux
   Count line length and maximum length
 
-  win2linux| Replace \\r\\n to \\n
-  win2mac  | Replace \\r\\n to \\r
-  linux2win| Replace \\n to \\r\\n
-  linux2mac| Replace \\n to \\r
-  mac2win  | Replace \\r to \\r\\n
-  mac2linux| Replace \\r to \\n
+  linesep  | Line separator convert (win/mac/linux)
 
   length   | Print length of each line
   maxlen   | Max line length
@@ -37,12 +32,7 @@ USAGE
 
 sub functions_hash{
     return (
-        win2linux  => \&win2linux,
-        win2max    => \&win2mac,
-        linux2win  => \&linux2win,
-        linux2mac  => \&linux2mac,
-        mac2win    => \&mac2win,
-        mac2linux  => \&mac2linux,
+        linesep    => \&line_separator_convert,
         length     => \&line_length,
         maxlen     => \&maxlen,
         cc         => \&char_count,
@@ -65,27 +55,28 @@ base_main() unless caller;
 ###################
 
 #
-# Command win2linux, win2mac, linux2win, linux2mac, mac2win, mac2linux
+# Line separator convert
 #
 
-sub new_line_convert{
-    my($from, $to) = @_;
-    my %new_line = (win   => "\r\n",
+sub line_separator_convert{
+    my $options = get_options(qw/linesep/, 
+                      "from=s" => "win/mac/linux/auto (Default: Auto)",
+                      "to=s"   => "win/mac/linux (Default: Linux)"
+                  );
+    my ($in_fh, $out_fh, $from, $to) = @{$options}{qw/in_fh out_fh from to/};
+    die "ERROR: from and to should all be defined\n" unless $from and $to;
+    die "ERROR: $from! It should be win/mac/linux" 
+        unless $from =~ /win|mac|linux/i;
+    die "ERROR: $to! It should be win/mac/linux"
+        unless $to =~ /win|mac|linux/i;
+    my %line_sep = (win   => "\r\n",
                     linux => "\n",
                     mac   => "\r");
-    my ($in_fh, $out_fh) = get_fh($from."2".$to);
-    local $/ = $new_line{$from};
-    local $\ = $new_line{$to};
-    while(<$in_fh>){ print $out_fh $_ }
+    local $/ = $line_sep{"\L$from\E"};
+    local $\ = $line_sep{"\L$to\E"};
+    while(<$in_fh>){ chomp; print $out_fh $_ }
     close_fh($in_fh, $out_fh);
 }
-
-sub win2linux { new_line_convert(qw/win linux/) }
-sub win2mac   { new_line_convert(qw/win mac/)   }
-sub linux2win { new_line_convert(qw/linux win/) }
-sub linux2mac { new_line_convert(qw/linux mac/) }
-sub mac2win   { new_line_convert(qw/mac win/)   }
-sub mac2linux { new_line_convert(qw/mac linux/) }
 
 # 
 # Max line length

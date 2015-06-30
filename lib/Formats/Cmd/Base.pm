@@ -66,7 +66,7 @@ sub key_in_opt{
     my $opt_name = shift;
     die "Option name ERROR: $opt_name!!!\n"
         unless $opt_name =~ /^(([A-Za-z])\|)?([a-z]+)(=[ifso])?$/;
-    return ($3, $2);
+    return ($3, $2 // '');
 }
 
 =head2 cmd_usage
@@ -74,6 +74,8 @@ sub key_in_opt{
   Title   : cmd_usage
   Usage   : cmd_usage(q/cmd/);
             cmd_usage(q/cmd/, "header" => "Print header");
+            my $options = get_options(q/cmd/, "header" => "Print header",
+                                              "footer" => "Print footer");
 
   Function: Print formated command usage
 
