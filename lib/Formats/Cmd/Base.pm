@@ -23,7 +23,7 @@ sub cmd_usage{
         my ($long_option, $short_option) = key_in_opt($opt);
         $short_option = "-$short_option," if $short_option;
         $long_option  = "--$long_option";
-        push @add_options, "    $short_option$long_option  $desc\n";
+        push @add_options, "    $short_option$long_option        $desc\n";
     }
 
     print <<USAGE;
