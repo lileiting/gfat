@@ -44,7 +44,32 @@ use Getopt::Long qw(:config no_ignore_case);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(get_fh close_fh get_options);
+@EXPORT_OK = qw(get_fh close_fh get_options base_main);
+
+=head2 base_main
+
+  Title   : base_main
+  Usage   : base_main(\&functions, \&base_usage);
+            base_main(\&functions, \&base_usage) unless caller;
+
+  Function: Run functions for given command
+
+  Returns : Nothing
+
+  Args    : The subroutine reference for functions defination
+            and the base usage subroutine reference
+
+=cut
+
+sub base_main{
+    my ($functions_ref, $base_usage_ref) = @_;
+    $base_usage_ref->() unless @ARGV;
+    my $cmd = shift @ARGV;
+    my %functions = $functions_ref->();
+    $functions{$cmd} ? &{$functions{$cmd}} : 
+        (warn "Unrecognized command: $cmd!\n" 
+         and $base_usage_ref->());
+}
 
 =head2 key_in_opt
 

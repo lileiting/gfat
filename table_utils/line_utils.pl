@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base qw(get_fh close_fh get_options);
+use Formats::Cmd::Base qw(get_fh close_fh get_options base_main);
 use List::Util qw(sum max min);
 
 sub base_usage{
@@ -41,14 +41,7 @@ sub functions_hash{
     );
 }
 
-sub base_main{
-    base_usage unless @ARGV;
-    my $cmd = shift @ARGV;
-    my %functions = functions_hash;
-    $functions{$cmd} ? &{$functions{$cmd}} : (warn "Unrecognized command: $cmd!\n" and base_usage);
-}
-
-base_main() unless caller;
+base_main(\&functions_hash, \&base_usage) unless caller;
 
 ###################
 # Define commands #
