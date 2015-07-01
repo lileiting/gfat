@@ -169,7 +169,7 @@ sub gc_content{
            if $non_atgc;
 }
 
-sub clean{
+sub clean_fasta{
     my $options = get_options(q/clean/);
     my $in = $options->{in_io};
     my $out= $options->{out_io};
@@ -178,6 +178,15 @@ sub clean{
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                  -description => $seq->desc,
                                  -seq => join('', grep{/[A-Za-z*]/}split(//, $seq->seq))));
+    }
+}
+
+sub revcom_fasta{
+    my $options = get_options(q/clean/);
+    my $in = $options->{in_io};
+    my $out= $options->{out_io};
+    while(my $seq = $in->next_seq){
+        $out->write_seq($seq->revcom);
     }
 }
 
@@ -192,7 +201,8 @@ sub fasta_cmd{
     elsif($cmd eq q/getseq/   ){ getseq_fasta }
     elsif($cmd eq q/translate/){ translate_cds}
     elsif($cmd eq q/gc/       ){ gc_content   }
-    elsif($cmd eq q/clean/    ){ clean        }
+    elsif($cmd eq q/clean/    ){ clean_fasta  }
+    elsif($cmd eq q/revcom/   ){ revcom_fasta }
     else{die "Unrecognized command: $cmd!\n".
              "Use -h or --help for help!\n"}
 }

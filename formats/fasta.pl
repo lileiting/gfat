@@ -20,6 +20,7 @@ CMD:
   translate | Translate CDS to protein sequence
          gc | GC content
       clean | Clean irregular chars
+     revcom | Reverse complementary sequences
 
 USAGE
     exit;
