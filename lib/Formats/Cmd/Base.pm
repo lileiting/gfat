@@ -62,10 +62,10 @@ use base qw(Exporter);
 =cut
 
 sub base_main{
-    my ($functions_ref, $base_usage_ref) = @_;
+    my ($functions_hash_ref, $base_usage_ref) = @_;
     $base_usage_ref->() unless @ARGV;
     my $cmd = shift @ARGV;
-    my %functions = $functions_ref->();
+    my %functions = %$functions_hash_ref;
     $functions{$cmd} ? &{$functions{$cmd}} : 
         (warn "Unrecognized command: $cmd!\n" 
          and $base_usage_ref->());

@@ -31,17 +31,17 @@ USAGE
 }
 
 sub functions_hash{
-    return (
+    return {
         linesep    => \&line_separator_convert,
         length     => \&line_length,
         maxlen     => \&maxlen,
         cc         => \&char_count,
         vcc        => \&visible_char_count,
         ivcc       => \&invisible_char_count,
-    );
+    };
 }
 
-base_main(\&functions_hash, \&base_usage) unless caller;
+base_main(functions_hash(), \&base_usage) unless caller;
 
 ###################
 # Define commands #
