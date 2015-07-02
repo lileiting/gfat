@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use Getopt::Long;
 use Bio::Perl;
+use Formats::Cmd::BioBase qw(get_seqio);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
@@ -182,9 +183,10 @@ sub clean_fasta{
 }
 
 sub revcom_fasta{
-    my $options = get_options(q/clean/);
-    my $in = $options->{in_io};
-    my $out= $options->{out_io};
+#    my $options = get_options(q/clean/);
+#    my $in = $options->{in_io};
+#    my $out= $options->{out_io};
+    my ($in, $out) = get_seqio(q/clean/);
     while(my $seq = $in->next_seq){
         $out->write_seq($seq->revcom);
     }
