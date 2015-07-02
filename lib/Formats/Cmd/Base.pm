@@ -49,8 +49,8 @@ use base qw(Exporter);
 =head2 base_main
 
   Title   : base_main
-  Usage   : base_main(\&functions, \&base_usage);
-            base_main(\&functions, \&base_usage) unless caller;
+  Usage   : base_main($functions_hash_ref, \&base_usage);
+            base_main($functions_hash_ref, \&base_usage) unless caller;
 
   Function: Run functions for given command
 
@@ -71,21 +71,21 @@ sub base_main{
          and $base_usage_ref->());
 }
 
-=head2 key_in_opt
+#=head2 key_in_opt
 
-  Title   : key_in_opt
-  Usage   : my ($long_option) = key_in_opt($opt_name);
-            my ($long_option, $short_option) = key_in_opt($opt_name);
+#  Title   : key_in_opt
+#  Usage   : my ($long_option) = key_in_opt($opt_name);
+#            my ($long_option, $short_option) = key_in_opt($opt_name);
 
-  Function: Analyze the option defination for GetOptions, like 
-            "h|help", "i|input=s", "header", etc
+#  Function: Analyze the option defination for GetOptions, like 
+#            "h|help", "i|input=s", "header", etc
 
-  Returns : an array, first element is the long option, second
-            element is the short option
+#  Returns : an array, first element is the long option, second
+#            element is the short option
 
-  Args    : One string
+#  Args    : One string
 
-=cut
+#=cut
 
 sub key_in_opt{
     my $opt_name = shift;
