@@ -29,13 +29,6 @@ USAGE
     exit;
 }
 
-sub main{
-    base_usage unless @ARGV;
-    my $cmd = shift @ARGV;
-    base_usage if $cmd eq q/-h/ or $cmd eq q/--help/;
-    fasta_cmd($cmd);
-}
-
 sub functions_hash{
     return {
         idlist    => \&idlist_fasta ,
@@ -51,7 +44,6 @@ sub functions_hash{
 }
 
 base_main(&functions_hash, \&base_usage);
-#main() unless caller;
 
 #############################
 # Defination of subcommands #
@@ -231,9 +223,6 @@ sub clean_fasta{
 }
 
 sub revcom_fasta{
-#    my $options = get_options(q/clean/);
-#    my $in = $options->{in_io};
-#    my $out= $options->{out_io};
     my ($in, $out) = get_seqio(q/clean/);
     while(my $seq = $in->next_seq){
         $out->write_seq($seq->revcom);
