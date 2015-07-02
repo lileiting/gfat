@@ -7,7 +7,7 @@ use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
 use Formats::Cmd::Base qw(base_main);
-use Formats::Cmd::BioBase qw(get_seqio);
+use Formats::Cmd::BioBase qw(get_seqio close_seqio);
 
 sub base_usage{
     print <<USAGE;
@@ -218,6 +218,7 @@ sub clean_fasta{
                                  -description => $seq->desc,
                                  -seq => join('', grep{/[A-Za-z*]/}split(//, $seq->seq))));
     }
+    close_seqio($in, $out);
 }
 
 sub revcom_fasta{
@@ -225,6 +226,7 @@ sub revcom_fasta{
     while(my $seq = $in->next_seq){
         $out->write_seq($seq->revcom);
     }
+    close_seqio($in, $out);
 }
 
 __END__

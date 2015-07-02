@@ -38,7 +38,7 @@ use Formats::Cmd::Base qw(get_fh);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(get_seqio);
+@EXPORT_OK = qw(get_seqio close_seqio);
 
 =head2 get_seqio
 
