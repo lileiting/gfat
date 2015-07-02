@@ -211,9 +211,7 @@ sub gc_content{
 }
 
 sub clean_fasta{
-    my $options = get_options(q/clean/);
-    my $in = $options->{in_io};
-    my $out= $options->{out_io};
+    my ($in, $out) = get_seqio(q/clean/);
     while(my $seq = $in->next_seq){
         $out->write_seq(
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
