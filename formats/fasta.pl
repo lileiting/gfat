@@ -148,15 +148,12 @@ sub sort_fasta{
 }
 
 sub rmdesc_fasta{
-    my $options = cmd_options(q/rmdesc/);
-    my $in = $options->{in_io};
-    my $out = $options->{out_io};
+    my ($in, $out) = get_seqio(q/rmdesc/);
     while(my $seq = $in->next_seq){
         $out->write_seq(
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                  -seq => $seq->seq));
     }
-    exit;
 }
 
 sub getseq_fasta{
