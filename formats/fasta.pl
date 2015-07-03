@@ -172,9 +172,7 @@ sub getseq_fasta{
 }
 
 sub translate_cds{
-    my $options = get_options(q/translate/);
-    my $in = $options->{in_io};
-    my $out = $options->{out_io};
+    my ($in, $out) = get_seqio(q/translate/);
     while(my $seq = $in->next_seq){
         $out->write_seq(translate($seq));
     }
