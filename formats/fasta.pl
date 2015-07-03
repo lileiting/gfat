@@ -107,27 +107,16 @@ sub cmd_options{
 }
 
 sub idlist_fasta{
-    my $options = cmd_options(q/idlist/);
-    my $in = $options->{in_io};
-    my $out_fh = $options->{out_fh};
-    my $desc = $options->{desc};
+    my $options = get_options(q/idlist/, 
+        "d|desc" => "Print description in header");
+    my ($in_fh, $out_fh, $desc) = @{$options}{qw/in_fh out_fh desc/};
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
     while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,
                       $desc ? ' '.$seq->desc : '',
                       "\n";
     }
-    exit;
 }
-
-#sub length_fasta{
-#    my $options = cmd_options(q/length/);
-#    my $in = $options->{in_io};
-#    my $out_fh = $options->{out_fh};
-#    while(my $seq = $in->next_seq){
-#        print $out_fh $seq->display_id,"\t",$seq->length,"\n";
-#    }
-#    exit;
-#}
 
 sub length_fasta{
     my $options = get_options(q/length/);
