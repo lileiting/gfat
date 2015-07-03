@@ -128,10 +128,11 @@ sub length_fasta{
 }
 
 sub sort_fasta{
-    my $options = cmd_options(q/sort/);
-    my $in = $options->{in_io};
-    my $out = $options->{out_io};
-    my $sizes = $options->{sizes};
+    my $options = get_options(q/sort/, 
+        "s|sizes" => "Sort by sizes (default by ID name)");
+    my ($in_fh, $out_fh, $sizes) = @{$options}{qw/in_fh out_fh sizes/};
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
+    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=> q/fasta/);
     my @seqobjs;
     while(my $seq = $in->next_seq){push @seqobjs, $seq}
     if($sizes){
