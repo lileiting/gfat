@@ -156,6 +156,7 @@ USAGE
 sub get_options{
     my ($cmd, @opt) = @_;
     my %opt;
+    die "Command was undefined!" unless $cmd;
     die "CMD: $cmd, OPTION: @opt" unless @opt % 2 == 0;
     my @add_options;
     for(my $i = 0; $i < @opt; $i+= 2){
@@ -182,6 +183,7 @@ sub get_options{
 
   Title   : get_fh
   Usage   : my ($in_fh, $out_fh) = get_fh(q/cmd/);
+            my ($in_fh, $out_fh, $options) = get_fh(q/cmd/);
 
   Function: An shortcuts for simply get the input and output filehandles
             without additional options.
@@ -194,10 +196,9 @@ sub get_options{
 =cut
 
 sub get_fh{
-    my $cmd = shift;
-    my $options = get_options($cmd);
+    my $options = get_options(@_);
     my ($in_fh, $out_fh) = @{$options}{qw/in_fh out_fh/};
-    return ($in_fh, $out_fh);
+    return ($in_fh, $out_fh, $options);
 }
 
 =head2 close_fh

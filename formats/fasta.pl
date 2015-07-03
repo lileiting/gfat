@@ -185,8 +185,7 @@ sub count_gc{
 }
 
 sub gc_content{
-    my $options = cmd_options(q/gc/);
-    my $in = $options->{in_io};
+    my ($in, undef, $options) = get_seqio(q/gc/);
     my $out = $options->{out_fh};
     my $total_len = 0;
     my $gc = 0;

@@ -9,6 +9,7 @@ Formats::Cmd::BioBase - Base modules that used for build commands
   # For simple options with only input, output and help
   my $cmd = shift @ARGV // die;
   my ($in_seqio, $out_seqio) = get_fh($cmd);
+  my ($in_seqio, $out_seqio, $options) = get_fh($cmd);
   ...
   close_seqio($in_seqio, $out_seqio);
 
@@ -56,11 +57,10 @@ use base qw(Exporter);
 =cut
 
 sub get_seqio{
-    my $cmd = shift // die "Command name not defined!";
-    my($in_fh, $out_fh) = get_fh($cmd);
+    my($in_fh, $out_fh, $options) = get_fh(@_);
     my $in_io = Bio::SeqIO->new(-fh => $in_fh, -format=>'fasta');
     my $out_io = Bio::SeqIO->new(-fh => $out_fh, -format=>'fasta');
-    return ($in_io, $out_io);
+    return ($in_io, $out_io, $options);
 }
 
 =head2 close_seqio
