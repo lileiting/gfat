@@ -49,63 +49,6 @@ base_main(&functions_hash, \&base_usage);
 # Defination of subcommands #
 #############################
 
-sub print_fasta_usage{
-    my $cmd = shift;
-    my %opt_desc = (
-        sort   => qq/\n  -s,--sizes          Sort sequences by sizes/, 
-        idlist => qq/\n  -d,--desc           With description/,
-        getseq => qq/\n  -p,--pattern STR    Pattern for sequence IDs/
-    );
-
-    my $opt_desc = $opt_desc{$cmd} // '';
-
-    print <<USAGE;
-
-$FindBin::Script $cmd [OPTIONS]
-
-  [-i,--input] <FILE>
-  -o,--output  <FILE> Default to STDOUT$opt_desc
-  -h,--help
-
-USAGE
-    exit;
-}
-
-sub cmd_options{
-    my $cmd = shift;
-    my ($infile, $outfile, $in_fh, $out_fh);
-    my $pattern;
-    my ($sizes, $desc, $help);
-    GetOptions(
-        "i|input=s"  => \$infile,
-        "o|output=s" => \$outfile,
-        "s|sizes"    => \$sizes,
-        "d|desc"     => \$desc,
-        "p|pattern=s"=> \$pattern,
-        "h|help"     => \$help
-    );
-    print_fasta_usage($cmd) if $help or (!$infile and @ARGV == 0 and -t STDIN);
-    print_fasta_usage($cmd) if $cmd eq q/getseq/ and !$pattern;
-
-    $in_fh = \*STDIN;
-    $infile = shift @ARGV if !$infile and @ARGV > 0;
-    open $in_fh, "<", $infile or die "$infile: $!" if $infile;
-    $out_fh = \*STDOUT;
-    open $out_fh, ">", $outfile or die "$outfile: $!" if $outfile;
-
-    my $in_io = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
-    my $out_io= Bio::SeqIO->new(-fh => $out_fh,-format => q/fasta/);
-
-    return {
-        in_io => $in_io,
-        out_fh => $out_fh,
-        out_io => $out_io, 
-        sizes => $sizes, 
-        desc => $desc,
-        pattern => $pattern
-    };
-}
-
 sub idlist_fasta{
     my $options = get_options(q/idlist/, 
         "d|desc" => "Print description in header");
@@ -157,9 +100,8 @@ sub rmdesc_fasta{
 }
 
 sub getseq_fasta{
-    my $options = cmd_options(q/getseq/);
-    my $in = $options->{in_io};
-    my $out = $options->{out_io};
+    my ($in, $out, $options) = get_seqio(q/getseq/, 
+        "p|pattern" => "Pattern for sequence IDs");
     my $pattern = $options->{pattern};
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
