@@ -6,7 +6,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
-use Formats::Cmd::Base qw(base_main);
+use Formats::Cmd::Base qw(get_options base_main);
 use Formats::Cmd::BioBase qw(get_seqio close_seqio);
 
 sub base_usage{
@@ -71,7 +71,7 @@ USAGE
     exit;
 }
 
-sub get_options{
+sub cmd_options{
     my $cmd = shift;
     my ($infile, $outfile, $in_fh, $out_fh);
     my $pattern;
@@ -107,7 +107,7 @@ sub get_options{
 }
 
 sub idlist_fasta{
-    my $options = get_options(q/idlist/);
+    my $options = cmd_options(q/idlist/);
     my $in = $options->{in_io};
     my $out_fh = $options->{out_fh};
     my $desc = $options->{desc};
@@ -119,18 +119,27 @@ sub idlist_fasta{
     exit;
 }
 
+#sub length_fasta{
+#    my $options = cmd_options(q/length/);
+#    my $in = $options->{in_io};
+#    my $out_fh = $options->{out_fh};
+#    while(my $seq = $in->next_seq){
+#        print $out_fh $seq->display_id,"\t",$seq->length,"\n";
+#    }
+#    exit;
+#}
+
 sub length_fasta{
     my $options = get_options(q/length/);
-    my $in = $options->{in_io};
-    my $out_fh = $options->{out_fh};
+    my ($in_fh, $out_fh) = @{$options}{qw/in_fh out_fh/};
+    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>'fasta');
     while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
-    exit;
 }
 
 sub sort_fasta{
-    my $options = get_options(q/sort/);
+    my $options = cmd_options(q/sort/);
     my $in = $options->{in_io};
     my $out = $options->{out_io};
     my $sizes = $options->{sizes};
@@ -149,7 +158,7 @@ sub sort_fasta{
 }
 
 sub rmdesc_fasta{
-    my $options = get_options(q/rmdesc/);
+    my $options = cmd_options(q/rmdesc/);
     my $in = $options->{in_io};
     my $out = $options->{out_io};
     while(my $seq = $in->next_seq){
@@ -161,7 +170,7 @@ sub rmdesc_fasta{
 }
 
 sub getseq_fasta{
-    my $options = get_options(q/getseq/);
+    my $options = cmd_options(q/getseq/);
     my $in = $options->{in_io};
     my $out = $options->{out_io};
     my $pattern = $options->{pattern};
@@ -189,7 +198,7 @@ sub count_gc{
 }
 
 sub gc_content{
-    my $options = get_options(q/gc/);
+    my $options = cmd_options(q/gc/);
     my $in = $options->{in_io};
     my $out = $options->{out_fh};
     my $total_len = 0;

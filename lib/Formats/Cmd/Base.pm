@@ -156,7 +156,7 @@ USAGE
 sub get_options{
     my ($cmd, @opt) = @_;
     my %opt;
-    die "@opt" unless @opt % 2 == 0;
+    die "CMD: $cmd, OPTION: @opt" unless @opt % 2 == 0;
     my @add_options;
     for(my $i = 0; $i < @opt; $i+= 2){
         my ($opt, $desc) = @opt[$i, $i+1];
