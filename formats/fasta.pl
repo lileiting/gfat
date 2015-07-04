@@ -12,9 +12,10 @@ use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 sub base_usage{
     print <<USAGE;
 
-$FindBin::Script CMD [OPTIONS]
+Usage:
+    perl $FindBin::Script ACTION
 
-CMD:
+Available ACTIONs:
      idlist | Get ID list of a sequence file
      length | Print sequence length
        sort | Sort sequences by name/sizes
@@ -69,23 +70,15 @@ sub length_fasta{
 }
 
 sub sort_fasta{
-    my $options = get_options(q/sort/, 
+    my ($in, $out, $options) = get_seqio(q/sort/, 
         "s|sizes" => "Sort by sizes (default by ID name)");
-    my ($in_fh, $out_fh, $sizes) = @{$options}{qw/in_fh out_fh sizes/};
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
-    my $out = Bio::SeqIO->new(-fh => $out_fh, -format=> q/fasta/);
+    my $sizes = $options->{sizes};
     my @seqobjs;
     while(my $seq = $in->next_seq){push @seqobjs, $seq}
-    if($sizes){
-        map{$out->write_seq($_)}(
-            sort{$b->length <=> $a->length}
-            @seqobjs);
-    }else{
-        map{$out->write_seq($_)}(
-            sort{$a->display_id cmp $b->display_id}
-            @seqobjs);
-    }
-    exit;
+    map{$out->write_seq($_)}( sort{ $sizes ? 
+            $b->length <=> $a->length : 
+            $a->display_id cmp $b->display_id
+        }@seqobjs);
 }
 
 sub rmdesc_fasta{
