@@ -1,4 +1,4 @@
-package Formats::FormatSeqStr;
+package Gfat::FormatSeqStr;
 use warnings;
 use strict;
 use vars qw(@EXPORT @EXPORT_OK);

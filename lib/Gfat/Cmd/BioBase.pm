@@ -1,10 +1,10 @@
 =head1 NAME
 
-Formats::Cmd::BioBase - Base modules that used for build commands
+Gfat::Cmd::BioBase - Base modules that used for build commands
 
 =head1 SYNOPSIS
 
-  use Formats::Cmd::Base qw(get_seqio, close_seqio);
+  use Gfat::Cmd::Base qw(get_seqio, close_seqio);
 
   # For simple options with only input, output and help
   my $cmd = shift @ARGV // die;
@@ -31,11 +31,11 @@ The rest of the documentation details each of the subroutine.
 
 =cut
 
-package Formats::Cmd::BioBase;
+package Gfat::Cmd::BioBase;
 use warnings;
 use strict;
 use Bio::SeqIO;
-use Formats::Cmd::Base qw(get_fh);
+use Gfat::Cmd::Base qw(get_fh);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();

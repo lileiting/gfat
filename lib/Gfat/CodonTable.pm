@@ -1,4 +1,4 @@
-package CodonTable;
+package Gfat::CodonTable;
 use warnings;
 use strict;
 use vars qw(@EXPORT @EXPORT_OK);

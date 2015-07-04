@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base qw(get_fh close_fh get_options base_main);
+use Gfat::Cmd::Base qw(get_fh close_fh get_options base_main);
 use List::Util qw(sum max min);
 
 sub base_usage{

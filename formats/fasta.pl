@@ -6,8 +6,8 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
-use Formats::Cmd::Base qw(get_options base_main);
-use Formats::Cmd::BioBase qw(get_seqio close_seqio);
+use Gfat::Cmd::Base qw(get_options base_main);
+use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 
 sub base_usage{
     print <<USAGE;

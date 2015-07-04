@@ -5,7 +5,7 @@ use strict;
 #use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Formats::Cmd::Base qw(get_fh close_fh get_options);
+use Gfat::Cmd::Base qw(get_fh close_fh get_options);
 
 sub usage{
     print <<USAGE;

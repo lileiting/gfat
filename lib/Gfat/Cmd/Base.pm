@@ -1,10 +1,10 @@
 =head1 NAME
 
-Formats::Cmd::Base - Base modules that used for build commands
+Gfat::Cmd::Base - Base modules that used for build commands
 
 =head1 SYNOPSIS
 
-  use Formats::Cmd::Base qw(get_fh close_fh get_options);
+  use Gfat::Cmd::Base qw(get_fh close_fh get_options);
 
   # For simple options with only input, output and help
   my $cmd = shift @ARGV // die;
@@ -36,7 +36,7 @@ The rest of the documentation details each of the subroutine.
 
 =cut
 
-package Formats::Cmd::Base;
+package Gfat::Cmd::Base;
 use warnings;
 use strict;
 use FindBin;
