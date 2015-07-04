@@ -61,9 +61,8 @@ sub idlist_fasta{
 }
 
 sub length_fasta{
-    my $options = get_options(q/length/);
-    my ($in_fh, $out_fh) = @{$options}{qw/in_fh out_fh/};
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format=>'fasta');
+    my ($in, undef, $options) = get_seqio(q/length/);
+    my ($out_fh) = @{$options}{out_fh};
     while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
