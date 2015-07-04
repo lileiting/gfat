@@ -6,7 +6,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
-use Gfat::Cmd::Base qw(get_options base_main);
+use Gfat::Cmd::Base qw(get_options base_main close_fh);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 
 sub base_usage{
@@ -25,6 +25,8 @@ Available ACTIONs:
          gc | GC content
       clean | Clean irregular chars
      revcom | Reverse complementary sequences
+     format | Format FASTA sequences 60 bp per line
+    oneline | Format FASTA sequences unlimited length per line
 
 USAGE
     exit;
@@ -41,6 +43,8 @@ sub functions_hash{
         gc        => \&gc_content   ,
         clean     => \&clean_fasta  ,
         revcom    => \&revcom_fasta ,
+        format    => \&format_fasta ,
+        oneline   => \&oneline_fasta
     }
 }
 
@@ -153,6 +157,27 @@ sub revcom_fasta{
         $out->write_seq($seq->revcom);
     }
     close_seqio($in, $out);
+}
+
+sub format_fasta{
+    my ($in, $out) = get_seqio(q/format/);
+    while(my $seq = $in->next_seq){
+        $out->write_seq($seq);
+    }
+    close_seqio($in, $out);
+}
+
+sub oneline_fasta{
+    my ($in, undef, $options) = get_seqio(q/oneline/);
+    my $out_fh = $options->{out_fh};
+    while(my $seq = $in->next_seq){
+        my $id = $seq->display_id;
+        my $desc = " ".$seq->desc;
+        my $seq = $seq->seq;
+        print $out_fh ">$id$desc\n$seq\n";
+    }
+    close_seqio($in);
+    close_fh($out_fh);
 }
 
 __END__
