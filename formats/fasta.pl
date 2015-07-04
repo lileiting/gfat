@@ -50,10 +50,9 @@ base_main(&functions_hash, \&base_usage);
 #############################
 
 sub idlist_fasta{
-    my $options = get_options(q/idlist/, 
+    my ($in, undef, $options) =  get_seqio(q/idlist/, 
         "d|desc" => "Print description in header");
-    my ($in_fh, $out_fh, $desc) = @{$options}{qw/in_fh out_fh desc/};
-    my $in = Bio::SeqIO->new(-fh => $in_fh, -format => q/fasta/);
+    my ($out_fh, $desc) = @{$options}{qw/out_fh desc/};
     while(my $seq = $in->next_seq){
         print $out_fh $seq->display_id,
                       $desc ? ' '.$seq->desc : '',
