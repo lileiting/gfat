@@ -8,6 +8,7 @@ use Getopt::Long;
 use Bio::Perl;
 use Gfat::Cmd::Base qw(get_options base_main close_fh);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
+use List::Util qw/sum/;
 
 sub base_usage{
     print <<USAGE;
@@ -27,6 +28,7 @@ Available ACTIONs:
      revcom | Reverse complementary sequences
      format | Format FASTA sequences 60 bp per line
     oneline | Format FASTA sequences unlimited length per line
+        n50 | Calculate N50
 
 USAGE
     exit;
@@ -44,7 +46,8 @@ sub functions_hash{
         clean     => \&clean_fasta  ,
         revcom    => \&revcom_fasta ,
         format    => \&format_fasta ,
-        oneline   => \&oneline_fasta
+        oneline   => \&oneline_fasta,
+        n50       => \&N50
     }
 }
 
@@ -178,6 +181,27 @@ sub oneline_fasta{
     }
     close_seqio($in);
     close_fh($out_fh);
+}
+
+sub calculate_N50{
+    my @num = sort{$b <=> $a}@_;
+    my $total = sum(@num);
+    my $sum = 0;
+    for my $n (@num){
+        $sum += $n;
+        return $n if $sum >= $total / 2;
+    }
+}
+
+sub N50{
+    my ($in, undef, $options) = get_seqio(q/n50/);
+    my $out_fh = $options->{out_fh};
+    my @seqlen;
+    while(my $seq = $in->next_seq){
+        push @seqlen, $seq->length;
+    }
+    my $n50 = calculate_N50(@seqlen);
+    print $out_fh "N50: $n50\n";
 }
 
 __END__
