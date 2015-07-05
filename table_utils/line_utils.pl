@@ -8,40 +8,18 @@ use lib "$FindBin::RealBin/../lib";
 use Gfat::Cmd::Base qw(get_fh close_fh get_options base_main);
 use List::Util qw(sum max min);
 
-sub base_usage{
-    print <<USAGE;
-
-perl $FindBin::Script CMD [OPTIONS]
-
-  Dealing with plain file formats line by line.
-  Convert line separator among win, mac, and linux
-  Count line length and maximum length
-
-  linesep  | Line separator convert (win/mac/linux)
-
-  length   | Print length of each line
-  maxlen   | Max line length
-
-  cc       | Character count
-  vcc      | Visible character count
-  ivcc     | Invisable character count
-
-USAGE
-    exit;
-}
-
-sub functions_hash{
+sub actions{
     return {
-        linesep    => \&line_separator_convert,
-        length     => \&line_length,
-        maxlen     => \&maxlen,
-        cc         => \&char_count,
-        vcc        => \&visible_char_count,
-        ivcc       => \&invisible_char_count,
+        linesep    => [ \&line_separator_convert, "Line separator convert (win/mac/linux)" ],
+        length     => [ \&line_length,            "Print length of each line"              ],
+        maxlen     => [ \&maxlen,                 "Max line length"                        ], 
+        cc         => [ \&char_count,             "Character count"                        ], 
+        vcc        => [ \&visible_char_count,     "Visible character count"                ], 
+        ivcc       => [ \&invisible_char_count,   "Invisable character count"              ]
     };
 }
 
-base_main(functions_hash(), \&base_usage) unless caller;
+base_main(actions) unless caller;
 
 ###################
 # Define commands #

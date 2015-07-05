@@ -4,7 +4,9 @@ use warnings;
 use strict;
 use Getopt::Long;
 use FindBin;
+use lib "$FindBin::RealBin/../lib";
 use List::Util qw(sum max min);
+use Gfat::Cmd::Base qw(base_main);
 
 sub base_usage{
     print <<USAGE;
@@ -45,29 +47,28 @@ USAGE
     exit;
 }
 
-sub base_main{
-    base_usage unless @ARGV;
-    my $cmd = shift @ARGV;
-    if(   $cmd eq q/rmissing/ ){ &rmissing  } 
-    elsif($cmd eq q/csv2tab/  ){ &csv2tab   }
-    elsif($cmd eq q/tab2csv/  ){ &tab2csv   }
-    elsif($cmd eq q/rowsum/   ){ &rowsum    }
-    elsif($cmd eq q/rowmax/   ){ &rowmax    }
-    elsif($cmd eq q/rowmin/   ){ &rowmin    }
-    elsif($cmd eq q/colsum/   ){ &colsum    }
-    elsif($cmd eq q/colmax/   ){ &colmax    }
-    elsif($cmd eq q/colmin/   ){ &colmin    }
-    elsif($cmd eq q/sum/      ){ &matrix_sum}
-    elsif($cmd eq q/max/      ){ &matrix_max}
-    elsif($cmd eq q/min/      ){ &matrix_min}   
-    elsif($cmd eq q/size/     ){ &matrix_size}
-    elsif($cmd eq q/rm1/      ){ &rm1       }
-    elsif($cmd eq q/groupbest/){ &groupbest }
-    elsif($cmd eq q/log/      ){ &math_log }
-    else{ warn "Unrecognized command: $cmd!\n"; base_usage }
+sub actions{
+    return {
+        rmissing  => [ \&rmissing   , q/Remove rows with missing data("-")/],
+        csv2tab   => [ \&csv2tab    , "Replace any comma to tab" ], 
+        tab2csv   => [ \&tab2csv    , "Replace any tab to comma" ],
+        rowsum    => [ \&rowsum     , "Print sum for each row of a matrix (first row is title first column is observation name)"],
+        rowmax    => [ \&rowmax     , "Print maximum number for each row"],
+        rowmin    => [ \&rowmin     , "Print minimum number for each row"],
+        colsum    => [ \&colsum     , "Print column sum of a matrix"],
+        colmax    => [ \&colmax     , "Print maximum number for each column" ],
+        colmin    => [ \&colmin     , "Print minimum number for each column"],
+        sum       => [ \&matrix_sum , "Print sum for the whole matrix" ],
+        max       => [ \&matrix_max , "Print maximum for the whole matrix" ],
+        min       => [ \&matrix_min , "Print minimum for the whole matrix" ], 
+        size      => [ \&matrix_size, "Print matrix size, number of rows, columns" ],
+        rm1       => [ \&rm1        , "Remove rows with value less than 1"],
+        groupbest => [ \&groupbest  , q/Get best observation for each group, group name is inside observation name, i.e. for Gene1|A, "A" is group name/ ],
+        log       => [ \&math_log   , "Print log for each number, e as base"]
+    }
 }
 
-base_main() unless caller;
+base_main(actions) unless caller;
 
 ###################
 # Define commands #

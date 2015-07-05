@@ -10,48 +10,24 @@ use Gfat::Cmd::Base qw(get_options base_main close_fh);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 use List::Util qw/sum/;
 
-sub base_usage{
-    print <<USAGE;
-
-Usage:
-    perl $FindBin::Script ACTION
-
-Available ACTIONs:
-     idlist | Get ID list of a sequence file
-     length | Print sequence length
-       sort | Sort sequences by name/sizes
-     rmdesc | Remove sequence descriptions
-     getseq | Get sequences by ID pattern
-  translate | Translate CDS to protein sequence
-         gc | GC content
-      clean | Clean irregular chars
-     revcom | Reverse complementary sequences
-     format | Format FASTA sequences 60 bp per line
-    oneline | Format FASTA sequences unlimited length per line
-        n50 | Calculate N50
-
-USAGE
-    exit;
-}
-
-sub functions_hash{
+sub actions{
     return {
-        idlist    => \&idlist_fasta ,
-        length    => \&length_fasta ,
-        sort      => \&sort_fasta   ,
-        rmdesc    => \&rmdesc_fasta ,
-        getseq    => \&getseq_fasta ,
-        translate => \&translate_cds,
-        gc        => \&gc_content   ,
-        clean     => \&clean_fasta  ,
-        revcom    => \&revcom_fasta ,
-        format    => \&format_fasta ,
-        oneline   => \&oneline_fasta,
-        n50       => \&N50
+        idlist    => [\&idlist_fasta , "Get ID list of a sequence file"                  ],
+        length    => [\&length_fasta , "Print sequence length"                           ],
+        sort      => [\&sort_fasta   , "Sort sequences by name/sizes"                    ],
+        rmdesc    => [\&rmdesc_fasta , "Remove sequence descriptions"                    ],
+        getseq    => [\&getseq_fasta , "Get sequences by ID pattern"                     ],
+        translate => [\&translate_cds, "Translate CDS to protein sequence"               ],
+        gc        => [\&gc_content   , "GC content"                                      ],
+        clean     => [\&clean_fasta  , "Clean irregular chars"                           ],
+        revcom    => [\&revcom_fasta , "Reverse complementary sequences"                 ],
+        format    => [\&format_fasta , "Format FASTA sequences 60 bp per line"           ],
+        oneline   => [\&oneline_fasta, "Format FASTA sequences unlimited length per line"],
+        n50       => [\&N50          , "Calculate N50"                                   ]
     }
 }
 
-base_main(&functions_hash, \&base_usage);
+base_main(actions);
 
 #############################
 # Defination of subcommands #

@@ -41,16 +41,38 @@ use warnings;
 use strict;
 use FindBin;
 use Getopt::Long qw(:config no_ignore_case);
+use List::Util qw/max/;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
 @EXPORT_OK = qw(get_fh close_fh get_options base_main);
 
+sub base_usage{
+    my $actions_hash_ref = shift;
+    my %actions = %$actions_hash_ref;
+    print <<USAGE;
+
+Usage:
+    perl $FindBin::Script ACTION
+
+Available ACTIONS:
+USAGE
+
+    my $maxlen = max(map{length($_)}keys %actions);
+    for my $action (sort{$a cmp $b}keys %actions){
+        my $usage = $actions{$action}->[1];
+        printf "    %${maxlen}s | %s\n", $action, $usage;
+    }
+    print "\n";
+    exit;
+}
+
+
 =head2 base_main
 
   Title   : base_main
-  Usage   : base_main($functions_hash_ref, \&base_usage);
-            base_main($functions_hash_ref, \&base_usage) unless caller;
+  Usage   : base_main($actions_hash_ref);
+            base_main($actions_hash_ref) unless caller;
 
   Function: Run functions for given command
 
@@ -62,13 +84,13 @@ use base qw(Exporter);
 =cut
 
 sub base_main{
-    my ($functions_hash_ref, $base_usage_ref) = @_;
-    $base_usage_ref->() unless @ARGV;
+    my $functions_hash_ref = shift;
+    base_usage($functions_hash_ref) unless @ARGV;
     my $cmd = shift @ARGV;
     my %functions = %$functions_hash_ref;
-    $functions{$cmd} ? &{$functions{$cmd}} : 
-        (warn "Unrecognized command: $cmd!\n" 
-         and $base_usage_ref->());
+    $functions{$cmd} ? &{$functions{$cmd}->[0]} :
+        (warn "\nInvalid ACTION: $cmd\n"
+         and base_usage($functions_hash_ref));
 }
 
 #=head2 key_in_opt
