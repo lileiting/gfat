@@ -6,7 +6,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
-use Gfat::Cmd::Base qw(get_options base_main close_fh);
+use Gfat::Cmd::Base qw(base_main close_fh);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 use List::Util qw/sum/;
 
