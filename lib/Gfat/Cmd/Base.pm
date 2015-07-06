@@ -9,14 +9,11 @@ Gfat::Cmd::Base - Base modules that used for build commands
   # For simple options with only input, output and help
   my $cmd = shift @ARGV // die;
   my ($in_fh, $out_fh) = get_fh($cmd);
-  ...
-  close_fh($in_fh, $out_fh);
-
-  # For additional options
-  my $cmd = shift @ARGV // die;
-  my %options = get_options($cmd, "hello" => "Print hello world");
+  my ($in_fh, $out_fh, $options) = get_fh($cmd, "hello" => "Print hello world")
   my $hello = $options{hello};
   print "Hello world!\n" if $hello;
+  ...
+  close_fh($in_fh, $out_fh);
 
 =head1 DESCRIPTION
 
@@ -45,7 +42,35 @@ use List::Util qw/max/;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(get_fh close_fh get_options base_main);
+@EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage);
+
+=head2 base_usage
+
+  Title   : base_usage
+  Usage   : my $actions_hash_ref = {hello => [\&hello, "Print hello"]};
+            base_usage($actions_hash_ref);
+
+  Function: Resolve the information in the actions hash and 
+            print the base usage information
+
+  Returns : Exit the program
+
+  Args    : The subroutine reference for functions defination
+            and the base usage subroutine reference
+
+=cut
+
+sub multi_line{
+    my ($str, $maxlen) = @_;
+    my $space = $maxlen + 4 + 3;
+    my $line_len = 60 - $space;
+    my $newstr = '';
+    for (my $i = 0; $i < length($str); $i += $line_len){
+        my $part = substr($str, $i, $line_len);
+        $newstr = $newstr ?  "$newstr\n"." " x $space.$part : $part;
+    }
+    return $newstr;
+}
 
 sub base_usage{
     my $actions_hash_ref = shift;
@@ -59,8 +84,10 @@ Available ACTIONS:
 USAGE
 
     my $maxlen = max(map{length($_)}keys %actions);
+    die "Maximum action name is too long: $maxlen\n"
+        if $maxlen > 20;
     for my $action (sort{$a cmp $b}keys %actions){
-        my $usage = $actions{$action}->[1];
+        my $usage = multi_line($actions{$action}->[1], $maxlen);
         printf "    %${maxlen}s | %s\n", $action, $usage;
     }
     print "\n";
