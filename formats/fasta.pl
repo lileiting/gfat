@@ -24,7 +24,8 @@ sub actions{
         format    => [\&format_fasta , "Format FASTA sequences 60 bp per line"           ],
         oneline   => [\&oneline_fasta, "Format FASTA sequences unlimited length per line"],
         n50       => [\&N50          , "Calculate N50"                                   ],
-        motif     => [\&motif_search , "Print sequences match a pattern, e.g. WRKY"      ]
+        motif     => [\&motif_search , "Print sequences match a pattern, e.g. WRKY"      ],
+        ssr       => [\&find_ssr     , "Find SSR sequences"                              ]
     }
 }
 
@@ -190,6 +191,38 @@ sub motif_search{
         $out->write_seq($seq) if $seqstr =~ /$pattern/;
     }
     close_seqio($in, $out);
+}
+
+sub find_ssr{
+    my ($in) = get_seqio(q/ssr/);
+
+    # Defination of SSR:
+    # Repeat unit 2bp to 6bp, length not less than 18bp
+    my $id = 0;
+    my $flank_seq_length=100;
+    print "ID\tSeq_Name\tStart\tEnd\tSSR\tLength\tRepeat_Unit\tRepeat_Unit_Length\tRepeatitions\tSequence\n";
+    while(my $seq = $in->next_seq){
+        my $sequence = $seq->seq;
+        my $seq_name = $seq->display_id;
+        while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
+            my $match=$1;
+            my $repeat_unit=$2;
+            my $repeat_length=length($repeat_unit);
+            my $SSR_length=length($match);
+            if($match =~ /([ATGC])\1{5}/){next;}
+            $id++;
+            print     "$id\t$seq_name\t",
+                pos($sequence)-$SSR_length+1,"\t",
+                pos($sequence),"\t",
+                $match,"\t",
+                $SSR_length,"\t",
+                $repeat_unit,"\t",
+                $repeat_length,"\t",
+                $SSR_length / $repeat_length,"\t",
+                substr($sequence,pos($sequence)-$SSR_length-$flank_seq_length,$flank_seq_length+$SSR_length+$flank_seq_length),
+                "\n";
+        }
+    }
 }
 
 __END__
