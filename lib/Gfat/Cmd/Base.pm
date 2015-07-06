@@ -7,7 +7,7 @@ Gfat::Cmd::Base - Base modules that used for build commands
   use Gfat::Cmd::Base qw(get_fh close_fh get_options);
 
   # For simple options with only input, output and help
-  my $cmd = shift @ARGV // die;
+  my $cmd = shift @ARGV;
   my ($in_fh, $out_fh) = get_fh($cmd);
   my ($in_fh, $out_fh, $options) = get_fh($cmd, "hello" => "Print hello world")
   my $hello = $options{hello};
@@ -120,29 +120,6 @@ sub base_main{
          and base_usage($functions_hash_ref));
 }
 
-#=head2 key_in_opt
-
-#  Title   : key_in_opt
-#  Usage   : my ($long_option) = key_in_opt($opt_name);
-#            my ($long_option, $short_option) = key_in_opt($opt_name);
-
-#  Function: Analyze the option defination for GetOptions, like 
-#            "h|help", "i|input=s", "header", etc
-
-#  Returns : an array, first element is the long option, second
-#            element is the short option
-
-#  Args    : One string
-
-#=cut
-
-sub key_in_opt{
-    my $opt_name = shift;
-    die "Option name ERROR: $opt_name!!!\n"
-        unless $opt_name =~ /^(([A-Za-z])\|)?([a-z]+)(=[ifso])?$/;
-    return ($3, $2 // '');
-}
-
 =head2 cmd_usage
 
   Title   : cmd_usage
@@ -158,6 +135,13 @@ sub key_in_opt{
   Args    : The command name. 
 
 =cut
+
+sub key_in_opt{
+    my $opt_name = shift;
+    die "Option name ERROR: $opt_name!!!\n"
+        unless $opt_name =~ /^(([A-Za-z])\|)?([a-z]+)(=[ifso])?$/;
+    return ($3, $2 // '');
+}
 
 sub cmd_usage{
     my ($cmd, @options) = @_;
