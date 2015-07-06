@@ -5,52 +5,20 @@ use strict;
 #use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Cmd::Base qw(get_fh close_fh get_options);
+use Gfat::Cmd::Base qw(get_fh close_fh get_options base_main);
 
-sub usage{
-    print <<USAGE;
-
-  $FindBin::Script CMD <GFF>
-
-  Commands:
-
-  Chromosome based output
-    chrlist   | Print chromosome list  
-
-  Gene based output 
-    genelist  | Print gene list
-    exonnum   | Print exon number for each gene
-    intronnum | Print intron number for each gene
-    geneinfo  | Print gene information, including gene
-                name, exon number, intron number, etc
-
-  Type based output
-    type      | Print the number of entries for each type
-
-USAGE
-   exit;
+sub actions{
+    return {
+        chrlist   => [ \&print_chromosome_list, "Print chromosome list" ],
+        genelist  => [ \&print_gene_list, "Print gene list" ],
+        exonnum   => [ \&print_exon_number, "Print exon number for each gene" ],
+        intronnum => [ \&print_intron_number,"Print intron number for each gene"],
+        geneinfo  => [ \&print_gene_information, "Print gene information, including gene name, exon number, intron number, etc"],
+        type      => [ \&print_type_number, "Print the number of entries for each type"]
+    };
 }
 
-sub get_functions{
-    return (
-        chrlist   => \&print_chromosome_list, 
-        genelist  => \&print_gene_list,
-        exonnum   => \&print_exon_number,
-        intronnum => \&print_intron_number,
-        geneinfo  => \&print_gene_information,
-        type      => \&print_type_number,
-    );
-}
-
-sub main{
-    usage unless @ARGV;
-    my $cmd = shift @ARGV;
-    my %functions = get_functions;
-    $functions{$cmd} ? &{$functions{$cmd}} : 
-        (warn "Undefined cmd: $cmd\n" and usage)
-}
-
-main() unless caller;
+base_main(actions) unless caller;
 
 ###################
 # Define commands #
