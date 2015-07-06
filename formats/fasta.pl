@@ -23,7 +23,8 @@ sub actions{
         revcom    => [\&revcom_fasta , "Reverse complementary sequences"                 ],
         format    => [\&format_fasta , "Format FASTA sequences 60 bp per line"           ],
         oneline   => [\&oneline_fasta, "Format FASTA sequences unlimited length per line"],
-        n50       => [\&N50          , "Calculate N50"                                   ]
+        n50       => [\&N50          , "Calculate N50"                                   ],
+        motif     => [\&motif_search , "Print sequences match a pattern, e.g. WRKY"      ]
     }
 }
 
@@ -178,6 +179,17 @@ sub N50{
     }
     my $n50 = calculate_N50(@seqlen);
     print $out_fh "N50: $n50\n";
+}
+
+sub motif_search{
+    my ($in, $out, $options) = get_seqio(q/motif/, 
+        "p|pattern=s" => "Sequence pattern");
+    my $pattern = $options->{pattern};
+    while(my $seq = $in->next_seq){
+        my $seqstr = $seq->seq;
+        $out->write_seq($seq) if $seqstr =~ /$pattern/;
+    }
+    close_seqio($in, $out);
 }
 
 __END__
