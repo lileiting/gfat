@@ -209,19 +209,17 @@ sub find_ssr{
         my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
         while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
             my ($match, $repeat_unit) = ($1, $2);
-            my ($repeat_length, $SSR_length)=map{length($_)}($repeat_unit, $match);
+            my ($repeat_length, $SSR_length)=(length($repeat_unit), length($match));
             if($match =~ /([ATGC])\1{5}/){next;}
             $id++;
-            print $out_fh "$id\t$seq_name\t",
-                pos($sequence)-$SSR_length+1,"\t",
-                pos($sequence),"\t",
-                $match,"\t",
-                $SSR_length,"\t",
-                $repeat_unit,"\t",
-                $repeat_length,"\t",
-                $SSR_length / $repeat_length,"\t",
-                substr($sequence,pos($sequence)-$SSR_length-$flank_seq_length,$flank_seq_length+$SSR_length+$flank_seq_length),
-                "\n";
+            print $out_fh join("\t", 
+                $id,            $seq_name,      pos($sequence)-$SSR_length+1,
+                pos($sequence), $match,         $SSR_length,
+                $repeat_unit,   $repeat_length, $SSR_length / $repeat_length,
+                substr($sequence, 
+                    pos($sequence) - $SSR_length - $flank_seq_length,
+                    $SSR_length + $flank_seq_length * 2)
+            )."\n";
         }
     }
 }
