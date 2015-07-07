@@ -195,24 +195,24 @@ sub motif_search{
 }
 
 sub find_ssr{
-    my ($in) = get_seqio(q/ssr/);
-
+    my ($in, undef, $options) = get_seqio(q/ssr/);
+    my $out_fh = $options->{out_fh};
     # Defination of SSR:
     # Repeat unit 2bp to 6bp, length not less than 18bp
-    my $id = 0;
-    my $flank_seq_length=100;
-    print "ID\tSeq_Name\tStart\tEnd\tSSR\tLength\tRepeat_Unit\tRepeat_Unit_Length\tRepeatitions\tSequence\n";
+    my ($id, $flank_seq_length) = (0, 100);
+    print $out_fh join("\t", qw/ID          Seq_Name           Start              
+                                End         SSR                Length 
+                                Repeat_Unit Repeat_Unit_Length Repeatitions 
+                                Sequence/
+                      )."\n";
     while(my $seq = $in->next_seq){
-        my $sequence = $seq->seq;
-        my $seq_name = $seq->display_id;
+        my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
         while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
-            my $match=$1;
-            my $repeat_unit=$2;
-            my $repeat_length=length($repeat_unit);
-            my $SSR_length=length($match);
+            my ($match, $repeat_unit) = ($1, $2);
+            my ($repeat_length, $SSR_length)=map{length($_)}($repeat_unit, $match);
             if($match =~ /([ATGC])\1{5}/){next;}
             $id++;
-            print     "$id\t$seq_name\t",
+            print $out_fh "$id\t$seq_name\t",
                 pos($sequence)-$SSR_length+1,"\t",
                 pos($sequence),"\t",
                 $match,"\t",
