@@ -139,7 +139,7 @@ sub base_main{
 sub key_in_opt{
     my $opt_name = shift;
     die "Option name ERROR: $opt_name!!!\n"
-        unless $opt_name =~ /^(([A-Za-z])\|)?([a-z]+)(=[ifso])?$/;
+        unless $opt_name =~ /^((\w)\|)?(\w+)(=[ifso])?$/;
     return ($3, $2 // '');
 }
 
@@ -151,7 +151,7 @@ sub cmd_usage{
         my ($long_option, $short_option) = key_in_opt($opt);
         $short_option = "-$short_option," if $short_option;
         $long_option  = "--$long_option";
-        push @add_options, "    $short_option$long_option        $desc\n";
+        push @add_options, "    $short_option$long_option $desc\n";
     }
 
     print <<USAGE;
