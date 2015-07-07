@@ -37,7 +37,8 @@ package Gfat::Cmd::Base;
 use warnings;
 use strict;
 use FindBin;
-use Getopt::Long qw(:config no_ignore_case);
+#use Getopt::Long qw(:config no_ignore_case);
+use Getopt::Long;
 use List::Util qw/max/;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
@@ -154,14 +155,15 @@ sub cmd_usage{
         push @add_options, "    $short_option$long_option $desc\n";
     }
 
+    my $add_options = join('', @add_options);
     print <<USAGE;
 
   $FindBin::Script $cmd [OPTIONS]
 
-    [-i,--input]  FILE
-    -o,--output   FILE
-    -h,--help
-@add_options
+    [-i,--input]  FILE    Input file name [default:STDIN]
+    -o,--output   FILE    Output file name [default:STDOUT]
+    -h,--help             Print help
+$add_options
 
 USAGE
     exit;

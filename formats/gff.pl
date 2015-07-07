@@ -120,8 +120,8 @@ sub print_intron_number      { print_gene_information(q/intronnum/) }
 #
 
 sub print_type_number{
-    my $options = get_options(q/type/, "H|header" => "Print header");
-    my ($in_fh, $out_fh, $header) = @{$options}{qw/in_fh out_fh header/};
+    my $options = get_options(q/type/, "t|title" => "Print title");
+    my ($in_fh, $out_fh, $title) = @{$options}{qw/in_fh out_fh title/};
     my $data = load_gff_file($in_fh);
     my %types;
     for my $gene (sort {$a cmp $b} keys %$data){
@@ -129,7 +129,7 @@ sub print_type_number{
              $types{$type} += scalar( @{$data->{$gene}->{$type}} );
         }
     }
-    print "Type\tNumber\n" if $header;
+    print "Type\tNumber\n" if $title;
     for my $type ( sort {$a cmp $b} keys %types){
         my $value = $types{$type};
         print $out_fh "$type\t$value\n";

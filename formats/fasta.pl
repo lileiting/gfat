@@ -77,8 +77,12 @@ sub rmdesc_fasta{
 
 sub action_getseq{
     my ($in, $out, $options) = get_seqio(q/getseq/, 
-        "p|pattern=s" => "STR Pattern for sequence IDs");
+        "p|pattern=s" =>  "STR    Pattern for sequence IDs",
+        "s|seqname=s" =>  "STR    Match the exactly sequence name",
+        "l|listfile=s" => "STR    A file contains a list of sequence IDs");
     my $pattern = $options->{pattern};
+    my $seqname = $options->{seqname};
+    my $listfile = $options->{listfile};
     die "ERROR: Pattern was not defined!\n" unless $pattern;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
