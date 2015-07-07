@@ -16,7 +16,7 @@ sub actions{
         length    => [\&length_fasta , "Print sequence length"                           ],
         sort      => [\&sort_fasta   , "Sort sequences by name/sizes"                    ],
         rmdesc    => [\&rmdesc_fasta , "Remove sequence descriptions"                    ],
-        getseq    => [\&getseq_fasta , "Get sequences by ID pattern"                     ],
+        getseq    => [\&action_getseq, "Get sequences by ID pattern"                     ],
         translate => [\&translate_cds, "Translate CDS to protein sequence"               ],
         gc        => [\&gc_content   , "GC content"                                      ],
         clean     => [\&clean_fasta  , "Clean irregular chars"                           ],
@@ -75,10 +75,11 @@ sub rmdesc_fasta{
     }
 }
 
-sub getseq_fasta{
+sub action_getseq{
     my ($in, $out, $options) = get_seqio(q/getseq/, 
         "p|pattern" => "Pattern for sequence IDs");
     my $pattern = $options->{pattern};
+    die "ERROR: Pattern was not defined!\n" unless $pattern;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
         $out->write_seq($seq) if $seqid =~ /$pattern/;

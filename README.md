@@ -10,7 +10,9 @@ comparative genomics.
 ## Intallation
     git clone https://github.com/lileiting/gfat.git
 
-## FASTA sequences
+## How to use
+
+### FASTA sequences
 
 Print the ID for a FASTA sequence file in.fasta
 
@@ -31,7 +33,7 @@ Print sequence length
 Fetch sequences match a pattern
 
     # Find WRKY genes
-    ./formats/fasta.pl motif in.fasta -p WRKYGQK
+    ./formats/fasta.pl motif in.fasta -p 'WRKYG[QK]K'
     # Find sequences contain SSRs
     ./formats/fasta.pl motif in.fasta -p '(([ATGC]{2,6}?)\2{3,})'
 
