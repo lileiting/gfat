@@ -100,19 +100,6 @@ sub rmdesc_fasta{
 
 =cut
 
-sub load_list_file{
-    my $file = shift;
-    my %listid;
-    open my $fh, "<", $file or die "$file: $!";
-    while(<$fh>){
-        next if /^\s*#/ or /^\s*$/;
-        chomp;
-        $listid{$_}++;
-    }
-    close $fh;
-    return %listid;
-}
-
 sub action_getseq{
     my ($in, $out, $options) = get_seqio(q/getseq/, 
         "p|pattern=s" =>  "STR    Pattern for sequence IDs",
