@@ -6,7 +6,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Getopt::Long;
 use Bio::Perl;
-use Gfat::Cmd::Base qw(base_main close_fh);
+use Gfat::Cmd::Base qw(base_main close_fh load_listfile);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
 use List::Util qw/sum/;
 
@@ -123,13 +123,13 @@ sub action_getseq{
     my $listfile = $options->{listfile};
     die "ERROR: Pattern was not defined!\n" 
         unless $pattern or @seqnames or $listfile;
-    my %listid = load_list_file($listfile) if $listfile;
-    map{$listid{$_}++}@seqnames if @seqnames;
+    my $list_ref = load_listfile($listfile) if $listfile;
+    map{$list_ref->{$_}++}@seqnames if @seqnames;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
         $out->write_seq($seq) if  
             ($pattern and $seqid =~ /$pattern/) or
-            ((@seqnames or $listfile) and $listid{$seqid});
+            ((@seqnames or $listfile) and $list_ref->{$seqid});
     }
 }
 

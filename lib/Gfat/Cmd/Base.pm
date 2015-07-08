@@ -43,7 +43,7 @@ use List::Util qw/max/;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage);
+@EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage load_listfile);
 
 =head2 base_usage
 
@@ -257,6 +257,34 @@ sub close_fh{
                $fh eq \*STDOUT or 
                $fh eq \*STDERR;
     }
+}
+
+=head2 load_listfile
+
+  Title   : load_listfile
+  Usage   : my %list = load_listfile($listfile);
+
+  Function: Load names in a list file into a hash. 
+            Comments start with # will be ignored.
+            Blank lines will be ignored
+
+  Returns : A hash reference
+
+  Args    : A file name
+
+=cut
+
+sub load_listfile{
+    my $file = shift;
+    my %listid;
+    open my $fh, "<", $file or die "$file: $!";
+    while(<$fh>){
+        next if /^\s*#/ or /^\s*$/;
+        chomp;
+        $listid{$_}++;
+    }
+    close $fh;
+    return \%listid;
 }
 
 1;
