@@ -140,7 +140,7 @@ sub base_main{
 sub key_in_opt{
     my $opt_name = shift;
     die "Option name ERROR: $opt_name!!!\n"
-        unless $opt_name =~ /^((\w)\|)?(\w+)(=[ifso])?$/;
+        unless $opt_name =~ /^((\w)\|)?(\w+)(=[ifso]@?)?$/;
     return ($3, $2 // '');
 }
 

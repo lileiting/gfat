@@ -29,7 +29,7 @@ sub actions{
     }
 }
 
-base_main(actions);
+base_main(actions) unless caller;
 
 #############################
 # Defination of subcommands #
@@ -75,18 +75,61 @@ sub rmdesc_fasta{
     }
 }
 
+=head2 action_getseq
+
+  Title      : action_getseq
+
+  Usage      : fasta.pl getseq [OPTIONS]
+
+  Description: Get sequences from a FASTA file with a seqname, a pattern
+               or a list of seqnames
+
+  Options    : [-i,--input] <FASTA>
+               -o,--output FILE
+               -h,--help
+               -s,--seqname STR
+               -p,--pattern STR 
+               -l,--listfile <FILE>
+
+  Examples  : fasta.pl getseq in.fasta -s gene1
+              fasta.pl getseq in.fasta -s gene1 -s gene2
+              fasta.pl getseq in.fasta -s gene1,gene2
+              fasta.pl getseq in.fasta -p 'gene\d'
+              fasta.pl getseq in.fasta -l list.txt
+              fasta.pl getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt 
+
+=cut
+
+sub load_list_file{
+    my $file = shift;
+    my %listid;
+    open my $fh, "<", $file or die "$file: $!";
+    while(<$fh>){
+        next if /^\s*#/ or /^\s*$/;
+        chomp;
+        $listid{$_}++;
+    }
+    close $fh;
+    return %listid;
+}
+
 sub action_getseq{
     my ($in, $out, $options) = get_seqio(q/getseq/, 
         "p|pattern=s" =>  "STR    Pattern for sequence IDs",
-        "s|seqname=s" =>  "STR    Match the exactly sequence name",
+        "s|seqname=s@" =>  "STR    Match the exactly sequence name (could be multiple)",
         "l|listfile=s" => "STR    A file contains a list of sequence IDs");
     my $pattern = $options->{pattern};
-    my $seqname = $options->{seqname};
+    my @seqnames = $options->{seqname} ? split(/,/,join(',',@{$options->{seqname}})) : ();
     my $listfile = $options->{listfile};
-    die "ERROR: Pattern was not defined!\n" unless $pattern;
+    die "ERROR: Pattern was not defined!\n" 
+        unless $pattern or @seqnames or $listfile;
+    my %listid = load_list_file($listfile) if $listfile;
+    map{$listid{$_}++}@seqnames if @seqnames;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
-        $out->write_seq($seq) if $seqid =~ /$pattern/;
+        $out->write_seq($seq) if  
+            ($pattern and $seqid =~ /$pattern/) or
+            ((@seqnames or $listfile) and $listid{$seqid});
     }
 }
 
