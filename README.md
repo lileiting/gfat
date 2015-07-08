@@ -37,4 +37,12 @@ Fetch sequences match a pattern
     # Find sequences contain SSRs
     ./formats/fasta.pl motif in.fasta -p '(([ATGC]{2,6}?)\2{3,})'
 
+Get sequences based sequence name
+
+    fasta.pl getseq in.fasta -s gene1
+    fasta.pl getseq in.fasta -s gene1 -s gene2
+    fasta.pl getseq in.fasta -s gene1,gene2
+    fasta.pl getseq in.fasta -p 'gene\d'
+    fasta.pl getseq in.fasta -l list.txt
+    fasta.pl getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt
 
