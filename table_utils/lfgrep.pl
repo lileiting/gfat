@@ -4,6 +4,8 @@ use warnings;
 use strict;
 use Getopt::Long;
 use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Gfat::Cmd::Base qw(load_listfile);
 
 sub usage{
     print <<USAGE;
@@ -51,20 +53,6 @@ sub get_options{
         out_fh   => $out_fh,
         header   => $header
     }
-}
-
-sub load_listfile{
-    my $file = shift;
-    my %pattern;
-    open my $fh, "<", $file or die "$file: $!";
-    while(<$fh>){
-        next if /^\s*#/ or /^\s*$/;
-        s/\s//g;
-        chomp;
-        $pattern{$_}++;
-    }
-    close $fh;
-    return \%pattern;
 }
 
 sub grep_file{
