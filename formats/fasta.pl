@@ -115,9 +115,11 @@ sub action_getseq{
     map{$list_ref->{$_}++}@seqnames if @seqnames;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
-        $out->write_seq($seq) if  
-            ($pattern and $seqid =~ /$pattern/) or
-            ((@seqnames or $listfile) and $list_ref->{$seqid});
+        if(($pattern and $seqid =~ /$pattern/) or
+            ((@seqnames or $listfile) and $list_ref->{$seqid})){
+            $out->write_seq($seq);
+            exit if not $listfile and not $pattern and @seqnames == 1;
+        }
     }
 }
 
