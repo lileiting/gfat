@@ -5,21 +5,22 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use List::Util qw(max);
+use lib "$FindBin::RealBin/../lib";
+use Gfat::Cmd::Base qw(base_main get_fh);
 
-sub usage{
-    print <<USAGE;
-
-perl $FindBin::Script <domtblout>
-
-  Print uniq domains from a domtblout file
-
-  -d,--domain Print one domain per line [default]
-  -g,--gene   Print one gene per line
-  -h,--help   Print help
-
-USAGE
-    exit;
+sub actions{
+    return {
+        uniq  => [\&uniq_domains, "Print uniq domains from a domtblout file"]
+    };
 }
+
+base_main(actions) unless caller;
+exit;
+
+#########################
+# Defination of actions #
+#########################
+
 
 sub load_domtblout_file{
     my $fh = shift;
@@ -117,22 +118,18 @@ sub print_genes{
     }
 }
 
-sub main{
-    GetOptions("domain" => \my $print_domains, 
-               "gene" => \my $print_genes,
-               "help" => \my $help);
-    usage if $help or (@ARGV == 0 and -t STDIN);
+sub uniq_domains{
+    my ($in_fh, $out_fh, $options) = get_fh(q/uniq/, 
+        "domain" => "Print one domain per line",
+        "gene"  => "Print one gene per line",
+       );
+    my ($print_domains, $print_genes) = @{$options}{qw/domain gene/};
     $print_domains = 1 unless $print_domains or $print_genes;
-
-    my $fh = \*STDIN;
-    open $fh, "<", $ARGV[0] or die "$ARGV[0]: $!" if @ARGV;
-
-    my $data = load_domtblout_file($fh);
+    my $data = load_domtblout_file($in_fh);
     my $uniq_domains = get_uniq_domains($data);
     print_domains($uniq_domains) if $print_domains;
     print_genes($uniq_domains) if $print_genes;
 
 }
 
-main() unless caller;
-
+__END__
