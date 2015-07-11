@@ -14,6 +14,7 @@ Databases
 * [Google Scholar](https://scholar.google.com)
 * [Web of Science](http://webofknowledge.com/)
 * [PubMed](http://www.ncbi.nlm.nih.gov/pubmed)
+* [Nature Index](https://www.natureindex.com)
 
 Multidiscipline
 ------
