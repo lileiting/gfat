@@ -34,6 +34,7 @@ perl $FindBin::Script CMD [OPTIONS]
   max      | Print maximum for the whole matrix
   min      | Print minimum for the whole matrix
   size     | Print matrix size, number of rows, columns
+  count    | Count number of elements in each row
 
   rmissing | Remove rows with missing data("-")
   rm1      | Remove rows with value less than 1
@@ -62,6 +63,7 @@ sub actions{
         max       => [ \&matrix_max , "Print maximum for the whole matrix" ],
         min       => [ \&matrix_min , "Print minimum for the whole matrix" ], 
         size      => [ \&matrix_size, "Print matrix size, number of rows, columns" ],
+        count     => [ \&matrix_count, "Count number of elements in each row"],
         rm1       => [ \&rm1        , "Remove rows with value less than 1"],
         groupbest => [ \&groupbest  , q/Get best observation for each group, group name is inside observation name, i.e. for Gene1|A, "A" is group name/ ],
         log       => [ \&math_log   , "Print log for each number, e as base"]
@@ -228,7 +230,14 @@ sub matrix_size{
     my ($in_fh, $out_fh) = get_fh(qq/size/);
     my $matrix = read_table($in_fh);
     print $out_fh "Row\t", $matrix->{num_rows}, "\nColumn\t",$matrix->{num_cols},"\n";
+}
 
+sub matrix_count{
+    my ($in_fh, $out_fh) = get_fh(q/count/);
+    while(<$in_fh>){
+        @_ = split /\t/;
+        print scalar(@_)."\n";
+    }
 }
 
 #
