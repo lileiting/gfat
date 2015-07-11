@@ -48,11 +48,13 @@ use base qw(Exporter);
 =head2 base_usage
 
   Title   : base_usage
-  Usage   : my $actions_hash_ref = {hello => [\&hello, "Print hello"]};
+  Usage   : my $actions_hash_ref = {-description => 'print hello world',
+                                    hello => [\&hello, "Print hello"],
+                                    world => [\&world, "Print world"]};
             base_usage($actions_hash_ref);
 
   Function: Resolve the information in the actions hash and 
-            print the base usage information
+            print the base usage information. Description is optional.
 
   Returns : Exit the program
 
@@ -73,19 +75,32 @@ sub multi_line{
     return $newstr;
 }
 
+sub desc_format{
+    my $str = shift;
+    my $line_len = 60 - 4;
+    my $newstr = 'Description: ';
+    for (my $i = 0; $i < length($str); $i += $line_len){
+        $newstr .= "\n    ".substr($str, $i, $line_len);
+    }
+    return "\n$newstr\n";
+}
+
 sub base_usage{
     my $actions_hash_ref = shift;
     my %actions = %$actions_hash_ref;
+    my $description = $actions{"-description"} ? 
+        desc_format($actions{"-description"}) : '';
+    delete $actions{"-description"} if $actions{"-description"};
     print <<USAGE;
 
 Usage:
-    perl $FindBin::Script ACTION
-
+    $FindBin::Script ACTION
+$description
 Available ACTIONS:
 USAGE
 
     my $maxlen = max(map{length($_)}keys %actions);
-    die "Maximum action name is too long: $maxlen\n"
+    die "CATUTION: Maximum action name length is greater than 20!: $maxlen\n"
         if $maxlen > 20;
     for my $action (sort{$a cmp $b}keys %actions){
         my $usage = multi_line($actions{$action}->[1], $maxlen);

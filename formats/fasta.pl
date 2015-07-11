@@ -12,6 +12,7 @@ use List::Util qw/sum/;
 
 sub actions{
     return {
+        -description => 'FASTA sequence',
         idlist    => [\&idlist_fasta , "Get ID list of a sequence file"                  ],
         length    => [\&length_fasta , "Print sequence length"                           ],
         sort      => [\&sort_fasta   , "Sort sequences by name/sizes"                    ],
