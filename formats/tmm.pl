@@ -38,6 +38,7 @@ sub simplify_topology{
     die "CAUTION: Topology is empty!" 
         unless $str =~ /^Topology=([io\-\d]+)$/;
     $str = $1;
+    return '-' if $str eq 'o' or $str eq 'o';
     $str =~ s/^[io]//;
     $str =~ s/[io]$//;
     $str =~ s/[io]/,/g;
