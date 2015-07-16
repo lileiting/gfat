@@ -46,13 +46,15 @@ sub simplify_topology{
 }
 
 sub simplify{
-    my ($in_fh, $out_fh) = get_fh(q/simplify/);
+    my ($in_fh, $out_fh, $options) = get_fh(q/simplify/,
+        "excel" => "Print results enclosed with =\"\" to make it as string in Excel");
+    my $excel = $options->{excel};
     while(<$in_fh>){
         next if /^\s*#/ or /^\s*$/;
         my @F = split /\t/;
         my $geneid = $F[0];
         my $topology = simplify_topology($F[-1]);
-        print $out_fh "$geneid\t$topology\n";
+        print $out_fh $excel ? "$geneid\t=\"$topology\"\n" : "$geneid\t$topology\n";
     }
     close_fh($in_fh, $out_fh);
 }
