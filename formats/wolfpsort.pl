@@ -4,6 +4,8 @@ use warnings;
 use strict;
 use Getopt::Long;
 use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Gfat::Base qw(get_in_fh get_out_fh);
 
 sub usage{
     print <<usage;
@@ -25,28 +27,6 @@ usage
     exit;
 }
 
-sub get_input_fh{
-    my $file = shift;
-    my $fh;
-    if($file){
-        open $fh, "<", $file or die "$file:$!";
-    }else{
-        $fh = \*STDIN;
-    }
-    return $fh;
-}
-
-sub get_output_fh{
-    my $file = shift;
-    my $fh;
-    if($file){
-        open $fh, ">", $file or die "$file:$!";
-    }else{
-        $fh = \*STDOUT;
-    }
-    return $fh;
-}
-
 sub get_options{
     my %options;
     GetOptions(
@@ -57,8 +37,8 @@ sub get_options{
     usage if $options{help};
     usage if not $options{input} and @ARGV == 0 and -t STDIN;
     $options{input} = shift @ARGV if @ARGV > 0 and not $options{input};
-    $options{in_fh} = get_input_fh($options{input});
-    $options{out_fh} = get_output_fh($options{output});
+    $options{in_fh} = get_in_fh($options{input});
+    $options{out_fh} = get_out_fh($options{output});
     return \%options;
 }
 
