@@ -8,7 +8,7 @@ use Getopt::Long;
 use Bio::Perl;
 use Gfat::Cmd::Base qw(base_main close_fh load_listfile);
 use Gfat::Cmd::BioBase qw(get_seqio close_seqio);
-use List::Util qw/sum/;
+use List::Util qw/sum max min/;
 
 sub actions{
     return {
@@ -37,6 +37,12 @@ base_main(actions) unless caller;
 # Defination of subcommands #
 #############################
 
+=head2 fasta.pl idlist
+
+  Usage: fasta.pl idlist [OPTIONS]
+
+=cut
+
 sub idlist_fasta{
     my ($in, undef, $options) =  get_seqio(q/idlist/, 
         "d|desc" => "Print description in header");
@@ -48,12 +54,26 @@ sub idlist_fasta{
     }
 }
 
+=head2 fasta.pl length
+
+  Usage: fasta.pl length [OPTIONS]
+
+=cut
+
 sub length_fasta{
     my ($in, undef, $options) = get_seqio(q/length/);
     my ($out_fh) = @{$options}{out_fh};
+    my @lengths;
     while(my $seq = $in->next_seq){
+        push @lengths, $seq->length;
         print $out_fh $seq->display_id,"\t",$seq->length,"\n";
     }
+    die "CAUTION: No sequences!" unless @lengths;
+    warn "Number of sequences: ", scalar(@lengths), "\n";
+    warn "Total length: ", sum(@lengths), "\n";
+    warn "Maximum length: ", max(@lengths), "\n";
+    warn "Minimum length: ", min(@lengths), "\n";
+    warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
 }
 
 sub sort_fasta{
