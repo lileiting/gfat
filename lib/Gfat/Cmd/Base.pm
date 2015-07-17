@@ -37,7 +37,7 @@ package Gfat::Cmd::Base;
 use warnings;
 use strict;
 use FindBin;
-use Gfat::Base qw(get_in_fh get_out_fh);
+use Gfat::Base qw(GetInFh GetOutFh);
 #use Getopt::Long qw(:config no_ignore_case);
 use Getopt::Long;
 use List::Util qw/max/;
@@ -223,8 +223,8 @@ sub get_options{
     );
     cmd_usage(@_) if $opt{help} or (!$opt{infile} and @ARGV == 0 and -t STDIN);
     $opt{infile} = shift @ARGV if (!$opt{infile} and @ARGV > 0);
-    $opt{in_fh} = get_in_fh($opt{infile});
-    $opt{out_fh} = get_out_fh($opt{outfile});
+    $opt{in_fh} = GetInFh($opt{infile});
+    $opt{out_fh} = GetOutFh($opt{outfile});
 
     return \%opt;
 }

@@ -6,13 +6,13 @@ use Getopt::Long;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
-@EXPORT_OK = qw(get_in_fh get_out_fh);
+@EXPORT_OK = qw(GetInFh GetOutFh);
 
-=head2 get_in_fh
+=head2 GetInFh
 
-  Title   : get_in_fh
+  Title   : GetInFh
 
-  Usage   : my $fh = get_in_fh($infile);
+  Usage   : my $fh = GetInFh($infile);
 
   Function: Open a file and return the filehandle reference,
             if nothing was given, return the reference of 
@@ -24,7 +24,7 @@ use base qw(Exporter);
 
 =cut
 
-sub get_in_fh{
+sub GetInFh{
     my $file = shift;
     my $fh;
     if($file){
@@ -35,11 +35,11 @@ sub get_in_fh{
     return $fh;
 }
 
-=head2 get_out_fh
+=head2 GetOutFh
 
-  Title   : get_out_fh
+  Title   : GetOutFh
 
-  Usage   : my $fh = get_out_fh($outfile);
+  Usage   : my $fh = GetOutFh($outfile);
 
   Function: Open a file and return the filehandle reference,
             if nothing was given, return the reference of 
@@ -51,7 +51,7 @@ sub get_in_fh{
 
 =cut
 
-sub get_out_fh{
+sub GetOutFh{
     my $file = shift;
     my $fh;
     if($file){
@@ -61,3 +61,5 @@ sub get_out_fh{
     }
     return $fh;
 }
+
+1;

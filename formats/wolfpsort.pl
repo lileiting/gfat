@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Base qw(get_in_fh get_out_fh);
+use Gfat::Base qw(GetInFh GetOutFh);
 
 sub usage{
     print <<usage;
@@ -37,8 +37,8 @@ sub get_options{
     usage if $options{help};
     usage if not $options{input} and @ARGV == 0 and -t STDIN;
     $options{input} = shift @ARGV if @ARGV > 0 and not $options{input};
-    $options{in_fh} = get_in_fh($options{input});
-    $options{out_fh} = get_out_fh($options{output});
+    $options{in_fh} = GetInFh($options{input});
+    $options{out_fh} = GetOutFh($options{output});
     return \%options;
 }
 
