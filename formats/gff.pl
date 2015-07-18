@@ -98,8 +98,9 @@ sub number_of_introns{ return number_of_exons(@_) - 1; }
 
 sub print_gene_information{
     my $cmd = shift // 'geneinfo';
-    my $exon = 1 if $cmd eq q/exonnum/ or $cmd eq q/geneinfo/;
-    my $intron = 1 if $cmd eq q/intronnum/ or $cmd eq q/geneinfo/;
+    my ($exon, $intron);
+    $exon   = 1 if $cmd eq q/exonnum/   or $cmd eq q/geneinfo/;
+    $intron = 1 if $cmd eq q/intronnum/ or $cmd eq q/geneinfo/;
     my ($in_fh, $out_fh) = get_fh($cmd);
     my $data = load_gff_file($in_fh);
     for my $gene (sort {by_number($a) <=> by_number($b)} keys %$data){

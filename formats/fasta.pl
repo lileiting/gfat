@@ -132,7 +132,8 @@ sub action_getseq{
     my $listfile = $options->{listfile};
     die "ERROR: Pattern was not defined!\n" 
         unless $pattern or @seqnames or $listfile;
-    my $list_ref = load_listfile($listfile) if $listfile;
+    my $list_ref;
+    $list_ref = load_listfile($listfile) if $listfile;
     map{$list_ref->{$_}++}@seqnames if @seqnames;
     while(my $seq = $in->next_seq){
         my $seqid = $seq->display_id;
