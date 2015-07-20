@@ -14,7 +14,7 @@ my $gff_file = shift @ARGV;
 
 print STDERR "Loading GFF file ...\n";
 my %info;
-open my $gff_fh, $gff_file or die;
+open my $gff_fh, "<", $gff_file or die "$gff_file:$!";
 while(my $stream = <$gff_fh>){
 	chomp($stream);
 	my @txt = split /\t/,$stream;

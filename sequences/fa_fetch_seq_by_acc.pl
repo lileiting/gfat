@@ -58,7 +58,7 @@ if(@acc){
 }
 if(@files){
 	for my $file (@files){
-		open my $fh, $file or die "ERROR in opening file $file ...\n";
+		open my $fh, "<", $file or die "ERROR in opening file $file ...\n";
 		while(<$fh>){
 			next if /^\s*$/ or /^\s*#/;
 			s/[\r\n]//g;

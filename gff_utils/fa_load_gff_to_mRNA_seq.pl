@@ -12,7 +12,7 @@ die "Usage: ", basename($0), " <GFF> <FASTA>\n" unless @ARGV == 2;
 my ($gff_file, $chr_file) = @ARGV;
 my $db = Bio::DB::Fasta->new($chr_file);
 
-open my $fh, $gff_file or die;
+open my $fh, "<", $gff_file or die "$gff_file:$!";
 while(<$fh>){
 	next if /^\s*#/ or /^\s*$/;
 	my($chr,undef,$type,$start, $end,undef, $strand,undef,$ann) = split /\t/;
