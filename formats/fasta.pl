@@ -15,17 +15,19 @@ sub actions{
         -description => 'FASTA sequence',
         idlist    => [\&idlist_fasta , "Get ID list of a sequence file"                  ],
         length    => [\&length_fasta , "Print sequence length"                           ],
+        gc        => [\&gc_content   , "GC content"                                      ],
+        n50       => [\&N50          , "Calculate N50"                                   ],
+
         sort      => [\&sort_fasta   , "Sort sequences by name/sizes"                    ],
         rmdesc    => [\&rmdesc_fasta , "Remove sequence descriptions"                    ],
+        rename    => [\&rename_fasta , "Rename sequence IDs with a regular expression"   ],
         getseq    => [\&action_getseq, "Get sequences by ID pattern"                     ],
         subseq    => [\&action_subseq, "Get subsequences"                                ],
         translate => [\&translate_cds, "Translate CDS to protein sequence"               ],
-        gc        => [\&gc_content   , "GC content"                                      ],
         clean     => [\&clean_fasta  , "Clean irregular chars"                           ],
         revcom    => [\&revcom_fasta , "Reverse complementary sequences"                 ],
         format    => [\&format_fasta , "Format FASTA sequences 60 bp per line"           ],
         oneline   => [\&oneline_fasta, "Format FASTA sequences unlimited length per line"],
-        n50       => [\&N50          , "Calculate N50"                                   ],
         motif     => [\&motif_search , "Print sequences match a pattern, e.g. WRKY"      ],
         ssr       => [\&find_ssr     , "Find SSR sequences"                              ]
     }
@@ -96,6 +98,38 @@ sub rmdesc_fasta{
                                  -seq => $seq->seq));
     }
 }
+
+=head2 fasta.pl rename
+
+  Usage    : fasta.pl rename [OPTIONS]
+
+  OPTIONS  : -i,--input  FILE
+             -o,--output FILE
+             -h,--help
+             -f,--from   STR
+             -t,--to     STR
+
+  EXAMPLES : fasta.pl rename input.fasta -f Sequence -t Seq
+             fasta.pl rename input.fasta -f '^' -t 'Hello|'
+
+=cut
+
+sub rename_fasta{
+    my ($in, $out, $options) = get_seqio(q/rename/, 
+        "f|from=s" => "From which string",
+        "t|to=s"   => "To which string"    );
+    my ($from, $to) = @{$options}{qw/from to/};
+    die "CAUTION: FROM or TO was not defined!" 
+        unless defined $from and defined $to;
+    while(my $seq = $in->next_seq){
+        my $id = $seq->display_id;
+        $id =~ s/$from/$to/;
+        $out->write_seq(
+            Bio::PrimarySeq->new(-display_id => $id,
+                                 -seq => $seq->seq));
+    }
+}
+
 
 =head2 action_getseq
 
