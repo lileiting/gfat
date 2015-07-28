@@ -64,7 +64,7 @@ use base qw(Exporter);
 
 =cut
 
-sub multi_line{
+sub _multi_line{
     my ($str, $maxlen) = @_;
     my $space = $maxlen + 4 + 3;
     my $line_len = 60 - $space;
@@ -76,7 +76,7 @@ sub multi_line{
     return $newstr;
 }
 
-sub desc_format{
+sub _desc_format{
     my $str = shift;
     my $line_len = 60 - 4;
     my $newstr = 'Description: ';
@@ -90,7 +90,7 @@ sub base_usage{
     my $actions_hash_ref = shift;
     my %actions = %$actions_hash_ref;
     my $description = $actions{"-description"} ? 
-        desc_format($actions{"-description"}) : '';
+        _desc_format($actions{"-description"}) : '';
     delete $actions{"-description"} if $actions{"-description"};
     print <<USAGE;
 
@@ -104,7 +104,7 @@ USAGE
     die "CATUTION: Maximum action name length is greater than 20!: $maxlen\n"
         if $maxlen > 20;
     for my $action (sort{$a cmp $b}keys %actions){
-        my $usage = multi_line($actions{$action}->[1], $maxlen);
+        my $usage = _multi_line($actions{$action}->[1], $maxlen);
         printf "    %${maxlen}s | %s\n", $action, $usage;
     }
     print "\n";
@@ -153,7 +153,7 @@ sub base_main{
 
 =cut
 
-sub key_in_opt{
+sub _key_in_opt{
     my $opt_name = shift;
     die "Option name ERROR: $opt_name!!!\n"
         unless $opt_name =~ /^((\w)\|)?(\w+)(=[ifso]@?)?$/;
@@ -165,7 +165,7 @@ sub cmd_usage{
     my @add_options = ();
     for(my $i = 0; $i < @options; $i+= 2){
         my ($opt, $desc) = @options[$i, $i+1];
-        my ($long_option, $short_option) = key_in_opt($opt);
+        my ($long_option, $short_option) = _key_in_opt($opt);
         $short_option = "-$short_option," if $short_option;
         $long_option  = "--$long_option";
         push @add_options, "    $short_option$long_option $desc\n";
@@ -212,7 +212,7 @@ sub get_options{
     my @add_options;
     for(my $i = 0; $i < @opt; $i+= 2){
         my ($opt, $desc) = @opt[$i, $i+1];
-        my ($opt_name) = key_in_opt($opt);
+        my ($opt_name) = _key_in_opt($opt);
         push @add_options, $opt, \$opt{$opt_name};
     }
     GetOptions(
