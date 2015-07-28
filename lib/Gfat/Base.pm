@@ -27,7 +27,7 @@ use base qw(Exporter);
 sub GetInFh{
     my $file = shift;
     my $fh;
-    if($file){
+    if($file and $file ne '-'){
         open $fh, "<", $file or die "$file:$!";
     }else{
         $fh = \*STDIN;
@@ -54,7 +54,7 @@ sub GetInFh{
 sub GetOutFh{
     my $file = shift;
     my $fh;
-    if($file){
+    if($file and $file ne '-'){
         open $fh, ">", $file or die "$file:$!";
     }else{
         $fh = \*STDOUT;
