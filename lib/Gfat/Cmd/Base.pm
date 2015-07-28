@@ -38,7 +38,7 @@ use warnings;
 use strict;
 use FindBin;
 use Gfat::Base qw(GetInFh GetOutFh);
-#use Getopt::Long qw(:config no_ignore_case);
+use Getopt::Long qw(:config gnu_getopt);
 use Getopt::Long;
 use List::Util qw/max/;
 use vars qw(@EXPORT @EXPORT_OK);
