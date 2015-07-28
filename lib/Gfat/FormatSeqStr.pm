@@ -8,7 +8,6 @@ use base qw(Exporter);
 
 sub format_seqstr{
     my $str = shift;
-    my $len = length($str);
     $str =~ s/(.{60})/$1\n/g;
     chomp $str;
     return $str;
