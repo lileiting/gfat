@@ -65,13 +65,24 @@ use base qw(Exporter);
 =cut
 
 sub _multi_line{
-    my ($str, $maxlen) = @_;
-    my $space = $maxlen + 4 + 3;
-    my $line_len = 60 - $space;
+    my ($str, $indent) = @_;
+    my $line_maxlen = 60 - $indent;
+
+    my $space  = ' ' x $indent;
     my $newstr = '';
-    for (my $i = 0; $i < length($str); $i += $line_len){
-        my $part = substr($str, $i, $line_len);
-        $newstr = $newstr ?  "$newstr\n"." " x $space.$part : $part;
+    my @words  = split / /, $str;
+    my $line_len;
+    for my $word (@words){
+        if($newstr eq ''){ 
+            $newstr = $word;
+            $line_len = length($word);
+        }elsif($line_len + length(" $word") <= $line_maxlen){
+            $newstr .= " $word";
+            $line_len += length(" $word");
+        }else{
+            $newstr .= "\n$space$word";
+            $line_len = 0;
+        }
     }
     return $newstr;
 }
@@ -104,7 +115,7 @@ USAGE
     die "CATUTION: Maximum action name length is greater than 20!: $maxlen\n"
         if $maxlen > 20;
     for my $action (sort{$a cmp $b}keys %actions){
-        my $usage = _multi_line($actions{$action}->[1], $maxlen);
+        my $usage = _multi_line($actions{$action}->[1], $maxlen + 4 + 3);
         printf "    %${maxlen}s | %s\n", $action, $usage;
     }
     print "\n";
