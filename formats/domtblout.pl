@@ -120,16 +120,14 @@ sub print_genes{
 
 sub uniq_domains{
     my ($in_fh, $out_fh, $options) = get_fh(q/uniq/, 
-        "domain" => "Print one domain per line",
-        "gene"  => "Print one gene per line",
+        "g|gene"  => 
+        "            Print one gene per line [default: one domain per line]",
        );
-    my ($print_domains, $print_genes) = @{$options}{qw/domain gene/};
-    $print_domains = 1 unless $print_domains or $print_genes;
+    my $print_genes = $options->{gene};
     my $data = load_domtblout_file($in_fh);
     my $uniq_domains = get_uniq_domains($data);
-    print_domains($uniq_domains) if $print_domains;
-    print_genes($uniq_domains) if $print_genes;
-
+    if($print_genes){print_genes($uniq_domains)}
+    else{print_domains($uniq_domains)}
 }
 
 __END__
