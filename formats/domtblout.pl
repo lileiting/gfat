@@ -10,7 +10,8 @@ use Gfat::Cmd::Base qw(base_main get_fh);
 
 sub actions{
     return {
-        uniq  => [\&uniq_domains, "Print uniq domains from a domtblout file"]
+        uniq  => [\&uniq_domains, "Print uniq domains from a domtblout file"],
+        conserved => [\&conserved_domains, "Print all possible domains and align by first conserved domain(s)"]
     };
 }
 
@@ -129,5 +130,74 @@ sub uniq_domains{
     if($print_genes){print_genes($uniq_domains)}
     else{print_domains($uniq_domains)}
 }
+
+=head2 domtblout.pl conserved
+
+  USAGE  : domtblout.pl conserved [OPTIONS]
+
+  OPTIONS: -i,--input  FILE
+           -o,--output FILE
+           -h,--help
+           -c,--conserved Domain[,Domain ...]
+
+=cut
+
+sub _get_conserved_pos{
+    my ($domains, $conserved) = @_;
+    my $i;
+    for my $domain (@$domains){
+        $i++;
+        if($conserved->{$domain->{query}}){
+            return $i;
+        }
+    }
+    warn $domains->[0]->{gene},":NO conserved domain(s)!";
+    return 1;
+}
+
+sub print_conserved_domains{
+    my ($domains, @conserved_domains) = @_;
+    my (%genes, %conserved);
+    map{push @{$genes{$_->{gene}}}, $_}@$domains;
+    map{$conserved{$_}++}@conserved_domains;
+
+    # number of domains before or after conserved domain
+    my ($before,$after) = (0, 0);
+    for my $gene (keys %genes){
+        my @domains = @{$genes{$gene}};
+        my $conserved_pos = _get_conserved_pos(\@domains,\%conserved);
+        $before = $conserved_pos if $conserved_pos > $before;
+        $after  = scalar(@domains) - $conserved_pos 
+            if (scalar(@domains) - $conserved_pos) > $after;
+    }
+
+    for my $gene (sort {$a cmp $b} keys %genes){
+        my @domains = @{$genes{$gene}};
+        my $conserved_pos = _get_conserved_pos(\@domains,\%conserved);
+        my $out = "$gene" . "\t-" x ($before - $conserved_pos);
+        for my $domain (@domains){
+            my $domain_info = $domain->{query}.'['.
+                $domain->{ali_from}.'-'.$domain->{ali_to}.']';
+            $out .= "\t$domain_info";
+        }
+        $out .= "\t-" x ($after - (scalar(@domains) - $conserved_pos));
+        print "$out\n";
+    }
+
+}
+
+sub conserved_domains{
+    my ($in_fh, $out_fh, $options) = get_fh(q/conserved/, 
+        "c|conserved=s@" => "STR      conserved domains, could be multiple"
+        );
+    die "CAUTION: conserved domains should be specified!" 
+        unless $options->{conserved};
+    my @conserved_domains = split(/,/,join(',',@{$options->{conserved}}));
+
+    my $data = load_domtblout_file($in_fh);
+    my $uniq_domains = get_uniq_domains($data);
+    print_conserved_domains($uniq_domains, @conserved_domains);
+}
+
 
 __END__
