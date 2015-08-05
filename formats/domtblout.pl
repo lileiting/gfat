@@ -31,6 +31,7 @@ sub load_domtblout_file{
         my @F            = split /\s+/;
         my $gene         = $F[0];
         my $query        = $F[3];
+        my $qlen         = $F[5];  # Query length
         my $evalue       = $F[6];
         my $bitscore     = $F[7];
         my $domain_index = $F[9];
@@ -43,6 +44,7 @@ sub load_domtblout_file{
         my $ali_to       = $F[18];
         my $env_from     = $F[19];
         my $env_to       = $F[20];
+        next unless $ali_to - $ali_from + 1 >= $qlen / 2;
         push @{$data{$gene}},
             {gene     => $gene,
              query    => $query,
