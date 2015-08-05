@@ -70,7 +70,7 @@ sub _multi_line{
 
     my $space  = ' ' x $indent;
     my $newstr = '';
-    my @words  = split / /, $str;
+    my @words  = split /[\s\n\r]+/, $str;
     my $line_len;
     for my $word (@words){
         if($newstr eq ''){ 

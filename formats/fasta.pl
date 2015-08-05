@@ -13,23 +13,70 @@ use List::Util qw/sum max min/;
 sub actions{
     return {
         -description => 'FASTA sequence',
-        idlist    => [\&idlist_fasta , "Get ID list of a sequence file"                  ],
-        length    => [\&length_fasta , "Print sequence length"                           ],
-        gc        => [\&gc_content   , "GC content"                                      ],
-        n50       => [\&N50          , "Calculate N50"                                   ],
-
-        sort      => [\&sort_fasta   , "Sort sequences by name/sizes"                    ],
-        rmdesc    => [\&rmdesc_fasta , "Remove sequence descriptions"                    ],
-        rename    => [\&rename_fasta , "Rename sequence IDs with a regular expression"   ],
-        getseq    => [\&action_getseq, "Get sequences by ID pattern"                     ],
-        subseq    => [\&action_subseq, "Get subsequences"                                ],
-        translate => [\&translate_cds, "Translate CDS to protein sequence"               ],
-        clean     => [\&clean_fasta  , "Clean irregular chars"                           ],
-        revcom    => [\&revcom_fasta , "Reverse complementary sequences"                 ],
-        format    => [\&format_fasta , "Format FASTA sequences 60 bp per line"           ],
-        oneline   => [\&oneline_fasta, "Format FASTA sequences unlimited length per line"],
-        motif     => [\&motif_search , "Print sequences match a pattern, e.g. WRKY"      ],
-        ssr       => [\&find_ssr     , "Find SSR sequences"                              ]
+        idlist => [
+            \&idlist_fasta,
+            "Get ID list of a sequence file"
+        ],
+        length => [
+            \&length_fasta,
+            "Print sequence length"
+        ],
+        gc => [
+            \&gc_content,
+             "GC content"   
+        ],
+        n50 => [
+            \&N50,
+             "Calculate N50"
+        ],
+        sort => [
+            \&sort_fasta,
+             "Sort sequences by name/sizes"
+        ],
+        rmdesc => [
+            \&rmdesc_fasta,
+             "Remove sequence descriptions"
+        ],
+        rename => [
+            \&rename_fasta,
+            "Rename sequence IDs with a regular expression"
+        ],
+        getseq => [
+            \&action_getseq,
+            "Get sequences by ID pattern"
+        ],
+        subseq => [
+            \&action_subseq,
+            "Get subsequences"
+        ],
+        translate => [
+            \&translate_cds,
+            "Translate CDS to protein sequence"
+        ],
+        clean => [
+            \&clean_fasta,
+            "Clean irregular chars"
+        ],
+        revcom => [
+            \&revcom_fasta,
+            "Reverse complementary sequences"
+        ],
+        format => [
+            \&format_fasta,
+            "Format FASTA sequences 60 bp per line"
+        ],
+        oneline => [
+            \&oneline_fasta,
+            "Format FASTA sequences unlimited length per line"
+        ],
+        motif => [
+            \&motif_search,
+            "Print sequences match a pattern, e.g. WRKY"
+        ],
+        ssr => [
+            \&find_ssr,
+            "Find SSR sequences"
+        ]
     }
 }
 
@@ -46,7 +93,7 @@ base_main(actions) unless caller;
 =cut
 
 sub idlist_fasta{
-    my ($in, undef, $options) =  get_seqio(q/idlist/, 
+    my ($in, undef, $options) =  get_seqio(q/idlist/,
         "d|desc" => "Print description in header");
     my ($out_fh, $desc) = @{$options}{qw/out_fh desc/};
     while(my $seq = $in->next_seq){
@@ -79,13 +126,13 @@ sub length_fasta{
 }
 
 sub sort_fasta{
-    my ($in, $out, $options) = get_seqio(q/sort/, 
+    my ($in, $out, $options) = get_seqio(q/sort/,
         "s|sizes" => "Sort by sizes (default by ID name)");
     my $sizes = $options->{sizes};
     my @seqobjs;
     while(my $seq = $in->next_seq){push @seqobjs, $seq}
-    map{$out->write_seq($_)}( sort{ $sizes ? 
-            $b->length <=> $a->length : 
+    map{$out->write_seq($_)}( sort{ $sizes ?
+            $b->length <=> $a->length :
             $a->display_id cmp $b->display_id
         }@seqobjs);
 }
@@ -115,11 +162,11 @@ sub rmdesc_fasta{
 =cut
 
 sub rename_fasta{
-    my ($in, $out, $options) = get_seqio(q/rename/, 
+    my ($in, $out, $options) = get_seqio(q/rename/,
         "f|from=s" => "From which string",
         "t|to=s"   => "To which string"    );
     my ($from, $to) = @{$options}{qw/from to/};
-    die "CAUTION: FROM or TO was not defined!" 
+    die "CAUTION: FROM or TO was not defined!"
         unless defined $from and defined $to;
     while(my $seq = $in->next_seq){
         my $id = $seq->display_id;
@@ -144,7 +191,7 @@ sub rename_fasta{
                -o,--output FILE
                -h,--help
                -s,--seqname STR
-               -p,--pattern STR 
+               -p,--pattern STR
                -l,--listfile <FILE>
 
   Examples  : fasta.pl getseq in.fasta -s gene1
@@ -152,19 +199,24 @@ sub rename_fasta{
               fasta.pl getseq in.fasta -s gene1,gene2
               fasta.pl getseq in.fasta -p 'gene\d'
               fasta.pl getseq in.fasta -l list.txt
-              fasta.pl getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt 
+              fasta.pl getseq in.fasta -s gene1 -s gene2 \
+                  -s gene3,gene4 -p 'name\d' -l list.txt
 
 =cut
 
 sub action_getseq{
-    my ($in, $out, $options) = get_seqio(q/getseq/, 
-        "p|pattern=s" =>  "STR    Pattern for sequence IDs",
-        "s|seqname=s@" =>  "STR    Match the exactly sequence name (could be multiple)",
-        "l|listfile=s" => "STR    A file contains a list of sequence IDs");
+    my ($in, $out, $options) = get_seqio(q/getseq/,
+        "p|pattern=s" =>
+            "STR    Pattern for sequence IDs",
+        "s|seqname=s@" =>
+            "STR    Match the exactly sequence name (could be multiple)",
+        "l|listfile=s" =>
+            "STR    A file contains a list of sequence IDs");
     my $pattern = $options->{pattern};
-    my @seqnames = $options->{seqname} ? split(/,/,join(',',@{$options->{seqname}})) : ();
+    my @seqnames = $options->{seqname} ?
+        split(/,/,join(',',@{$options->{seqname}})) : ();
     my $listfile = $options->{listfile};
-    die "ERROR: Pattern was not defined!\n" 
+    die "ERROR: Pattern was not defined!\n"
         unless $pattern or @seqnames or $listfile;
     my $list_ref;
     $list_ref = load_listfile($listfile) if $listfile;
@@ -195,19 +247,19 @@ sub action_getseq{
                -e,--end NUM
 
   Examples   : fasta.pl subseq in.fasta -s gene1 -t 10 -e 100
-               
+
 
 =cut
 
 sub action_subseq{
-    my ($in, $out, $options) = get_seqio(q/subseq/, 
+    my ($in, $out, $options) = get_seqio(q/subseq/,
          "s|seqname=s", "STR    Sequence name",
          "t|start=i", "NUM    Start position(>=1)",
          "e|end=i", "NUM    End position(>=1)"
     );
 
     my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
-    die "ERROR in sequence name, start position and end position\n" 
+    die "ERROR in sequence name, start position and end position\n"
         unless $seqname and $start and $end;
 
     while(my $seq = $in->next_seq){
@@ -215,7 +267,7 @@ sub action_subseq{
         if($id eq $seqname){
             my $subseq_id = "$id:$start-$end";
             my $subseq = $seq->subseq($start, $end);
-            $out->write_seq( 
+            $out->write_seq(
                 Bio::PrimarySeq->new(-display_id => $subseq_id,
                                      -seq => $subseq));
             exit;
@@ -256,7 +308,7 @@ sub gc_content{
     }
     printf $out "GC content: %.2f %%\n", $gc / ($gc+$at) * 100;
     my $non_atgc = $total_len - ($gc + $at);
-    printf $out "Non-ATGC characters: %d of %d (%.2f %%)\n", 
+    printf $out "Non-ATGC characters: %d of %d (%.2f %%)\n",
                $non_atgc, $total_len, $non_atgc / $total_len * 100
            if $non_atgc;
 }
@@ -264,10 +316,12 @@ sub gc_content{
 sub clean_fasta{
     my ($in, $out) = get_seqio(q/clean/);
     while(my $seq = $in->next_seq){
+        my $cleaned_seq = join('',
+            grep{/[A-Za-z*]/}split(//, $seq->seq));
         $out->write_seq(
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                  -description => $seq->desc,
-                                 -seq => join('', grep{/[A-Za-z*]/}split(//, $seq->seq))));
+                                 -seq => $cleaned_seq));
     }
     close_seqio($in, $out);
 }
@@ -323,7 +377,7 @@ sub N50{
 }
 
 sub motif_search{
-    my ($in, $out, $options) = get_seqio(q/motif/, 
+    my ($in, $out, $options) = get_seqio(q/motif/,
         "p|pattern=s" => "Sequence pattern");
     my $pattern = $options->{pattern};
     while(my $seq = $in->next_seq){
@@ -339,23 +393,31 @@ sub find_ssr{
     # Defination of SSR:
     # Repeat unit 2bp to 6bp, length not less than 18bp
     my ($id, $flank_seq_length) = (0, 100);
-    print $out_fh join("\t", qw/ID          Seq_Name           Start              
-                                End         SSR                Length 
-                                Repeat_Unit Repeat_Unit_Length Repeatitions 
-                                Sequence/
-                      )."\n";
+    print $out_fh join("\t",
+        qw/ID          Seq_Name           Start
+           End         SSR                Length
+           Repeat_Unit Repeat_Unit_Length Repeatitions
+           Sequence/
+        )."\n";
     while(my $seq = $in->next_seq){
         my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
         while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
             my ($match, $repeat_unit) = ($1, $2);
-            my ($repeat_length, $SSR_length)=(length($repeat_unit), length($match));
+            my ($repeat_length, $SSR_length)=
+                (length($repeat_unit), length($match));
             if($match =~ /([ATGC])\1{5}/){next;}
             $id++;
-            print $out_fh join("\t", 
-                $id,            $seq_name,      pos($sequence)-$SSR_length+1,
-                pos($sequence), $match,         $SSR_length,
-                $repeat_unit,   $repeat_length, $SSR_length / $repeat_length,
-                substr($sequence, 
+            print $out_fh join("\t",
+                $id,
+                $seq_name,
+                pos($sequence)-$SSR_length+1,
+                pos($sequence),
+                $match,
+                $SSR_length,
+                $repeat_unit,
+                $repeat_length,
+                $SSR_length / $repeat_length,
+                substr($sequence,
                     pos($sequence) - $SSR_length - $flank_seq_length,
                     $SSR_length + $flank_seq_length * 2)
             )."\n";

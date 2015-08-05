@@ -10,8 +10,15 @@ use Gfat::Cmd::Base qw(base_main get_fh);
 
 sub actions{
     return {
-        uniq  => [\&uniq_domains, "Print uniq domains from a domtblout file"],
-        conserved => [\&conserved_domains, "Print all possible domains and align by first conserved domain(s)"]
+        uniq  => [
+            \&uniq_domains, 
+            "Print uniq domains from a domtblout file"
+        ],
+        conserved => [
+            \&conserved_domains, 
+            "Print all possible domains and align by first
+            conserved domain(s)"
+        ]
     };
 }
 
