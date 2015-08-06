@@ -6,6 +6,6 @@ use base qw(Exporter);
 @EXPORT = qw();
 @EXPORT_OK = qw($VERSION $max_textwidth);
 
-our $VERSION = '0.1.228';
+our $VERSION = '0.1.229';
 our $max_textwidth = 70;
 

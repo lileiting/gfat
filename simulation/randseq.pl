@@ -5,7 +5,8 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use GFAT::FormatSeqStr qw(format_seqstr);
+use Text::Wrap;
+$Text::Wrap::columns = 61; # Note: this includes separator
 
 sub usage{
     print <<USAGE;
@@ -129,7 +130,7 @@ sub get_seqstr{
     my ($mode, $length, @char) = @_;
     my $seqstr    = rand_seq($mode eq 'cds' ? $length - 2 : $length, @char);
     $seqstr = 'ATG'.$seqstr.rand_seq(1,stop_codon) if $mode eq 'cds';
-    $seqstr = format_seqstr($seqstr);
+    $seqstr = wrap('', '', $seqstr);
     return $seqstr;
 }
 

@@ -47,7 +47,7 @@ use base qw(Exporter);
 @EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage load_listfile);
 
 use Text::Wrap;
-$Text::Wrap::columns = $max_textwidth;
+$Text::Wrap::columns = $max_textwidth + 1; # Note: this includes separator
 
 =head2 base_usage
 
