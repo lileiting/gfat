@@ -1,4 +1,4 @@
-package Gfat::Base;
+package GFAT::Base;
 use warnings;
 use strict;
 use FindBin;

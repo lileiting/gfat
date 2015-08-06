@@ -5,7 +5,7 @@ use strict;
 #use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Cmd::Base qw(get_fh close_fh get_options base_main);
+use GFAT::ActionBase qw(get_fh close_fh get_options base_main);
 
 sub actions{
     return {

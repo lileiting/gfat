@@ -1,10 +1,10 @@
 =head1 NAME
 
-Gfat::Cmd::BioBase - Base modules that used for build commands
+GFAT::ActionBioBase - Base modules that used for build commands
 
 =head1 SYNOPSIS
 
-  use Gfat::Cmd::Base qw(get_seqio, close_seqio);
+  use GFAT::ActionBioBase qw(get_seqio, close_seqio);
 
   # For simple options with only input, output and help
   my $cmd = shift @ARGV // die;
@@ -19,7 +19,7 @@ Subroutines that assist defining commands for read and write FASTA files
 
 =head1 FEEDBACK
 
-Create an issue in GitHub <https://github.com/lileiting/gfatk/issues>
+Create an issue in GitHub <https://github.com/lileiting/gfat/issues>
 
 =head1 AUTHOR
 
@@ -31,11 +31,11 @@ The rest of the documentation details each of the subroutine.
 
 =cut
 
-package Gfat::Cmd::BioBase;
+package GFAT::ActionBioBase;
 use warnings;
 use strict;
 use Bio::SeqIO;
-use Gfat::Cmd::Base qw(get_fh);
+use GFAT::ActionBase qw(get_fh);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();

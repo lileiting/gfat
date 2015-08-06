@@ -1,10 +1,10 @@
 =head1 NAME
 
-Gfat::Cmd::Base - Base modules that used for build commands
+GFAT::ActionBase - Base modules that used for build commands
 
 =head1 SYNOPSIS
 
-  use Gfat::Cmd::Base qw(get_fh close_fh get_options);
+  use GFAT::ActionBase qw(get_fh close_fh get_options);
 
   # For simple options with only input, output and help
   my $cmd = shift @ARGV;
@@ -21,7 +21,7 @@ Subroutines that assist defining commands for scripts
 
 =head1 FEEDBACK
 
-Create an issue in GitHub <https://github.com/lileiting/gfatk/issues>
+Create an issue in GitHub <https://github.com/lileiting/gfat/issues>
 
 =head1 AUTHOR
 
@@ -33,14 +33,14 @@ The rest of the documentation details each of the subroutine.
 
 =cut
 
-package Gfat::Cmd::Base;
+package GFAT::ActionBase;
 use warnings;
 use strict;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw/max/;
 use FindBin;
-use Gfat::Base qw(GetInFh GetOutFh);
-use Gfat::Config qw($max_textwidth);
+use GFAT::Base qw(GetInFh GetOutFh);
+use GFAT::Config qw($max_textwidth);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();

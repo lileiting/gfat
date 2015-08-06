@@ -6,7 +6,7 @@ use Bio::SeqIO;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::CodonTable;
+use GFAT::CodonTable;
 
 ############################################################
 # Usage

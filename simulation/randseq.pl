@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::FormatSeqStr qw(format_seqstr);
+use GFAT::FormatSeqStr qw(format_seqstr);
 
 sub usage{
     print <<USAGE;

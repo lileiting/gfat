@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Base qw(GetInFh GetOutFh);
+use GFAT::Base qw(GetInFh GetOutFh);
 
 sub usage{
     print <<usage;

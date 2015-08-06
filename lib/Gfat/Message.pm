@@ -1,4 +1,4 @@
-package Gfat::Message;
+package GFAT::Message;
 use warnings;
 use strict;
 use vars qw(@EXPORT @EXPORT_OK);

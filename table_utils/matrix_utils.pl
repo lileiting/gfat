@@ -6,7 +6,7 @@ use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use List::Util qw(sum max min);
-use Gfat::Cmd::Base qw(base_main);
+use GFAT::ActionBase qw(base_main);
 
 sub base_usage{
     print <<USAGE;

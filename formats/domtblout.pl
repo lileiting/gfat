@@ -6,7 +6,7 @@ use Getopt::Long;
 use FindBin;
 use List::Util qw(max);
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Cmd::Base qw(base_main get_fh);
+use GFAT::ActionBase qw(base_main get_fh);
 
 sub actions{
     return {

@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
-use Gfat::Cmd::Base qw(load_listfile);
+use GFAT::ActionBase qw(load_listfile);
 
 sub usage{
     print <<USAGE;
