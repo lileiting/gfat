@@ -36,11 +36,11 @@ The rest of the documentation details each of the subroutine.
 package Gfat::Cmd::Base;
 use warnings;
 use strict;
+use Getopt::Long qw(:config gnu_getopt);
+use List::Util qw/max/;
 use FindBin;
 use Gfat::Base qw(GetInFh GetOutFh);
-use Getopt::Long qw(:config gnu_getopt);
-use Getopt::Long;
-use List::Util qw/max/;
+use Gfat::Config qw($max_textwidth);
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
@@ -66,7 +66,7 @@ use base qw(Exporter);
 
 sub _multi_line{
     my ($str, $indent) = @_;
-    my $line_maxlen = 60 - $indent;
+    my $line_maxlen = $max_textwidth - $indent;
 
     my $space  = ' ' x $indent;
     my $newstr = '';
@@ -89,7 +89,7 @@ sub _multi_line{
 
 sub _desc_format{
     my $str = shift;
-    my $line_len = 60 - 4;
+    my $line_len = $max_textwidth - 4;
     my $newstr = 'Description: ';
     for (my $i = 0; $i < length($str); $i += $line_len){
         $newstr .= "\n    ".substr($str, $i, $line_len);
