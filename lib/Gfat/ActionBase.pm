@@ -46,6 +46,9 @@ use base qw(Exporter);
 @EXPORT = ();
 @EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage load_listfile);
 
+use Text::Wrap;
+$Text::Wrap::columns = $max_textwidth;
+
 =head2 base_usage
 
   Title   : base_usage
@@ -66,35 +69,15 @@ use base qw(Exporter);
 
 sub _multi_line{
     my ($str, $indent) = @_;
-    my $line_maxlen = $max_textwidth - $indent;
-
-    my $space  = ' ' x $indent;
-    my $newstr = '';
-    my @words  = split /[\s\n\r]+/, $str;
-    my $line_len;
-    for my $word (@words){
-        if($newstr eq ''){ 
-            $newstr = $word;
-            $line_len = length($word);
-        }elsif($line_len + length(" $word") <= $line_maxlen){
-            $newstr .= " $word";
-            $line_len += length(" $word");
-        }else{
-            $newstr .= "\n$space$word";
-            $line_len = 0;
-        }
-    }
+    my $newstr = wrap(' ' x $indent, ' ' x $indent, $str);
+    $newstr =~ s/^\s*//;
     return $newstr;
 }
 
 sub _desc_format{
     my $str = shift;
-    my $line_len = $max_textwidth - 4;
-    my $newstr = 'Description: ';
-    for (my $i = 0; $i < length($str); $i += $line_len){
-        $newstr .= "\n    ".substr($str, $i, $line_len);
-    }
-    return "\n$newstr\n";
+    return "\nDescription:\n" . 
+        wrap(' ' x 4, ' ' x 4, $str)."\n";
 }
 
 sub base_usage{
