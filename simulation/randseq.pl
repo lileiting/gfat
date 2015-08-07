@@ -5,8 +5,9 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
+use GFAT::Config;
 use Text::Wrap;
-$Text::Wrap::columns = 61; # Note: this includes separator
+local $Text::Wrap::columns = $GFAT::Config::seqwidth + 1;
 
 sub usage{
     print <<USAGE;
@@ -27,6 +28,9 @@ perl randseq.pl [OPTIONS]
   -X,--max NUM 
     Minimum and maximum length of sequence [both default:100]
 
+  -V,--version
+    Print version
+
   -h,--help
     Print help
 
@@ -35,6 +39,7 @@ USAGE
 }
 
 sub get_options{
+    my $version;
     my $help;
     my $num = 1;
     my $prefix = q/RandSeq/;
@@ -47,7 +52,9 @@ sub get_options{
         "I|min=i"    => \$min,
         "X|max=i"    => \$max,
         "m|mode=s"   => \$mode,
+        "V|version"  => \$version,
         "h|help"     => \$help);
+    print_version if $version;
     usage if $help;
     die "ERROR: max length ($max), min length($min)\n" if $max < $min;
     my @modes = qw/nt cds aa/;

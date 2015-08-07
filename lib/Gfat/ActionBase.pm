@@ -40,14 +40,14 @@ use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw/max/;
 use FindBin;
 use GFAT::Base qw(GetInFh GetOutFh);
-use GFAT::Config qw($max_textwidth);
+use GFAT::Config;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT = ();
 @EXPORT_OK = qw(get_fh close_fh get_options base_main base_usage load_listfile);
 
 use Text::Wrap;
-$Text::Wrap::columns = $max_textwidth + 1; # Note: this includes separator
+local $Text::Wrap::columns = $GFAT::Config::textwidth + 1;
 
 =head2 base_usage
 
@@ -173,6 +173,7 @@ sub cmd_usage{
     [-i,--input]  FILE    Input file name [default:STDIN]
     -o,--output   FILE    Output file name [default:STDOUT]
     -h,--help             Print help
+    -V,--version          Print version
 $add_options
 
 USAGE
@@ -213,8 +214,10 @@ sub get_options{
         "i|input=s"  => \$opt{infile},
         "o|output=s" => \$opt{outfile},
         "h|help"     => \$opt{help},
+        "V|version"  => \$opt{version},
         @add_options
     );
+    print_version if $opt{version};
     cmd_usage(@_) if $opt{help} or (!$opt{infile} and @ARGV == 0 and -t STDIN);
     $opt{infile} = shift @ARGV if (!$opt{infile} and @ARGV > 0);
     $opt{in_fh} = GetInFh($opt{infile});
