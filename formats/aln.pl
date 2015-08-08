@@ -4,8 +4,11 @@ use warnings;
 use strict;
 use File::Basename;
 use Bio::AlignIO;
-use Getopt::Long;
+use Getopt::Long qw(:config gnu_getopt);
 use FindBin;
+use Text::Abbrev;
+use lib "$FindBin::RealBin/../lib";
+use GFAT::Config;
 
 sub usage{
     print <<"usage";
@@ -17,8 +20,8 @@ USAGE
     $FindBin::Script [-t] [-f format] <ALIGNMENT> [<ALIGNMENT> ...]
 
 OPTIONS
-    -t print title
-    -f format [Default: fasta]
+    -t,--title         print title
+    -f,--format FORMAT [Default: fasta]
            Specify the format of the file.  Supported formats include:
 
               bl2seq      Bl2seq Blast output
@@ -38,6 +41,9 @@ OPTIONS
               selex       selex (hmmer) format
               stockholm   stockholm format
 
+    -V,--version    Print version number
+    -h,--help       Print help
+
 NOTICE
     Note that abbreviations of formats are supported, so typing the first 
     letter or first few letters of a format are sufficient
@@ -47,36 +53,25 @@ usage
 }
 
 sub get_options{
-
     usage unless @ARGV;
-
     my ($title, $format) = (undef, 'fasta');
-    GetOptions("title"    => \$title,
-               "format=s" => \$format);
-
-    $format = do {
-        $_ = $format;
-        if(   /^b/i   and 'bl2seq'    =~ /^$_/i){'bl2seq'   }
-        elsif(/^c/i   and 'clustalw'  =~ /^$_/i){'clustalw' }
-        elsif(/^e/i   and 'emboss'    =~ /^$_/i){'emboss'   }
-        elsif(/^f/i   and 'fasta'     =~ /^$_/i){'fasta'    }
-        elsif(/^maf/i and 'maf'       =~ /^$_/i){'maf'      }
-        elsif(/^mas/i and 'mase'      =~ /^$_/i){'mase'     }
-        elsif(/^meg/i and 'mega'      =~ /^$_/i){'mega'     }
-        elsif(/^mem/i and 'meme'      =~ /^$_/i){'meme'     }
-        elsif(/^ms/i  and 'msf'       =~ /^$_/i){'msf'      }
-        elsif(/^n/i   and 'nexus'     =~ /^$_/i){'nexus'    }
-        elsif(/^pf/i  and 'pfam'      =~ /^$_/i){'pfam'     }
-        elsif(/^ph/i  and 'phylip'    =~ /^$_/i){'phylip'   }
-        elsif(/^pr/i  and 'prodom'    =~ /^$_/i){'prodom'   }
-        elsif(/^ps/i  and 'psi'       =~ /^$_/i){'psi'      }
-        elsif(/^se/i  and 'selex'     =~ /^$_/i){'selex'    }
-        elsif(/^st/i  and 'stockholm' =~ /^$_/i){'stockholm'}
-        else{
-            print "ERROR: Unsupported alignment file format: $_!\n";
-            usage;
-        }
-    };
+    GetOptions("t|title"    => \$title,
+               "f|format=s" => \$format,
+               "V|version"  => \my $version,
+               "h|help"     => \my $help
+              );
+    print_version if $version;
+    usage if $help;
+    my @formats = qw/bl2seq clustalw emboss fasta maf
+        mase mega meme msf nexus pfam phylip prodom psi
+        selex stockholm/;
+    my %formats = abbrev @formats;
+    if($formats{$format}){
+        $format = $formats{$format};
+    }else{
+        print "ERROR: Unsupported alignment file format: $format!\n";
+        usage;
+    }
     return ($title, $format);
 }
 
