@@ -6,7 +6,7 @@ use base qw(Exporter);
 @EXPORT = qw(print_version);
 @EXPORT_OK = qw($VERSION $textwidth $seqwidth print_version);
 
-our $VERSION = '0.1.233';
+our $VERSION = '0.1.234';
 our $textwidth = 70;
 our $seqwidth = 60;
 
@@ -15,3 +15,4 @@ sub print_version{
     exit;
 }
 
+1;
