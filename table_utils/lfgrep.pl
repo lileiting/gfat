@@ -2,7 +2,7 @@
 
 use warnings;
 use strict;
-use Getopt::Long;
+use Getopt::Long qw(:config gnu_getopt);
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionBase qw(load_listfile);
@@ -36,11 +36,11 @@ USAGE
 
 sub get_options{
     my ($in_fh, $out_fh) = (\*STDIN, \*STDOUT);
-    GetOptions("file=s" => \my $infile,
-               "list=s" => \my $listfile,
-               "out=s"  => \my $outfile,
-               "H|header" => \my $header,
-               "help"   => \my $help);
+    GetOptions("file|f=s" => \my $infile,
+               "list|l=s" => \my $listfile,
+               "out|o=s"  => \my $outfile,
+               "header|H" => \my $header,
+               "help|h"   => \my $help);
     usage if $help or (@ARGV == 0 and -t STDIN);
     die "CAUTION: List file is missing!\n" unless $listfile;
     $infile = shift @ARGV if (!$infile and @ARGV > 0);

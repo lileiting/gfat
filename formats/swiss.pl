@@ -280,9 +280,10 @@ sub publications{
         my $desc = $seq->description;
         my @comments = $seq->annotation->get_Annotations('comment');
         my $comments = (split /-!-/, $comments[0]->display_text)[1];
-        $comments =~ s/[\s\r\n]+/ /g;
+        $comments ? ($comments =~ s/[\s\r\n]+/ /g) : ($comments = '');
         my @references = $seq->annotation->get_Annotations('reference');
         for my $reference (@references){
+            next unless $reference->display_text;
             print join("\t", 
                       $acc, $id, $desc,$comments,
                       $reference->location,
