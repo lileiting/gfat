@@ -57,9 +57,9 @@ sub new{
     return \%action;
 }
 
-sub acclist2{
+sub acclist{
     my $action = new(
-        -action      => 'acclist2',
+        -action      => 'acclist',
         -description => "Print ACC list for a sequence file",
     );
     while( my $seq = $action->{in}->next_seq){
@@ -67,75 +67,12 @@ sub acclist2{
     }
 }
 
-sub idlist2{
+sub idlist{
     my $action = new(
-        -action => 'idlist2'
+        -action => 'idlist'
     );
     while( my $seq = $action->{in}->next_seq){
         print $seq->display_id, "\n";
     }
 }
 
-sub acclist_usage{
-    print <<"usage";
-
-USAGE 
-    $FindBin::Script acclist [OPTIONS]
-
-DESCRIPTION
-    Print ACC list for a sequence file
-
-OPTIONS
-    -i,--infile FILE
-
-usage
-    exit;
-}
-
-sub acclist{
-    acclist_usage unless @ARGV;
-    my %options;
-    GetOptions(\%options,
-        "infile|i=s"
-    );
-    acclist_usage unless $options{infile};
-    my $in_fh = GetInFh($options{infile});
-    my $in = Bio::SeqIO->new(-fh => $in_fh,
-                             -format => $::format);
-    while( my $seq = $in->next_seq){
-        print $seq->accession_number, "\n";
-    }
-}
-
-sub idlist_usage{
-    print <<"usage";
-
-USAGE 
-    $FindBin::Script idlist [OPTIONS]
-
-DESCRIPTION
-    Print ID list for a sequence file
-
-OPTIONS
-    -i,--infile FILE
-
-usage
-    exit;
-}
-
-sub idlist{
-    idlist_usage unless @ARGV;
-    my %options;
-    GetOptions(\%options,
-        "infile|i=s"
-    );
-    idlist_usage unless $options{infile};
-    my $in_fh = GetInFh($options{infile});
-    my $in = Bio::SeqIO->new(-fh => $in_fh,
-                             -format => $::format);
-    while( my $seq = $in->next_seq){
-        print $seq->display_id, "\n";
-    }
-}
-
-1;
