@@ -3,9 +3,8 @@ package GFAT::SeqAction;
 use warnings;
 use strict;
 use FindBin;
-use Getopt::Long;
+use Getopt::Long qw(:config gnu_getopt);
 use Bio::Perl;
-use GFAT::Base qw(GetInFh);
 
 sub generate_usage{
     my %args = @_;
@@ -39,17 +38,9 @@ sub new{
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
     &{$usage} if $options{help} or (@ARGV == 0 and -t STDIN);
-    my $fh;
-    if(@ARGV){
-        my $file = shift @ARGV;
-        if($file eq '-'){
-            $fh = \*STDIN;
-        }
-        else{
-            open $fh, "<", $file or die "$!";
-        }
-    }else{
-        $fh = \*STDIN;
+    my ($file, $fh) = (shift @ARGV, \*STDIN);
+    if($file and $file ne '-' ){
+        open $fh, "<", $file or die "$!";
     }
     my $in = Bio::SeqIO->new(-fh => $fh, 
                              -format => $args{format});
@@ -76,3 +67,4 @@ sub idlist{
     }
 }
 
+1;
