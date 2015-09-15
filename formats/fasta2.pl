@@ -14,7 +14,7 @@ USAGE
 
 ACTIONS
     acclist | Print accession numbers for a sequence file
-    idlist  | Print ID list for a sequence file
+    ids     | Print ID list for a sequence file
 
 usage
     exit;

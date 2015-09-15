@@ -14,12 +14,18 @@ sub acclist{
     }
 }
 
-sub idlist{
+sub ids{
     my $action = new_action(
-        -action => 'idlist'
+        -action => 'ids',
+        -description => 'Print the FASTA sequence headers',
+        -options => {
+            "description|d" => 'Print a second column for descriptions',
+        }
     );
     while( my $seq = $action->{in}->next_seq){
-        print $seq->display_id, "\n";
+        print $seq->display_id, 
+            $action->{options}->{description} ? "\t".$seq->desc : '', 
+            "\n";
     }
 }
 
