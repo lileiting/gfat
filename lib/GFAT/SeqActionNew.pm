@@ -1,4 +1,4 @@
-package GFAT::SeqActionBase;
+package GFAT::SeqActionNew;
 
 use warnings;
 use strict;

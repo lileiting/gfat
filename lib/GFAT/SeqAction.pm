@@ -2,7 +2,7 @@ package GFAT::SeqAction;
 
 use warnings;
 use strict;
-use GFAT::SeqActionBase;
+use GFAT::SeqActionNew;
 
 sub acclist{
     my $action = new_action(
