@@ -20,12 +20,18 @@ sub ids{
         -description => 'Print the FASTA sequence headers',
         -options => {
             "description|d" => 'Print a second column for descriptions',
+            "until|u=s"       => 'Truncate the name and description at words'
         }
     );
     while( my $seq = $action->{in}->next_seq){
-        print $seq->display_id, 
-            $action->{options}->{description} ? "\t".$seq->desc : '', 
-            "\n";
+        my $info = $seq->display_id . 
+            ($action->{options}->{description} ? "\t".$seq->desc : '');
+        
+        my $re = $action->{options}->{until};
+        if(defined $re){
+            $info =~ s/$re.*$//;
+        }
+        print "$info\n";
     }
 }
 

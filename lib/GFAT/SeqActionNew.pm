@@ -16,8 +16,10 @@ sub resolve_options_usage{
 
     my $options_usage = '';
     my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
-    my $max_opt_len = max(map{my $a = $_; $a =~ s/(=.+)$//;length($a)-1+4}(@opt_keys));
-
+    my $max_opt_len = max( map{ my $a = $_; 
+                                $a =~ s/(=.+)$//;
+                                length($a)-1+4
+                              } (@opt_keys) );
     my %type = (i => 'INT',
                 s => 'STR',
                 f => 'FLT',
@@ -26,27 +28,26 @@ sub resolve_options_usage{
         die "ERROR in option: $option"
             unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
         my $desc = $args{-options}->{$option};
-        my ($long, $short, $type0, $type, $multi) = ($1, $2, $3, $4, $5);
-
+        my ($long, $short, $type0, $type, $multi) = 
+            ($1, $2, $3, $4, $5);
         my $string = sprintf "    %-${max_opt_len}s %s %s\n",
             "-$short,--$long",
             $type0 ? $type{$type} : '   ',
             $desc;
-
         $options_usage .= $string;
     }
     $options_usage =~ s/^\s+//;
     return $options_usage;
 }
 
-
 sub action_usage{
     my %args = @_;
     my $options_usage = resolve_options_usage(@_);
+    my $file_info = $args{-filenumber} == 1 ? 'infile' : 'file1 file2';
     my $usage = "
 USAGE
-    $FindBin::Script $args{-action} infile [OPTIONS]
-    $FindBin::Script $args{-action} [OPTIONS] infile
+    $FindBin::Script $args{-action} $file_info [OPTIONS]
+    $FindBin::Script $args{-action} [OPTIONS] $file_info
 
 DESCRIPTION
     $args{-description}
@@ -66,7 +67,7 @@ sub new_action{
     $args{-outformat} //= $::format;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
-    #$args{'-filenumber'} //= '1+'; # 1, 2, 3, 1+
+    $args{-filenumber} //= 1;
 
     my $usage = action_usage(%args);
     my %options;
