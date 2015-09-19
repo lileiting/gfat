@@ -17,14 +17,6 @@ sub actions{
             \&gc_content,
              "GC content"   
         ],
-        sort => [
-            \&sort_fasta,
-             "Sort sequences by name/sizes"
-        ],
-        rmdesc => [
-            \&rmdesc_fasta,
-             "Remove sequence descriptions"
-        ],
         rename => [
             \&rename_fasta,
             "Rename sequence IDs with a regular expression"
@@ -73,27 +65,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-sub sort_fasta{
-    my ($in, $out, $options) = get_seqio(q/sort/,
-        "s|sizes" => "Sort by sizes (default by ID name)");
-    my $sizes = $options->{sizes};
-    my @seqobjs;
-    while(my $seq = $in->next_seq){push @seqobjs, $seq}
-    map{$out->write_seq($_)}( sort{ $sizes ?
-            $b->length <=> $a->length :
-            $a->display_id cmp $b->display_id
-        }@seqobjs);
-}
-
-sub rmdesc_fasta{
-    my ($in, $out) = get_seqio(q/rmdesc/);
-    while(my $seq = $in->next_seq){
-        $out->write_seq(
-            Bio::PrimarySeq->new(-display_id => $seq->display_id,
-                                 -seq => $seq->seq));
-    }
-}
 
 =head2 fasta.pl rename
 

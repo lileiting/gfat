@@ -16,6 +16,8 @@ ACTIONS
     acclist | Print a list of accession numbers
     ids     | Print a list of sequence IDs
     length  | Print a list of sequence length
+    rmdesc  | Remove sequence descriptions
+    sort    | Sort sequences by name/size
 
 usage
     exit;
@@ -38,8 +40,4 @@ sub main{
 
 main() unless caller;
 
-####################
-# Sequence Actions #
-####################
-
-
+__END__

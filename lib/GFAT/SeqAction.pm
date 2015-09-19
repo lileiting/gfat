@@ -72,4 +72,36 @@ sub length{
     }
 }
 
+sub rmdesc{
+    my $action = new_seqaction(
+        -description => 'Remove sequence descriptions'
+    );
+    for my $in(@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            $action->{out_io}->write_seq(
+                Bio::PrimarySeq->new(-display_id => $seq->display_id,
+                                     -seq => $seq->seq));
+        }
+    }
+}
+
+sub sort{
+    my $action = new_seqaction(
+        -description => 'Sort sequences by name/size',
+        -options => {
+            "sizes|s" => 'Sort by sizes (default by ID name)'
+        }
+    );
+    my @seqobjs;
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            push @seqobjs, $seq;
+        }
+    }
+    map{$action->{out_io}->write_seq($_)}( sort{ $action->{options}->{sizes} ?
+            $b->length <=> $a->length :
+            $a->display_id cmp $b->display_id
+        }@seqobjs);
+}
+
 1;
