@@ -43,7 +43,7 @@ sub resolve_options_usage{
 sub action_usage{
     my %args = @_;
     my $options_usage = resolve_options_usage(@_);
-    my $file_info = $args{-filenumber} == 1 ? 'infile' : 'file1 file2';
+    my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
     my $usage = "
 USAGE
     $FindBin::Script $args{-action} $file_info [OPTIONS]
@@ -74,23 +74,36 @@ sub new_action{
     GetOptions(\%options, keys %{$args{-options}});
     &{$usage} if $options{help} or (@ARGV == 0 and -t STDIN);
 
-    my ($infile, $in_fh) = (shift @ARGV, \*STDIN);
-    if($infile and $infile ne '-' ){
-        open $in_fh, "<", $infile or die "$!";
+    if(@ARGV){
+        for my $infile (@ARGV){
+            my $in_fh;
+            if($infile ne '-'){
+                open $in_fh, "<", $infile or die "$!";
+            }
+            else{
+                $in_fh = \*STDIN;
+            }
+            my $in = Bio::SeqIO->new(-fh => $in_fh,
+                                     -format => $args{-informat});
+            push @{$action{in_fhs}}, $in_fh;
+            push @{$action{in_ios}}, $in;
+        }
+    }else{
+        my $in_fh = \*STDIN;
+        my $in = Bio::SeqIO->new(-fh => $in_fh, 
+                                 -format => $args{-informat});
+        push @{$action{in_fhs}}, $in_fh;
+        push @{$action{in_ios}}, $in;
     }
-    my $in = Bio::SeqIO->new(-fh => $in_fh, 
-                             -format => $args{-informat});
 
     my ($outfile, $out_fh) = ($options{outfile}, \*STDOUT);
     if($options{outfile} and $options{outfile} ne '-'){
         open $out_fh, ">", $outfile or die "$!";
     }
-
     my $out = Bio::SeqIO->new(-fh => $out_fh,
                            -format => $args{-outformat});
-
-    $action{in} = $in;
-    $action{out} = $out;
+    $action{out_fh} = $out_fh;
+    $action{out_io} = $out;
     $action{options} = \%options;
     return \%action;
 }

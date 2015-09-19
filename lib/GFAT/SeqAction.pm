@@ -23,15 +23,17 @@ sub ids{
             "until|u=s"       => 'Truncate the name and description at words'
         }
     );
-    while( my $seq = $action->{in}->next_seq){
-        my $info = $seq->display_id . 
-            ($action->{options}->{description} ? "\t".$seq->desc : '');
+    for my $in (@{$action->{in_ios}}){
+        while( my $seq = $in->next_seq ){
+            my $info = $seq->display_id . 
+                ($action->{options}->{description} ? "\t".$seq->desc : '');
         
-        my $re = $action->{options}->{until};
-        if(defined $re){
-            $info =~ s/$re.*$//;
+            my $re = $action->{options}->{until};
+            if(defined $re){
+                $info =~ s/$re.*$//;
+            }
+            print "$info\n";
         }
-        print "$info\n";
     }
 }
 
