@@ -170,6 +170,36 @@ sub sort{
         }@seqobjs);
 }
 
+sub subseq{
+    my $action = new_seqaction(
+        -description => 'Get subsequences',
+        -options => {
+            "seqname|s=s" => 'Sequence name',
+            "start|t=i"   => 'Start position(>=1)',
+            "end|e=i"     => 'End position(>=1)'
+        }
+    );
+    my $options = $action->{options};
+    my $out = $action->{out_io};
+    my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
+    die "ERROR in sequence name, start position and end position\n"
+        unless $seqname and $start and $end;
+
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $id = $seq->display_id;
+            if($id eq $seqname){
+                my $subseq_id = "$id:$start-$end";
+                my $subseq = $seq->subseq($start, $end);
+                $out->write_seq(
+                    Bio::PrimarySeq->new(-display_id => $subseq_id,
+                                         -seq => $subseq));
+                exit;
+            }
+        }
+    }
+}
+
 sub translate{
     my $action = new_seqaction(
         -description => 'Translate CDS to protein sequences'

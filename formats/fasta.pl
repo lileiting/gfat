@@ -17,10 +17,6 @@ sub actions{
             \&gc_content,
              "GC content"   
         ],
-        subseq => [
-            \&action_subseq,
-            "Get subsequences"
-        ],
         clean => [
             \&clean_fasta,
             "Clean irregular chars"
@@ -49,52 +45,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-=head2 action_subseq
-
-  Title      : action_subseq
-
-  Usage      : fasta.pl subseq [OPTIONS]
-
-  Description: Get subsequences from a FASTA sequence file
-
-  Options    : [-i,--input] <FASTA>
-               -o,--output FILE
-               -h,--help
-               -s,--seqname STR
-               -t,--start NUM
-               -e,--end NUM
-
-  Examples   : fasta.pl subseq in.fasta -s gene1 -t 10 -e 100
-
-
-=cut
-
-sub action_subseq{
-    my ($in, $out, $options) = get_seqio(q/subseq/,
-         "s|seqname=s", "STR    Sequence name",
-         "t|start=i", "NUM    Start position(>=1)",
-         "e|end=i", "NUM    End position(>=1)"
-    );
-
-    my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
-    die "ERROR in sequence name, start position and end position\n"
-        unless $seqname and $start and $end;
-
-    while(my $seq = $in->next_seq){
-        my $id = $seq->display_id;
-        if($id eq $seqname){
-            my $subseq_id = "$id:$start-$end";
-            my $subseq = $seq->subseq($start, $end);
-            $out->write_seq(
-                Bio::PrimarySeq->new(-display_id => $subseq_id,
-                                     -seq => $subseq));
-            exit;
-        }
-    }
-
-    close_seqio($in, $out);
-}
 
 sub count_gc{
     my $str = shift;

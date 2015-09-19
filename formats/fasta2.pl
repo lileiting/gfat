@@ -21,6 +21,7 @@ ACTIONS
     revcom   | Reverse complementary
     rmdesc   | Remove sequence descriptions
     sort     | Sort sequences by name/size
+    subseq   | Get subsequence
     translate| Translate CDS to protein sequences
 
 usage
