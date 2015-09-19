@@ -13,14 +13,6 @@ use List::Util qw/sum max min/;
 sub actions{
     return {
         -description => 'FASTA sequence',
-        idlist => [
-            \&idlist_fasta,
-            "Get ID list of a sequence file"
-        ],
-        length => [
-            \&length_fasta,
-            "Print sequence length"
-        ],
         gc => [
             \&gc_content,
              "GC content"   
@@ -85,45 +77,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-=head2 fasta.pl idlist
-
-  Usage: fasta.pl idlist [OPTIONS]
-
-=cut
-
-sub idlist_fasta{
-    my ($in, undef, $options) =  get_seqio(q/idlist/,
-        "d|desc" => "Print description in header");
-    my ($out_fh, $desc) = @{$options}{qw/out_fh desc/};
-    while(my $seq = $in->next_seq){
-        print $out_fh $seq->display_id,
-                      $desc ? ' '.$seq->desc : '',
-                      "\n";
-    }
-}
-
-=head2 fasta.pl length
-
-  Usage: fasta.pl length [OPTIONS]
-
-=cut
-
-sub length_fasta{
-    my ($in, undef, $options) = get_seqio(q/length/);
-    my ($out_fh) = @{$options}{out_fh};
-    my @lengths;
-    while(my $seq = $in->next_seq){
-        push @lengths, $seq->length;
-        print $out_fh $seq->display_id,"\t",$seq->length,"\n";
-    }
-    die "CAUTION: No sequences!" unless @lengths;
-    warn "Number of sequences: ", scalar(@lengths), "\n";
-    warn "Total length: ", sum(@lengths), "\n";
-    warn "Maximum length: ", max(@lengths), "\n";
-    warn "Minimum length: ", min(@lengths), "\n";
-    warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
-}
 
 sub sort_fasta{
     my ($in, $out, $options) = get_seqio(q/sort/,

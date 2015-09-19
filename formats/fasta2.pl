@@ -13,8 +13,8 @@ USAGE
     $FindBin::Script ACTION [OPTIONS]
 
 ACTIONS
-    acclist | Print accession numbers for a sequence file
-    ids     | Print ID list for a sequence file
+    acclist | Print a list of accession numbers
+    ids     | Print a list of sequence IDs
     length  | Print a list of sequence length
 
 usage
