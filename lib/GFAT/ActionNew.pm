@@ -45,8 +45,8 @@ sub action_usage{
     my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
     my $usage = "
 USAGE
-    $FindBin::Script $args{-action} $file_info [OPTIONS]
-    $FindBin::Script $args{-action} [OPTIONS] $file_info
+    $FindBin::Script $args{-name} $file_info [OPTIONS]
+    $FindBin::Script $args{-name} [OPTIONS] $file_info
 
 DESCRIPTION
     $args{-description}
@@ -60,8 +60,8 @@ OPTIONS
 sub new_action{
     my %args = @_;
     my %action;
-    die "Action name was not given!" unless $args{-action};
-    $args{-description} //= $args{-action};
+    die "Action name and description were not given!" 
+        unless $args{-name} and $args{-description};
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-filenumber} //= 1;

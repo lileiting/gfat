@@ -6,7 +6,7 @@ use GFAT::SeqActionNew;
 
 sub acclist{
     my $action = new_seqaction(
-        -action      => 'acclist',
+        -name        => 'acclist',
         -description => "Print ACC list for a sequence file",
     );
     while( my $seq = $action->{in}->next_seq){
@@ -16,9 +16,9 @@ sub acclist{
 
 sub ids{
     my $action = new_seqaction(
-        -action => 'ids',
+        -name        => 'ids',
         -description => 'Print the FASTA sequence headers',
-        -options => {
+        -options     => {
             "description|d" => 'Print a second column for descriptions',
             "until|u=s"       => 'Truncate the name and description at words'
         }
@@ -27,12 +27,21 @@ sub ids{
         while( my $seq = $in->next_seq ){
             my $info = $seq->display_id . 
                 ($action->{options}->{description} ? "\t".$seq->desc : '');
-        
             my $re = $action->{options}->{until};
-            if(defined $re){
-                $info =~ s/$re.*$//;
-            }
+            $info =~ s/$re.*$// if defined $re;
             print "$info\n";
+        }
+    }
+}
+
+sub length{
+    my $action = new_seqaction(
+        -name        => 'length',
+        -description => 'Print a list of sequence length'
+    );
+    for my $in (@{$action->{in_ios}}){
+        while( my $seq = $in->next_seq ){
+            print $seq->display_id, "\t", $seq->length, "\n";
         }
     }
 }
