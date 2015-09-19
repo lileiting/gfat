@@ -17,10 +17,6 @@ sub actions{
             \&gc_content,
              "GC content"   
         ],
-        n50 => [
-            \&N50,
-             "Calculate N50"
-        ],
         sort => [
             \&sort_fasta,
              "Sort sequences by name/sizes"
@@ -306,27 +302,6 @@ sub oneline_fasta{
     }
     close_seqio($in);
     close_fh($out_fh);
-}
-
-sub calculate_N50{
-    my @num = sort{$b <=> $a}@_;
-    my $total = sum(@num);
-    my $sum = 0;
-    for my $n (@num){
-        $sum += $n;
-        return $n if $sum >= $total / 2;
-    }
-}
-
-sub N50{
-    my ($in, undef, $options) = get_seqio(q/n50/);
-    my $out_fh = $options->{out_fh};
-    my @seqlen;
-    while(my $seq = $in->next_seq){
-        push @seqlen, $seq->length;
-    }
-    my $n50 = calculate_N50(@seqlen);
-    print $out_fh "N50: $n50\n";
 }
 
 sub motif_search{

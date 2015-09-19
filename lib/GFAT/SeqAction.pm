@@ -33,6 +33,18 @@ sub ids{
     }
 }
 
+sub _calculate_N50{
+    my @num = sort{$b <=> $a}@_;
+    my $total = sum(@num);
+    my $sum = 0;
+    my $n = 0;
+    for my $len (@num){
+        $n++;
+        $sum += $len;
+        return ($n, $len) if $sum >= $total / 2;
+    }
+}
+
 sub length{
     my $action = new_seqaction(
         -description => 'Print a list of sequence length',
@@ -54,6 +66,9 @@ sub length{
         warn "Maximum length: ", max(@lengths), "\n";
         warn "Minimum length: ", min(@lengths), "\n";
         warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
+        my ($N50, $L50) = _calculate_N50(@lengths);
+        warn "N50: $N50\n";
+        warn "L50: $L50\n";
     }
 }
 
