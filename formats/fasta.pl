@@ -29,17 +29,9 @@ sub actions{
             \&action_subseq,
             "Get subsequences"
         ],
-        translate => [
-            \&translate_cds,
-            "Translate CDS to protein sequence"
-        ],
         clean => [
             \&clean_fasta,
             "Clean irregular chars"
-        ],
-        revcom => [
-            \&revcom_fasta,
-            "Reverse complementary sequences"
         ],
         format => [
             \&format_fasta,
@@ -197,13 +189,6 @@ sub action_subseq{
     close_seqio($in, $out);
 }
 
-sub translate_cds{
-    my ($in, $out) = get_seqio(q/translate/);
-    while(my $seq = $in->next_seq){
-        $out->write_seq(translate($seq));
-    }
-}
-
 sub count_gc{
     my $str = shift;
     my @char = split //, $str;
@@ -242,14 +227,6 @@ sub clean_fasta{
             Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                  -description => $seq->desc,
                                  -seq => $cleaned_seq));
-    }
-    close_seqio($in, $out);
-}
-
-sub revcom_fasta{
-    my ($in, $out) = get_seqio(q/clean/);
-    while(my $seq = $in->next_seq){
-        $out->write_seq($seq->revcom);
     }
     close_seqio($in, $out);
 }

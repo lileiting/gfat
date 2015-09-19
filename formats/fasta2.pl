@@ -13,11 +13,13 @@ USAGE
     $FindBin::Script ACTION [OPTIONS]
 
 ACTIONS
-    acclist | Print a list of accession numbers
-    ids     | Print a list of sequence IDs
-    length  | Print a list of sequence length
-    rmdesc  | Remove sequence descriptions
-    sort    | Sort sequences by name/size
+    acclist  | Print a list of accession numbers
+    ids      | Print a list of sequence IDs
+    length   | Print a list of sequence length
+    revcom   | Reverse complementary
+    rmdesc   | Remove sequence descriptions
+    sort     | Sort sequences by name/size
+    translate| Translate CDS to protein sequences
 
 usage
     exit;

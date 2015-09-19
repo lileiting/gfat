@@ -72,6 +72,17 @@ sub length{
     }
 }
 
+sub revcom{
+    my $action = new_seqaction(
+        -description => 'Reverse complementary'
+    );
+    for my $in(@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            $action->{out_io}->write_seq(Bio::Perl::revcom($seq));
+        }
+    }
+}
+
 sub rmdesc{
     my $action = new_seqaction(
         -description => 'Remove sequence descriptions'
@@ -102,6 +113,18 @@ sub sort{
             $b->length <=> $a->length :
             $a->display_id cmp $b->display_id
         }@seqobjs);
+}
+
+sub translate{
+    my $action = new_seqaction(
+        -description => 'Translate CDS to protein sequences'
+    );
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            #my $pep = translate($seq);
+            $action->{out_io}->write_seq(Bio::Perl::translate($seq));
+        }
+    }
 }
 
 1;
