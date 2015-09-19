@@ -6,7 +6,6 @@ use GFAT::SeqActionNew;
 
 sub acclist{
     my $action = new_seqaction(
-        -name        => 'acclist',
         -description => "Print ACC list for a sequence file",
     );
     while( my $seq = $action->{in}->next_seq){
@@ -16,11 +15,10 @@ sub acclist{
 
 sub ids{
     my $action = new_seqaction(
-        -name        => 'ids',
         -description => 'Print the FASTA sequence headers',
         -options     => {
             "description|d" => 'Print a second column for descriptions',
-            "until|u=s"       => 'Truncate the name and description at words'
+            "until|u=s"     => 'Truncate the name and description at words'
         }
     );
     for my $in (@{$action->{in_ios}}){
@@ -36,7 +34,6 @@ sub ids{
 
 sub length{
     my $action = new_seqaction(
-        -name        => 'length',
         -description => 'Print a list of sequence length'
     );
     for my $in (@{$action->{in_ios}}){

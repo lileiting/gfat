@@ -57,11 +57,26 @@ OPTIONS
     return sub {print $usage; exit}
 }
 
+sub get_action_name{
+    for my $level (1..3){
+        my $subroutine = (caller($level))[3];
+        if($subroutine =~ /new_action|new_seqaction/){
+            next;
+        }
+        else{
+            $subroutine =~ s/^.+:(.+)$/$1/;
+            return $subroutine;
+        }
+    }
+    die "CAUTION: Could not find action name!";
+}
+
 sub new_action{
     my %args = @_;
     my %action;
-    die "Action name and description were not given!" 
-        unless $args{-name} and $args{-description};
+    die "Action description were not given!"
+        unless $args{-description};
+    $args{-name} //= get_action_name;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-filenumber} //= 1;
