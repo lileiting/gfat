@@ -3,6 +3,7 @@ package GFAT::SeqAction;
 use warnings;
 use strict;
 use GFAT::SeqActionNew;
+use GFAT::LoadFile;
 use List::Util qw(sum max min);
 
 sub acclist{
@@ -11,6 +12,38 @@ sub acclist{
     );
     while( my $seq = $action->{in}->next_seq){
         print $seq->accession_number, "\n";
+    }
+}
+
+sub getseq{
+    my $action = new_seqaction(
+        -description => 'Get a subset of sequences from based on its IDs',
+        -options => {
+            'pattern|p=s' => 'Pattern for sequence IDs',
+            'seqname|s=s@' => 'sequence name (could be multiple)',
+            'listfile|l=s' => 'A file contains a list of sequence IDs'
+        }
+    );
+    my $options = $action->{options};
+    my $out = $action->{out_io};
+    my $pattern = $options->{pattern};
+    my @seqnames = $options->{seqname} ?
+        split(/,/,join(',',@{$options->{seqname}})) : ();
+    my $listfile = $options->{listfile};
+    die "ERROR: Pattern was not defined!\n"
+        unless $pattern or @seqnames or $listfile;
+    my $list_ref;
+    $list_ref = load_listfile($listfile) if $listfile;
+    map{$list_ref->{$_}++}@seqnames if @seqnames;
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
+            if(($pattern and $seqid =~ /$pattern/) or
+                ((@seqnames or $listfile) and $list_ref->{$seqid})){
+                $out->write_seq($seq);
+                exit if not $listfile and not $pattern and @seqnames == 1;
+            }
+        }
     }
 }
 

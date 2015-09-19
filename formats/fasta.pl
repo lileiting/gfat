@@ -17,10 +17,6 @@ sub actions{
             \&gc_content,
              "GC content"   
         ],
-        getseq => [
-            \&action_getseq,
-            "Get sequences by ID pattern"
-        ],
         subseq => [
             \&action_subseq,
             "Get subsequences"
@@ -53,59 +49,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-=head2 action_getseq
-
-  Title      : action_getseq
-
-  Usage      : fasta.pl getseq [OPTIONS]
-
-  Description: Get sequences from a FASTA file with a seqname, a pattern
-               or a list of seqnames
-
-  Options    : [-i,--input] <FASTA>
-               -o,--output FILE
-               -h,--help
-               -s,--seqname STR
-               -p,--pattern STR
-               -l,--listfile <FILE>
-
-  Examples  : fasta.pl getseq in.fasta -s gene1
-              fasta.pl getseq in.fasta -s gene1 -s gene2
-              fasta.pl getseq in.fasta -s gene1,gene2
-              fasta.pl getseq in.fasta -p 'gene\d'
-              fasta.pl getseq in.fasta -l list.txt
-              fasta.pl getseq in.fasta -s gene1 -s gene2 \
-                  -s gene3,gene4 -p 'name\d' -l list.txt
-
-=cut
-
-sub action_getseq{
-    my ($in, $out, $options) = get_seqio(q/getseq/,
-        "p|pattern=s" =>
-            "STR    Pattern for sequence IDs",
-        "s|seqname=s@" =>
-            "STR    Match the exactly sequence name (could be multiple)",
-        "l|listfile=s" =>
-            "STR    A file contains a list of sequence IDs");
-    my $pattern = $options->{pattern};
-    my @seqnames = $options->{seqname} ?
-        split(/,/,join(',',@{$options->{seqname}})) : ();
-    my $listfile = $options->{listfile};
-    die "ERROR: Pattern was not defined!\n"
-        unless $pattern or @seqnames or $listfile;
-    my $list_ref;
-    $list_ref = load_listfile($listfile) if $listfile;
-    map{$list_ref->{$_}++}@seqnames if @seqnames;
-    while(my $seq = $in->next_seq){
-        my $seqid = $seq->display_id;
-        if(($pattern and $seqid =~ /$pattern/) or
-            ((@seqnames or $listfile) and $list_ref->{$seqid})){
-            $out->write_seq($seq);
-            exit if not $listfile and not $pattern and @seqnames == 1;
-        }
-    }
-}
 
 =head2 action_subseq
 

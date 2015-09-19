@@ -8,7 +8,7 @@ use List::Util qw(max);
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_action);
-@EXPORT_OK = qw(new_action);
+@EXPORT_OK = @EXPORT;
 
 sub resolve_options_usage{
     my %args = @_;

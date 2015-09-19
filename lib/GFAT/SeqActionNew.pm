@@ -7,7 +7,7 @@ use GFAT::ActionNew;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_seqaction);
-@EXPORT_OK = qw(new_seqaction);
+@EXPORT_OK = @EXPORT;
 
 sub new_seqaction{
     my %args = @_;
