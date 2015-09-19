@@ -5,7 +5,7 @@ use strict;
 use GFAT::SeqActionNew;
 
 sub acclist{
-    my $action = new_action(
+    my $action = new_seqaction(
         -action      => 'acclist',
         -description => "Print ACC list for a sequence file",
     );
@@ -15,7 +15,7 @@ sub acclist{
 }
 
 sub ids{
-    my $action = new_action(
+    my $action = new_seqaction(
         -action => 'ids',
         -description => 'Print the FASTA sequence headers',
         -options => {
