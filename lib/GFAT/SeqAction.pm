@@ -72,6 +72,28 @@ sub length{
     }
 }
 
+sub rename{
+    my $action = new_seqaction(
+        -description => "Rename sequence IDs",
+        -options => {
+            "from|f=s" => 'From which string',
+            "to|t=s"   => 'To which string'
+        }
+    );
+    my ($from, $to) = @{$action->{options}}{qw/from to/};
+    die "CAUTION: FROM or TO was not defined!"
+        unless defined $from and defined $to;
+    for my $in(@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $id = $seq->display_id;
+            $id =~ s/$from/$to/;
+            $action->{out_io}->write_seq(
+                Bio::PrimarySeq->new(-display_id => $id,
+                                     -seq => $seq->seq));
+        }
+    }
+}
+
 sub revcom{
     my $action = new_seqaction(
         -description => 'Reverse complementary'
