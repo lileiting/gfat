@@ -15,10 +15,12 @@ USAGE
 ACTIONS
     acclist  | Print a list of accession numbers
     clean    | Clean irregular characters
+    format   | Read in and write out sequences
     gc       | GC content
     getseq   | Get sequences by IDs
     ids      | Print a list of sequence IDs
     length   | Print a list of sequence length
+    oneline  | Print one sequence in one line
     rename   | Rename sequence IDs
     revcom   | Reverse complementary
     rmdesc   | Remove sequence descriptions

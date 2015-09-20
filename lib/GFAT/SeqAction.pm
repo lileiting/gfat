@@ -33,6 +33,17 @@ sub clean{
     }
 }
 
+sub format_fasta{
+    my $action = new_seqaction(
+        -description => 'Read in and write out sequences'
+    );
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            $action->{out_io}->write_seq($seq);
+        }
+    }
+}
+
 sub _count_gc{
     my $str = shift;
     my @char = split //, $str;
@@ -153,6 +164,22 @@ sub length{
         my ($N50, $L50) = _calculate_N50(@lengths);
         warn "N50: $N50\n";
         warn "L50: $L50\n";
+    }
+}
+
+sub oneline{
+    my $action = new_seqaction(
+        -description => 'Print one sequence in one line'
+    );
+    my $options = $action->{options};
+
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $id = $seq->display_id;
+            my $desc = " ".$seq->desc;
+            my $seq = $seq->seq;
+            print ">$id$desc\n$seq\n";
+        }
     }
 }
 

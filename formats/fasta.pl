@@ -38,27 +38,6 @@ base_main(actions) unless caller;
 # Defination of subcommands #
 #############################
 
-sub format_fasta{
-    my ($in, $out) = get_seqio(q/format/);
-    while(my $seq = $in->next_seq){
-        $out->write_seq($seq);
-    }
-    close_seqio($in, $out);
-}
-
-sub oneline_fasta{
-    my ($in, undef, $options) = get_seqio(q/oneline/);
-    my $out_fh = $options->{out_fh};
-    while(my $seq = $in->next_seq){
-        my $id = $seq->display_id;
-        my $desc = " ".$seq->desc;
-        my $seq = $seq->seq;
-        print $out_fh ">$id$desc\n$seq\n";
-    }
-    close_seqio($in);
-    close_fh($out_fh);
-}
-
 sub motif_search{
     my ($in, $out, $options) = get_seqio(q/motif/,
         "p|pattern=s" => "Sequence pattern");
