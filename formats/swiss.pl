@@ -7,7 +7,7 @@ use FindBin;
 use Getopt::Long;
 use Bio::Perl;
 use lib "$FindBin::RealBin/../lib";
-use GFAT::ActionBase qw(load_listfile);
+use GFAT::LoadFile qw(load_listfile);
 
 sub main_usage{
     print <<"usage";
