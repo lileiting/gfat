@@ -19,12 +19,14 @@ ACTIONS
     gc       | GC content
     getseq   | Get sequences by IDs
     ids      | Print a list of sequence IDs
-    length   | Print a list of sequence length
+    motif    | Find sequences with given sequence pattern
     oneline  | Print one sequence in one line
     rename   | Rename sequence IDs
     revcom   | Reverse complementary
     rmdesc   | Remove sequence descriptions
-    sort     | Sort sequences by name/size
+    seqlen   | Print a list of sequence length
+    seqsort  | Sort sequences by name/size
+    ssr      | Find simple sequence repeats (SSR)
     subseq   | Get subsequence
     translate| Translate CDS to protein sequences
 

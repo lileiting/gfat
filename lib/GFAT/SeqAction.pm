@@ -140,30 +140,21 @@ sub _calculate_N50{
     }
 }
 
-sub length{
+sub motif{
     my $action = new_seqaction(
-        -description => 'Print a list of sequence length',
-        -options     => {
-            "summary|s" => 'Print summary of sequence length'
+        -description => 'Find sequences with given sequence pattern',
+        -options => {
+            "pattern|p=s" => 'Sequence pattern'
         }
     );
-    my @lengths;
+    my $options = $action->{options};
+    my $out = $action->{out_io};
+    my $pattern = $options->{pattern};
     for my $in (@{$action->{in_ios}}){
-        while( my $seq = $in->next_seq ){
-            print $seq->display_id, "\t", $seq->length, "\n";
-            push @lengths, $seq->length if $action->{options}->{summary};
+        while(my $seq = $in->next_seq){
+            my $seqstr = $seq->seq;
+            $out->write_seq($seq) if $seqstr =~ /$pattern/;
         }
-    }
-    if($action->{options}->{summary}){
-        die "CAUTION: No sequences!" unless @lengths;
-        warn "Number of sequences: ", scalar(@lengths), "\n";
-        warn "Total length: ", sum(@lengths), "\n";
-        warn "Maximum length: ", max(@lengths), "\n";
-        warn "Minimum length: ", min(@lengths), "\n";
-        warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
-        my ($N50, $L50) = _calculate_N50(@lengths);
-        warn "N50: $N50\n";
-        warn "L50: $L50\n";
     }
 }
 
@@ -229,7 +220,34 @@ sub rmdesc{
     }
 }
 
-sub sort{
+sub seqlen {
+    my $action = new_seqaction(
+        -description => 'Print a list of sequence length',
+        -options     => {
+            "summary|s" => 'Print summary of sequence length'
+        }
+    );
+    my @lengths;
+    for my $in (@{$action->{in_ios}}){
+        while( my $seq = $in->next_seq ){
+            print $seq->display_id, "\t", $seq->length, "\n";
+            push @lengths, $seq->length if $action->{options}->{summary};
+        }
+    }
+    if($action->{options}->{summary}){
+        die "CAUTION: No sequences!" unless @lengths;
+        warn "Number of sequences: ", scalar(@lengths), "\n";
+        warn "Total length: ", sum(@lengths), "\n";
+        warn "Maximum length: ", max(@lengths), "\n";
+        warn "Minimum length: ", min(@lengths), "\n";
+        warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
+        my ($N50, $L50) = _calculate_N50(@lengths);
+        warn "N50: $N50\n";
+        warn "L50: $L50\n";
+    }
+}
+
+sub seqsort{
     my $action = new_seqaction(
         -description => 'Sort sequences by name/size',
         -options => {
@@ -246,6 +264,48 @@ sub sort{
             $b->length <=> $a->length :
             $a->display_id cmp $b->display_id
         }@seqobjs);
+}
+
+sub ssr{
+    my $action = new_seqaction(
+        -description => 'Find simple sequence repeats (SSR)'
+    );
+    my $options = $action->{options};
+    # Defination of SSR:
+    # Repeat unit 2bp to 6bp, length not less than 18bp
+    my ($id, $flank_seq_length) = (0, 100);
+    print join("\t",
+        qw/ID          Seq_Name           Start
+           End         SSR                Length
+           Repeat_Unit Repeat_Unit_Length Repeatitions
+           Sequence/
+        )."\n";
+    for my $in (@{$action->{in_ios}}){    
+        while(my $seq = $in->next_seq){
+            my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
+            while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
+                my ($match, $repeat_unit) = ($1, $2);
+                my ($repeat_length, $SSR_length)=
+                    (length($repeat_unit), length($match));
+                if($match =~ /([ATGC])\1{5}/){next;}
+                $id++;
+                print join("\t",
+                    $id,
+                    $seq_name,
+                    pos($sequence)-$SSR_length+1,
+                    pos($sequence),
+                    $match,
+                    $SSR_length,
+                    $repeat_unit,
+                    $repeat_length,
+                    $SSR_length / $repeat_length,
+                    substr($sequence,
+                        pos($sequence) - $SSR_length - $flank_seq_length,
+                        $SSR_length + $flank_seq_length * 2)
+                )."\n";
+            }
+        }
+    }
 }
 
 sub subseq{
