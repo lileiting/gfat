@@ -13,10 +13,6 @@ use List::Util qw/sum max min/;
 sub actions{
     return {
         -description => 'FASTA sequence',
-        clean => [
-            \&clean_fasta,
-            "Clean irregular chars"
-        ],
         format => [
             \&format_fasta,
             "Format FASTA sequences 60 bp per line"
@@ -41,19 +37,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-sub clean_fasta{
-    my ($in, $out) = get_seqio(q/clean/);
-    while(my $seq = $in->next_seq){
-        my $cleaned_seq = join('',
-            grep{/[A-Za-z*]/}split(//, $seq->seq));
-        $out->write_seq(
-            Bio::PrimarySeq->new(-display_id => $seq->display_id,
-                                 -description => $seq->desc,
-                                 -seq => $cleaned_seq));
-    }
-    close_seqio($in, $out);
-}
 
 sub format_fasta{
     my ($in, $out) = get_seqio(q/format/);

@@ -10,8 +10,26 @@ sub acclist{
     my $action = new_seqaction(
         -description => "Print a list of accession numbers",
     );
-    while( my $seq = $action->{in}->next_seq){
-        print $seq->accession_number, "\n";
+    for my $in (@{$action->{in_ios}}){
+        while( my $seq = $in->next_seq){
+            print $seq->accession_number, "\n";
+        }
+    }
+}
+
+sub clean{
+    my $action = new_seqaction(
+       -description => 'Clean irregular characters'
+    );
+    for my $in (@{$action->{in_ios}}){
+        while( my $seq = $in->next_seq){
+            my $cleaned_seq = join('',
+                grep{/[A-Za-z*]/}split(//, $seq->seq));
+            $action->{out_io}->write_seq(
+                Bio::PrimarySeq->new(-display_id => $seq->display_id,
+                                     -description => $seq->desc,
+                                     -seq => $cleaned_seq));
+        }
     }
 }
 
