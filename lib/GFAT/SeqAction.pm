@@ -15,6 +15,39 @@ sub acclist{
     }
 }
 
+sub _count_gc{
+    my $str = shift;
+    my @char = split //, $str;
+    my %char;
+    map{$char{$_}++}@char;
+    my $gc = ($char{G} // 0) + ($char{C} // 0);
+    my $at = ($char{A} // 0) + ($char{T} // 0);
+    return ($gc, $at);
+}
+
+sub gc{
+    my $action = new_seqaction(
+        -description => 'GC content'
+    );
+    my $options = $action->{options};
+    my $total_len = 0;
+    my $gc = 0;
+    my $at = 0;
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            $total_len += $seq->length;
+            my ($seq_gc, $seq_at) = _count_gc($seq->seq);
+            $gc += $seq_gc;
+            $at += $seq_at;
+        }
+    }
+    printf "GC content: %.2f %%\n", $gc / ($gc+$at) * 100;
+    my $non_atgc = $total_len - ($gc + $at);
+    printf "Non-ATGC characters: %d of %d (%.2f %%)\n",
+               $non_atgc, $total_len, $non_atgc / $total_len * 100
+           if $non_atgc;
+}
+
 sub getseq{
     my $action = new_seqaction(
         -description => 'Get a subset of sequences from based on its IDs',

@@ -13,10 +13,6 @@ use List::Util qw/sum max min/;
 sub actions{
     return {
         -description => 'FASTA sequence',
-        gc => [
-            \&gc_content,
-             "GC content"   
-        ],
         clean => [
             \&clean_fasta,
             "Clean irregular chars"
@@ -45,35 +41,6 @@ base_main(actions) unless caller;
 #############################
 # Defination of subcommands #
 #############################
-
-sub count_gc{
-    my $str = shift;
-    my @char = split //, $str;
-    my %char;
-    map{$char{$_}++}@char;
-    my $gc = ($char{G} // 0) + ($char{C} // 0);
-    my $at = ($char{A} // 0) + ($char{T} // 0);
-    return ($gc, $at);
-}
-
-sub gc_content{
-    my ($in, undef, $options) = get_seqio(q/gc/);
-    my $out = $options->{out_fh};
-    my $total_len = 0;
-    my $gc = 0;
-    my $at = 0;
-    while(my $seq = $in->next_seq){
-        $total_len += $seq->length;
-        my ($seq_gc, $seq_at) = count_gc($seq->seq);
-        $gc += $seq_gc;
-        $at += $seq_at;
-    }
-    printf $out "GC content: %.2f %%\n", $gc / ($gc+$at) * 100;
-    my $non_atgc = $total_len - ($gc + $at);
-    printf $out "Non-ATGC characters: %d of %d (%.2f %%)\n",
-               $non_atgc, $total_len, $non_atgc / $total_len * 100
-           if $non_atgc;
-}
 
 sub clean_fasta{
     my ($in, $out) = get_seqio(q/clean/);

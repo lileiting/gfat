@@ -14,6 +14,7 @@ USAGE
 
 ACTIONS
     acclist  | Print a list of accession numbers
+    gc       | GC content
     getseq   | Get sequences by IDs
     ids      | Print a list of sequence IDs
     length   | Print a list of sequence length
