@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
+use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_action);
@@ -79,12 +80,15 @@ sub new_action{
     $args{-name} //= get_action_name;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
+    $args{-options}->{"version|V"} //= 'Print version number and exit';
     $args{-filenumber} //= 1;
 
     my $usage = action_usage(%args);
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
+    print_version if $options{version};
     &{$usage} if $options{help} or (@ARGV == 0 and -t STDIN);
+
 
     if(@ARGV){
         for my $infile (@ARGV){
