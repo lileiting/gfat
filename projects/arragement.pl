@@ -17,7 +17,7 @@ usage
 sub main{
     main_usage unless @ARGV;
     my $num = shift @ARGV;
-    main_usage unless $num > 1;
+    main_usage unless $num >= 1;
     my @input = (1..$num);
     arrangement(@input);
 }
@@ -33,11 +33,10 @@ sub arrangement{
 my @pre = ();
 sub _arrangement{
     my ($level, @a) = @_;
-    if(@a == 2){
+    if(@a == 1){
         print join(",", @pre, @a),"\n";
-        print join(",", @pre, reverse @a),"\n";
     }
-    elsif(@a > 2){
+    elsif(@a > 1){
         for (my $i = 0; $i <= $#a; $i++){
             my @tmp = @a;
             my $first = splice(@tmp,$i,1);
@@ -46,7 +45,7 @@ sub _arrangement{
         }
     }
     else{
-        die "Number of array elements is too small: ".@a."\n";
+        die "CAUTION: Input array is empty!\n";
     }
 }
 
