@@ -9,17 +9,17 @@ sub usage{
 
 print <<USAGE;
 
-perl sci PATTERN
+$FindBin::Script PATTERN
 
   This is a program to list sci journals and their impact 
   factor. The JOURNAL NAME PATTERN is actually considered 
   as Perl regular expression, see the following examples.
 
-  sci plant       # Means journals contain 'plant'
-  sci 'agri|hort' # Means journal names contain 'agri' or 'hort'
-  sci .           # Means all journals   
-  sci ^nat        # Means journals start with 'nat'
-  sci sci\$       # Means journals end with 'sci'
+  $FindBin::Script plant       # Means journals contain 'plant'
+  $FindBin::Script 'agri|hort' # Means journal names contain 'agri' or 'hort'
+  $FindBin::Script .           # Means all journals   
+  $FindBin::Script ^nat        # Means journals start with 'nat'
+  $FindBin::Script sci\$       # Means journals end with 'sci'
 
 USAGE
     exit;
