@@ -15,11 +15,14 @@ Usage
 Availabe ACTIONs:
 [ Statistics ]
     chrlist  | Print chromosome list
-    getintron| Get intron postions
+    genelist | Print gene list
 
 [ subset ]
     groups   | Get a subset of GFF based on a two columns files
                (gene ID and their groups)
+
+[ New data ]
+    getintron| Get intron postions
 
 usage
     exit;
@@ -40,6 +43,49 @@ main() unless caller;
 ###########
 # Actions #
 ###########
+
+#~~~~~~~~~~~~~gff data structure~~~~~~~~~~~~#
+
+# Data structure
+# HASH => GeneID => Type(gene, mRNA, CDS, exon, etc) 
+#   => [type_entry1, type_entry2, etc] X 
+#      [Chr, Start, End, Strand]
+# $data{Pbr01.1}->{gene}->[0]->[0] = $chr
+# $data{Pbr01.1}->{mRNA}->[0]->[0] = $chr
+# $data{Pbr01.1}->{CDS}->[0]->[0] = $chr
+
+sub _gff_entry{
+    my $line = shift;
+    my @F = split /\t/, $line;
+    my ($chr, $type, $start, $end, $strand) = @F[0,2,3,4,6];
+    my %info = grep{!/^\s*$/}(split /[;=]/, $F[8]);
+    my $id = $info{ID} // $info{Parent} // die "Where is ID in \"$line\"";
+    return (
+        chr => $chr,
+        type => $type,
+        start => $start,
+        end  => $end,
+        strand => $strand,
+        id => $id,
+    )
+}
+
+sub _load_gff_file{
+    #my $in_fh = shift;
+    my %data; # %data => Gene ID => 
+    print STDERR "Loading GFF file ...\n";
+    for my $in_fh (@_){
+        while(<$in_fh>){
+            my %entry = _gff_entry($_);
+            push @{$data{$entry{id}}->{$entry{type}}},
+                 [$entry{chr},$entry{start}, $entry{end},$entry{strand}];
+        }
+    }
+    return \%data;
+}
+
+
+#~~~~~~~~~~~~~~~~~~~~~chrlist~~~~~~~~~~~~~~~~#
 
 sub _by_number{
     my $str = shift;
@@ -69,6 +115,34 @@ sub chrlist{
         print join("\t", $chr, map{$chrs{$chr}->{$_} // 0}@types),"\n";
     }
 }
+
+#~~~~~~~~~~~~~~~~~~~genelist~~~~~~~~~~~~~~~~~~~~#
+
+
+# What if intron exist inside UTR??????????
+# What if intron exist between UTR and CDS
+sub _number_of_exons{
+    my ($data, $gene) = @_;
+    return scalar(@{$data->{$gene}->{CDS}});
+}
+
+sub _number_of_introns{ return _number_of_exons(@_) - 1; }
+
+sub genelist{
+    my $args = new_action(
+        -description => 'Print gene list'
+    );
+    my $data = _load_gff_file(@{$args->{in_fhs}});
+    print "GeneID\tExons\tIntrons\n";
+    for my $gene (sort {_by_number($a) <=> _by_number($b)} keys %$data){
+        print "$gene",
+              "\t", _number_of_exons($data,$gene),
+              "\t", _number_of_introns($data,$gene),
+              "\n";
+    }
+}
+
+#~~~~~~~~~~~~~~~~~~~getintron~~~~~~~~~~~~~~~~~~~#
 
 sub getintron{
     my $args = new_action(
@@ -106,6 +180,8 @@ sub getintron{
         }
     }
 }
+
+#~~~~~~~~~~~~~groups~~~~~~~~~~~#
 
 sub _load_gene_list_file{
     my $file = shift;
