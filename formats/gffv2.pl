@@ -17,6 +17,10 @@ Availabe ACTIONs:
     chrlist  | Print chromosome list
     getintron| Get intron postions
 
+[ subset ]
+    groups   | Get a subset of GFF based on a two columns files
+               (gene ID and their groups)
+
 usage
     exit;
 }
@@ -102,3 +106,57 @@ sub getintron{
         }
     }
 }
+
+sub _load_gene_list_file{
+    my $file = shift;
+    my %subfamilies;
+    open my $fh, "<", $file or die;
+    while(<$fh>){
+        #print "Processing $_";
+        chomp;
+        @_ = split /\t/;
+        $subfamilies{$_[0]} = $_[1];
+    }
+    close $fh;
+    return \%subfamilies;
+}
+
+sub _create_fhs{
+    my $subfamilies = shift;
+    my %fhs;
+    for my $subfamily (values %$subfamilies){
+        next if $fhs{$subfamily};
+        my $outfile = "subfamily-$subfamily.gff";
+        warn "Creating file $outfile ...\n";
+        open my $fh, ">", $outfile or die;
+        $fhs{$subfamily} = $fh;
+    }
+    return \%fhs;
+}
+
+sub groups{
+    my $args = new_action(
+        -description => 'Get subset GFF information based on a two-column
+                         file, and created multiple files based on the 
+                         second column',
+        -options     => { "listfile|l=s" => 'A two-column list file with 
+                                            gene ID and the belonging groups'
+                        }
+    );
+    die "CAUTION: List file is missing!\n" unless $args->{options}->{listfile};
+    my $subfamilies = _load_gene_list_file($args->{options}->{listfile});
+    my $fhs = _create_fhs($subfamilies);
+    for my $fh (@{$args->{in_fhs}}){
+        while(my $line = <$fh>){
+            for my $gene (keys %$subfamilies){
+                if($line =~ /$gene/){
+                    $line =~ s/UTR_[53]/UTR/;
+                    print {$fhs->{$subfamilies->{$gene}}} $line;
+                    last;
+                }
+            }
+        }
+    }
+}
+
+__END__

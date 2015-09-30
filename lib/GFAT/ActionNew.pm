@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
+use Text::Wrap;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
@@ -27,9 +28,13 @@ sub resolve_options_usage{
     for my $option (@opt_keys){
         die "ERROR in option: $option"
             unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
-        my $desc = $args{-options}->{$option};
-        my ($long, $short, $type0, $type, $multi) = 
+        my ($long, $short, $type0, $type, $multi) =
             ($1, $2, $3, $4, $5);
+        my $desc = $args{-options}->{$option};
+        $desc =~ s/[\s\r\n]+/ /g;
+        $desc = wrap(' ' x ($max_opt_len + 9),
+                     ' ' x ($max_opt_len + 9) ,$desc);
+        $desc =~ s/^\s+//;
         my $string = sprintf "    %-${max_opt_len}s %s %s\n",
             "-$short,--$long",
             $type0 ? $type{$type} : '   ',
@@ -42,6 +47,9 @@ sub resolve_options_usage{
 
 sub action_usage{
     my %args = @_;
+    $args{-description} =~ s/[\s\r\n]+/ /g;
+    $args{-description} = wrap("    ", "    ", $args{-description});
+    $args{-description} =~ s/^\s+//;
     my $options_usage = resolve_options_usage(@_);
     my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
     my $usage = "
