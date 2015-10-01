@@ -15,7 +15,8 @@ Usage
 Availabe ACTIONs:
 [ Statistics ]
     chrlist  | Print chromosome list
-    genelist | Print gene list
+    genelist | Print gene list (exon/intron number might not be 
+               accurate for situations that intron located in UTRs)
 
 [ subset ]
     groups   | Get a subset of GFF based on a two columns files
@@ -23,6 +24,9 @@ Availabe ACTIONs:
 
 [ New data ]
     getintron| Get intron postions
+
+[ Get sequences ]
+    getseq   | Get sequences
 
 usage
     exit;
@@ -177,6 +181,50 @@ sub getintron{
                     $strand, $id, $intron_count,
                     ($present_start - 1) - ($previous_end + 1) + 1;
             }
+        }
+    }
+}
+
+#~~~~~~~~~~~~~getseq~~~~~~~~~~~#
+
+sub _get_seqid_from_ann{
+    my $ann = shift;
+    my @ann = grep {!/^\s*$/} (split /;/,$ann);
+    my %hash;
+    map{@_ = split /=/;$hash{$_[0]} = $_[1]}@ann;
+    die "ERROR: No seq ID! ... $ann\n" unless $hash{ID};
+    return $hash{ID};
+}
+
+sub getseq{
+    my $args = new_action(
+        -desc => 'Get sequences',
+        -options => {
+            "db|d=s"   => 'Fasta sequence used to get sequences',
+            "type|t=s" => 'Specify which feature type was used to get 
+                           sequences' 
+                    }
+    );
+    my $seqdb = $args->{options}->{db};
+    die "A fasta sequence is required!\n" unless $seqdb;
+    my $seqtype = $args->{options}->{type} // 'mRNA';
+    use Bio::DB::Fasta;
+    my $db = Bio::DB::Fasta->new($seqdb);
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            my ($chr,$type, $start, $end,$strand,$ann) = 
+                (split /\t/)[0,2,3,4,6,8];
+            next unless $type eq $seqtype;
+            my $seqid = _get_seqid_from_ann($ann);
+            my $seqstr = $strand eq '+' ? 
+                $db->seq($chr, $start, $end) :
+                $db->seq($chr, $end, $start);
+            die "CAUTION: unable to obtain sequence for $seqid from $seqdb\n" 
+                unless $seqstr;
+            $seqstr =~ s/(.{60})/$1\n/g;
+            chomp $seqstr;
+            print ">$seqid $chr|$start-$end|$strand|",$end - $start + 1,
+                  "bp|$type\n$seqstr\n";
         }
     }
 }

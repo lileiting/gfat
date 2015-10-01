@@ -84,7 +84,8 @@ sub new_action{
     my %args = @_;
     my %action;
     die "Action description were not given!"
-        unless $args{-description};
+        unless $args{-description} or $args{-desc};
+    $args{-description} = $args{-desc} unless $args{-description};
     $args{-name} //= get_action_name;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";

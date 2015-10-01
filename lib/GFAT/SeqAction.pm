@@ -33,7 +33,7 @@ sub clean{
     }
 }
 
-sub format_fasta{
+sub format{
     my $action = new_seqaction(
         -description => 'Read in and write out sequences'
     );
