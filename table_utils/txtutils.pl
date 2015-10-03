@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+use GFAT::LoadFile;
 
 sub main_usage{
     print <<"usage";
@@ -43,7 +44,42 @@ sub main{
 main() unless caller;
 
 sub fgrep {
-    print "fgrep\n";
+    my $args = new_action(
+        -desc => 'Get a subset of lines from a file based on a list
+                 of patterns(strings) by exact match the first 
+                 column. This is a replacement of Linux/Unix 
+                 command "fgrep -f FILE", which is too slow for a 
+                 larger dataset, in my experience. This script 
+                 build a hash for the list of patterns. Thus, the 
+                 patterns will be considered simply a set of 
+                 strings, instead of regular expression patterns. ', 
+        -options => {
+            "file|f=s" => 'A list of strings, one per line.
+                    Comments are allowed with prefix of "#"',
+            "invert_match|v" => 'Selected lines are those not 
+                      matching any of the specified patterns.',
+            "header|H" => 'Header present at the first line'
+        }
+    );
+    die "CAUTION: A file with a list of patterns is required!\n" 
+        unless $args->{options}->{file};
+    my $pattern  = load_listfile($args->{options}->{file});
+    for my $in_fh (@{$args->{in_fhs}}){
+        if($args->{options}->{header}){
+            my $title = <$in_fh>;
+            print $title;
+        }
+        while(<$in_fh>){
+            chomp;
+            my @F = split /\s+/;
+            next unless defined $F[0];
+            if($args->{options}->{invert_match}){
+                print "$_\n" if not $pattern->{$F[0]};
+            }else{
+                print "$_\n" if $pattern->{$F[0]}
+            }
+        }
+    }
 }
 
 sub uniq{
