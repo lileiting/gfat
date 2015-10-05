@@ -2,9 +2,12 @@ package GFAT::SeqAction;
 
 use warnings;
 use strict;
+use List::Util qw(sum max min);
+use Digest::MD5 qw(md5_hex);
+use Digest::SHA qw(sha1_hex);
+use Data::Dumper;
 use GFAT::SeqActionNew;
 use GFAT::LoadFile;
-use List::Util qw(sum max min);
 
 sub acclist{
     my $action = new_seqaction(
@@ -106,6 +109,27 @@ sub getseq{
                 exit if not $listfile and not $pattern and @seqnames == 1;
             }
         }
+    }
+}
+
+sub identical{
+    my $args = new_seqaction(
+        -desc => 'Find identical records from multipls files,
+                  based sequence fingerprints (MD5)'
+    );
+    #die Dumper($args);
+
+    my %data;
+    my $index = 0;
+    for my $in_io (@{$args->{in_ios}}){
+        my $infile = $args->{infiles}[$index];
+        $index++;
+        while(my $seq = $in_io->next_seq){
+            print $seq->display_id, "\t", $infile, "\t",
+                  $seq->length, "\t",
+                  md5_hex($seq->seq), "\t", sha1_hex($seq->seq), "\n"; 
+        }
+
     }
 }
 

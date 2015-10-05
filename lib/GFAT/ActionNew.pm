@@ -109,6 +109,7 @@ sub new_action{
                 $in_fh = \*STDIN;
             }
             push @{$action{in_fhs}}, $in_fh;
+            push @{$action{infiles}}, $infile;
         }
     }else{
         my $in_fh = \*STDIN;
