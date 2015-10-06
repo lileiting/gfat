@@ -82,7 +82,12 @@ sub gc{
 
 sub getseq{
     my $action = new_seqaction(
-        -description => 'Get a subset of sequences from based on its IDs',
+        -description => 'Get a subset of sequences from input files based 
+                         on given IDs. The output sequence order will follow 
+                         the sequence order in input files, rather than 
+                         given IDs. Because "getseq" will read sequences
+                         from input files, and test one by one if it was 
+                         the sequence you want.',
         -options => {
             'pattern|p=s' => 'Pattern for sequence IDs',
             'seqname|s=s@' => 'sequence name (could be multiple)',
@@ -109,6 +114,41 @@ sub getseq{
                 exit if not $listfile and not $pattern and @seqnames == 1;
             }
         }
+    }
+}
+
+sub getseq2{
+    my $args = new_seqaction(
+        -desc => '"getseq2" is similar with another "getseq", with a little 
+                  differnt. The purpose of "getseq2" is to get sequences 
+                  based on given IDs and output sequences based on the order 
+                  of input IDs. "getseq2" will first load all input sequences 
+                  from input files into memory. So do not use this "getseq2" 
+                  on files larger than your computer memory.',
+        -options => {
+            "file|f=s" => 'A list of Sequence IDs, one per line',
+            "seqname|s=s@" => 'Sequence ID (could be multiple)'
+                    }
+    );
+    my $options = $args->{options};
+    my $listfile = $options->{file};
+    my @seqnames = $options->{seqname} ?
+        split(/,/,join(',',@{$options->{seqname}})) : ();
+    die "ERROR: Sequence ID was not defined!\n"
+        unless @seqnames or $listfile;
+    my %id_map;
+    for my $in (@{$args->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
+            $id_map{$seqid} = $seq;
+        }
+    }
+    my @file_IDs;
+    open my $fh, "$listfile" or die "$!";
+    chomp(@file_IDs = <$fh>);
+    close $fh;
+    for (@seqnames, @file_IDs){
+        $args->{out_io}->write_seq($id_map{$_});
     }
 }
 

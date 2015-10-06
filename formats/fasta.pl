@@ -18,6 +18,7 @@ ACTIONS
     format   | Read in and write out sequences
     gc       | GC content
     getseq   | Get sequences by IDs
+    getseq2  | Output sequences by the order of input IDs
     identical| Find identical records from multiple files
     ids      | Print a list of sequence IDs
     motif    | Find sequences with given sequence pattern
