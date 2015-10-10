@@ -155,9 +155,10 @@ sub getintron{
     my %data; 
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
+            next if /^\s*$/ or /^\s*#/;
             chomp;
             my ($chr, $type, $start, $end,$strand, $ann) = (split /\t/)[0,2,3,4,6,8];
-            my ($id) = ($ann =~ /Parent=(.+?);/);
+            my ($id) = ($ann =~ /Parent=(.+?)/);
             next unless $type =~ /CDS|UTR/i;
             #print "$id\t$type\t$start\t$end\t$strand\n";
             $data{$id}->{$start}->{chr} = $chr;
@@ -176,9 +177,9 @@ sub getintron{
             my $present_start = $starts[$i];
             if($present_start - $previous_end > 1){
                 $intron_count++;
-                printf "%s\t%d\t%d\t%s\tID=%s_intron_%d;length=%d\n", $chr, 
+                printf "%s\t%d\t%d\t%s\tID=%s_intron_%d;Parent=%s;length=%d\n", $chr, 
                     $previous_end + 1, $present_start - 1, 
-                    $strand, $id, $intron_count,
+                    $strand, $id, $intron_count,$id,
                     ($present_start - 1) - ($previous_end + 1) + 1;
             }
         }
