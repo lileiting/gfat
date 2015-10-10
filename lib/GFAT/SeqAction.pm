@@ -376,6 +376,9 @@ sub subseq{
     my $action = new_seqaction(
         -description => 'Get subsequences',
         -options => {
+            "file|f=s"    => 'A file containing gene IDs with positions
+                              (Start and End), strand (4th column) is optional,
+                              description (5th column) is optional',
             "seqname|s=s" => 'Sequence name',
             "start|t=i"   => 'Start position(>=1)',
             "end|e=i"     => 'End position(>=1)'
@@ -383,20 +386,46 @@ sub subseq{
     );
     my $options = $action->{options};
     my $out = $action->{out_io};
+    my $infile = $options->{file};
     my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
     die "ERROR in sequence name, start position and end position\n"
-        unless $seqname and $start and $end;
+        unless ($seqname and $start and $end) or $infile;
+
+    my %seqpos;
+    if($seqname and $start and $end){
+        $seqpos{$seqname} = [$start, $end];
+    }
+    if($infile){
+        open my $fh, $infile or die "$!";
+        while(<$fh>){
+            chomp;
+            die "Input data ERROR in $_! Required format ".
+                "is \"ID\tStart\tEnd (and optional strand and description)\"" 
+                unless /^\S+\t\d+\t\d+(\t[+\-])?/;
+            @_ = split /\t/;
+            $seqpos{$_[0]} = [@_[1..$#_]];
+        }
+        close $fh;
+    }
 
     for my $in (@{$action->{in_ios}}){
         while(my $seq = $in->next_seq){
             my $id = $seq->display_id;
-            if($id eq $seqname){
+            if($seqpos{$id}){
+                my $start = $seqpos{$id}->[0];
+                my $end   = $seqpos{$id}->[1];
                 my $subseq_id = "$id:$start-$end";
-                my $subseq = $seq->subseq($start, $end);
+                my $subseq;
+                if($seqpos{$id}->[2] and $seqpos{$id}->[2] eq '-'){
+                    $subseq = $seq->subseq($end, $start);
+                }else{
+                    $subseq = $seq->subseq($start, $end);
+                }
+
                 $out->write_seq(
                     Bio::PrimarySeq->new(-display_id => $subseq_id,
+                                         -desc => $seqpos{$id}->[3] // '',
                                          -seq => $subseq));
-                exit;
             }
         }
     }
