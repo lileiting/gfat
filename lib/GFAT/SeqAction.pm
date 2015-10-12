@@ -3,8 +3,7 @@ package GFAT::SeqAction;
 use warnings;
 use strict;
 use List::Util qw(sum max min);
-use Digest::MD5 qw(md5_hex);
-use Digest::SHA qw(sha1_hex);
+use Digest;
 use Data::Dumper;
 use GFAT::SeqActionNew;
 use GFAT::LoadFile;
@@ -152,24 +151,81 @@ sub getseq2{
     }
 }
 
+sub _first_gene_id{
+    my ($checksum, $data_ref) = @_;
+    if($data_ref->{$checksum}->[0]){
+        return $data_ref->{$checksum}->[0][0];
+    }else{
+        return 'undef';
+    }
+}
+
 sub identical{
     my $args = new_seqaction(
         -desc => 'Find identical records from multipls files,
-                  based sequence fingerprints (MD5)'
+                  based on sequence fingerprints (MD5)',
+        -options => {
+            "ignore_case|C" => 'Ignore case when comparing sequences
+                                (default: False)',
+            "ignore_N|N"    => 'Ignore N or X characters when 
+                                comparing sequences (default: False)',
+            "ignore_stop|S" => 'Ignore stop codon (remove the last 
+                                character \"*\" if present) (default:
+                                False)',
+            "checksum|M=s"  => 'Checksum method, could be MD5, SHA-1, 
+                                SHA-256, SHA-384, SHA-512, or CRC if
+                                Digest::CRC was installed',
+            "pchecksum|P"   => 'Print checksum (hexadecimal form) 
+                                string as the second column in result 
+                                file',
+#            "output_uniq|U=s"=> 'Output uniq sequneces. Conflict 
+#                                sequence IDs will combined as new 
+#                                sequence ID'
+                    }
     );
     #die Dumper($args);
 
-    my %data;
-    my $index = 0;
-    for my $in_io (@{$args->{in_ios}}){
-        my $infile = $args->{infiles}[$index];
-        $index++;
-        while(my $seq = $in_io->next_seq){
-            print $seq->display_id, "\t", $infile, "\t",
-                  $seq->length, "\t",
-                  md5_hex($seq->seq), "\t", sha1_hex($seq->seq), "\n"; 
-        }
+    my $ignore_case = $args->{options}->{ignore_case};
+    my $ignore_N    = $args->{options}->{ignore_N};
+    my $ignore_stop = $args->{options}->{ignore_stop};
+    my $checksum_method = $args->{options}->{checksum} // 'MD5';
+    my $print_checksum = $args->{options}->{pchecksum};
+    my $output_uniq = $args->{options}->{output_uniq};
 
+    my %data;
+    my $index = -1;
+    for my $in_io (@{$args->{in_ios}}){
+        $index++;
+        my $file = $args->{infiles}[$index];
+        while(my $seq = $in_io->next_seq){
+            my $seqstr = $seq->seq;
+            $seqstr = "\L$seqstr\E" if $ignore_case;
+            $seqstr =~ s/[NnXx]//g if $ignore_N;
+            $seqstr =~ s/\*$// if $ignore_stop;
+            my $ctx = Digest->new($checksum_method);
+            $ctx->add($seqstr);
+            my $checksum = $ctx->hexdigest;
+            push @{$data{$checksum}->[$index]}, $seq->display_id; 
+        }
+    }
+#    my $uniq_fh;
+#    if($output_uniq){
+#        open $uniq_fh, ">", $output_uniq or die "$!";
+#    }
+
+    print "\t",join("\t", @{$args->{infiles}}),"\n";
+    my $count = -1;
+    for my $checksum ( sort {_first_gene_id($a, \%data) cmp 
+                             _first_gene_id($b, \%data) }keys %data){
+        $count++;
+        print "t$count";
+        print "\t$checksum" if $print_checksum;
+        for my $i (0..$index){
+            my $gene_ids = join(",", @{ $data{$checksum}->[$i] 
+                                     // ['na'] });
+            print "\t$gene_ids";
+        }
+        print "\n";
     }
 }
 
