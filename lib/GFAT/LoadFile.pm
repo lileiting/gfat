@@ -14,9 +14,9 @@ sub load_listfile{
         open my $fh, "<", $file or die "$file: $!";
         while(<$fh>){
             next if /^\s*#/ or /^\s*$/;
-            s/\s//g;
-            chomp;
-            $listid{$_}++;
+            s/^\s+//g;
+            die "ERROR in list file: $_!!!" unless /^(\S+)/;
+            $listid{$1}++;
         }
         close $fh;
     }
