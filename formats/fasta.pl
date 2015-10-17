@@ -15,6 +15,7 @@ USAGE
 ACTIONS
     acclist  | Print a list of accession numbers
     clean    | Clean irregular characters
+    filter   | Filter sequences by size and Number of Ns or Xs
     format   | Read in and write out sequences
     gc       | GC content
     getseq   | Get sequences by IDs

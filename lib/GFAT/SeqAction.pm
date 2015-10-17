@@ -35,6 +35,45 @@ sub clean{
     }
 }
 
+sub filter{
+    my $args = new_seqaction(
+        -desc => "Filter the sequence file to contain records with 
+                  size >= or < certain cutoff, or filter out 
+                  sequences with too many Ns or Xs.",
+        -options => {
+            "size|s=i" => 'Minimum sequence size (default: 0, do nothing)',
+            "char|c=i" => 'Maximum number of Ns or Xs (default: -1, no limit)',
+                    }
+    );
+
+    my $size         = $args->{options}->{size} // 0;
+    my $char         = $args->{options}->{char} // -1;
+
+    my $report = '';
+    for my $in (@{$args->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
+            my $seqlen = $seq->length;
+            unless($seqlen >= $size){
+                $report .= "$seqid\tlength=$seqlen\n";
+                next;
+            }
+
+            if($char >= 0){
+                my $seqirr = 0;
+                my $seqstr = $seq->seq;
+                $seqirr++ while $seqstr =~ /[NnXx]/g;
+                unless($seqirr <= $char){
+                    $report .= "$seqid\tNnXx=$seqirr\n";
+                    next;
+                }
+            }
+            $args->{out_io}->write_seq($seq);
+        }
+    }
+    warn $report;
+}
+
 sub format{
     my $action = new_seqaction(
         -description => 'Read in and write out sequences'
