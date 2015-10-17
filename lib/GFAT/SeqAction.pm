@@ -129,7 +129,8 @@ sub getseq{
         -options => {
             'pattern|p=s' => 'Pattern for sequence IDs',
             'seqname|s=s@' => 'sequence name (could be multiple)',
-            'listfile|l=s' => 'A file contains a list of sequence IDs'
+            'listfile|l=s' => 'A file contains a list of sequence IDs',
+            'invert_match|v' => 'Invert match'
         }
     );
     my $options = $action->{options};
@@ -138,6 +139,7 @@ sub getseq{
     my @seqnames = $options->{seqname} ?
         split(/,/,join(',',@{$options->{seqname}})) : ();
     my $listfile = $options->{listfile};
+    my $invert_match = $options->{invert_match};
     die "ERROR: Pattern was not defined!\n"
         unless $pattern or @seqnames or $listfile;
     my $list_ref;
@@ -148,8 +150,10 @@ sub getseq{
             my $seqid = $seq->display_id;
             if(($pattern and $seqid =~ /$pattern/) or
                 ((@seqnames or $listfile) and $list_ref->{$seqid})){
-                $out->write_seq($seq);
+                $out->write_seq($seq) if not $invert_match;
                 exit if not $listfile and not $pattern and @seqnames == 1;
+            }else{
+                $out->write_seq($seq) if $invert_match;
             }
         }
     }
