@@ -551,11 +551,13 @@ sub subseq2{
     
     open my $fh, $listfile or die $!;
     while(<$fh>){
-        die "Format error: $_" unless /^(\S+)\t(\d+)\t(\d+)\t([+\-])\t(\S+)$/;
+        die "Format error: $_" unless /^(\S+)\t(-?\d+)\t(\d+)\t([+\-])\t(\S+)$/;
         my ($chr, $start, $end, $strand, $new_id) = 
             ($1, $2, $3, $4, $5);
         die "Start pos should be less than or equal to end pos : $_" if $start > $end;
         die "$chr not found" unless $seqs{$chr};
+        $start = 1 if $start < 1;
+        $end = $seqs{$chr}->length if $end > $seqs{$chr}->length;
         $out->write_seq(
               Bio::PrimarySeq->new(-display_id => $new_id,
                                    -desc => "$chr:$start-$end|$end",
