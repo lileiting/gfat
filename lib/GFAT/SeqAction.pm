@@ -530,6 +530,42 @@ sub subseq{
     }
 }
 
+sub subseq2{
+    my $args = new_seqaction(
+        -desc => 'Get subsequences based an input file containing a list of 
+                  seuqence ID, start position, end position, strand, new ID',
+        -options => {  
+                     "file|f=s" => 'a list of seuqence ID, start position, 
+                                    end position, strand, new ID'
+                    }
+    );
+    my $listfile = $args->{options}->{file};
+    my $out = $args->{out_io}; 
+
+    my %seqs;
+    for my $in (@{$args->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            $seqs{$seq->display_id} = $seq;
+        }
+    }
+    
+    open my $fh, $listfile or die $!;
+    while(<$fh>){
+        die "Format error: $_" unless /^(\S+)\t(\d+)\t(\d+)\t([+\-])\t(\S+)$/;
+        my ($chr, $start, $end, $strand, $new_id) = 
+            ($1, $2, $3, $4, $5);
+        die "Start pos should be less than or equal to end pos : $_" if $start > $end;
+        die "$chr not found" unless $seqs{$chr};
+        $out->write_seq(
+              Bio::PrimarySeq->new(-display_id => $new_id,
+                                   -desc => "$chr:$start-$end|$end",
+                                   -seq => $strand eq '+' ? $seqs{$chr}->subseq($start, $end) 
+                                                           : $seqs{$chr}->subseq($end, $start)
+                                 ));
+    }
+    close $fh;
+}
+
 sub translate{
     my $action = new_seqaction(
         -description => 'Translate CDS to protein sequences'

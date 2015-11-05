@@ -31,6 +31,8 @@ ACTIONS
     seqsort  | Sort sequences by name/size
     ssr      | Find simple sequence repeats (SSR)
     subseq   | Get subsequence
+    subseq2  | Get subsequences based on input file (ID, start, end,
+               strand, new ID)
     translate| Translate CDS to protein sequences
 
 usage
