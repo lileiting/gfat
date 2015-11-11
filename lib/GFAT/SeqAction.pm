@@ -560,7 +560,7 @@ sub subseq2{
         $end = $seqs{$chr}->length if $end > $seqs{$chr}->length;
         $out->write_seq(
               Bio::PrimarySeq->new(-display_id => $new_id,
-                                   -desc => "$chr:$start-$end|$end",
+                                   -desc => "$chr:$start-$end|$strand",
                                    -seq => $strand eq '+' ? $seqs{$chr}->subseq($start, $end) 
                                                            : $seqs{$chr}->subseq($end, $start)
                                  ));
