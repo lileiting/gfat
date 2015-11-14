@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+use GFAT::SeqActionNew;
 use GFAT::SeqAction;
 
 sub main_usage{
@@ -35,6 +36,7 @@ ACTIONS
     subseq   | Get subsequence
     subseq2  | Get subsequences based on input file (ID, start, end,
                strand, new ID)
+    totab    | Convert FASTA format sequence to 2-column format
     translate| Translate CDS to protein sequences
 
 usage
@@ -60,7 +62,7 @@ main() unless caller;
 
 sub fromtab{
     my $args = new_action(
-        -desc => 'Convert 2-column sequence to FASTA format 
+        -desc => 'Convert 2-column sequence to FASTA format
                   [Copied function from tanghaibao\'s
                    python -m jcvi.formats.fasta fromtab]',
         -options => {
@@ -93,6 +95,28 @@ sub fromtab{
                 chomp $seq;
             }
             print ">$id\n$seq\n";
+        }
+    }
+}
+
+sub totab{
+    my $args = new_seqaction(
+        -desc => 'Convert FASTA format sequence to 2-column format. 
+                  This is a reverse action of "fromtab"',
+        -options => {
+            "desc|d" => 'Print description in the third column 
+                         [default: not]'
+                    }
+    );
+
+    my $print_desc = $args->{options}->{desc};
+
+    for my $in_io (@{$args->{in_ios}}){
+        while(my $seq = $in_io->next_seq){
+            print $seq->display_id, 
+                  "\t", $seq->seq, 
+                  $print_desc ? "\t".$seq->desc : '',
+                  "\n";
         }
     }
 }
