@@ -493,11 +493,36 @@ sub summarymap{
     my $args = new_action(
         -desc => 'Summary of map data',
         -options => {
-            "title|t" => 'Print title [Default: no title]'
+            "title|t" => 'Print title [Default: no title]',
+            "LG|L|l" => 'Summarize data LG by LG'
         }
     );
     my $print_title = $args->{options}->{title};
+    my $LG_mode = $args->{options}->{LG};
     $args = load_map_data2($args);
+    my @map_ids = sort{$a cmp $b} keys %{$args->{map_data}};
+    if ($LG_mode){
+        # Print title
+        print join("\t", "Map ID", "LG", "Number of markers", 
+                        "Length", "Average intervals", 
+                        "LG start", "LG end")."\n" 
+                if $print_title;
+        for my $map_id (@map_ids){
+            my @LGs = sort {$a <=> $b} keys %{$args->{map_data}->{$map_id}}; 
+            for my $LG (@LGs){
+                my $num_markers = keys %{$args->{map_data}->{$map_id}->{$LG}};
+                my ($LG_start, $LG_end) = (sort {$a <=> $b} 
+                    values %{$args->{map_data}->{$map_id}->{$LG}})[0,-1];
+                my $length = sprintf "%.1f", $LG_end - $LG_start;
+                my $average_intervals = $num_markers > 1 ? 
+                    sprintf "%.2f", $length / ($num_markers - 1) :
+                    "NA";
+                print join("\t", $map_id, $LG, $num_markers, 
+                    $length, $average_intervals, $LG_start, $LG_end)."\n";
+            }
+        }
+    }
+    else{
     # Print title
     print join("\t", "Map ID", "Number of LGs", 
         "Number of markers", "Total length")."\n" if $print_title;
@@ -514,6 +539,7 @@ sub summarymap{
         }
         $length = sprintf "%.1f", $length;
         print "$map_id\t$num_LG\t$num_markers\t$length\n";
+    }
     }
 }
 
