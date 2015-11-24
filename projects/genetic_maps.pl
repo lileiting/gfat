@@ -28,8 +28,8 @@ Availabe actions
     mergemap         | Prepare input data for mergemap
     mergemapLG       | one file per LG 
     commonstats      | Count common markers
-    summary          | Summary of input data
-    summary2         | Summary of input data
+    summaryLG        | Summary of input data
+    summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
 
 usage
@@ -379,7 +379,7 @@ sub summary_map{
     );
 }
 
-sub summary{
+sub summaryLG{
     my $args = new_action(
         -desc => 'Summary of input data'
     );
@@ -392,19 +392,6 @@ sub summary{
         my ($total_markers, $total_length, @LG_summary) = 
             summary_map(\%map_data, $map_id, \@LGs);
         print join ("\t", $map_id, $total_markers, $total_length, @LG_summary), "\n";
-    }
-}
-
-sub summary2{
-    my $args = new_action(
-        -desc => 'Summary of map data'
-    );
-    my %map_data = load_map_data($args);
-    my @LGs = get_all_LG_ids(%map_data);
-    for my $map_id (sort {$a cmp $b} keys %map_data){
-        my ($num_markers, $length) = summary_map(\%map_data, $map_id, \@LGs);
-        my $num_LG = @LGs;
-        print "$map_id\t$num_LG\t$num_markers\t$length\n";
     }
 }
 
@@ -431,7 +418,7 @@ sub summary_map3{
     return ($num_markers, $num_LG, $length);
 }
 
-sub summary3{
+sub summarymap{
     my $args = new_action(
         -desc => 'Summary of map data'
     );
