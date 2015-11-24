@@ -491,9 +491,16 @@ sub summaryLG{
 
 sub summarymap{
     my $args = new_action(
-        -desc => 'Summary of map data'
+        -desc => 'Summary of map data',
+        -options => {
+            "title|t" => 'Print title [Default: no title]'
+        }
     );
+    my $print_title = $args->{options}->{title};
     $args = load_map_data2($args);
+    # Print title
+    print join("\t", "Map ID", "Number of LGs", 
+        "Number of markers", "Total length")."\n" if $print_title;
     for my $map_id (sort {$a cmp $b} keys %{$args->{map_data}}){
         my $num_LG;
         my $num_markers;
