@@ -179,6 +179,9 @@ sub write_allmaps_file{
     return 1;
 }
 
+#
+# Convert input data to the format ALLMAPS required
+#
 
 sub blastn2allmaps{
     my $args = new_action(
@@ -209,6 +212,10 @@ sub bowtie2allmaps{
     write_allmaps_file(\%map_data, \%bowtie_data);
 }
 
+# 
+# Convert input data to the format MergeMap required
+#
+
 sub mergemap{
     my $args = new_action(
         -desc => 'Prepare input data for mergemap'
@@ -234,6 +241,10 @@ sub mergemap{
         close $fh;
     }
 }
+
+#
+# Run MergeMap LG-by-LG
+# 
 
 sub mergemapLG{
     my $args = new_action(
@@ -300,6 +311,11 @@ done
     close $shell_fh;
 }
 
+# 
+# Convert data in multiple linear_map_chart.txt files into the 
+# 4-column format
+#
+
 sub linear_map_chart{
     my $args = new_action(
         -desc => 'Read linear_map_chart.txt files'
@@ -331,6 +347,9 @@ sub linear_map_chart{
     }
 }
 
+#
+# Common markers statistics
+#
 
 sub commonstats{
     my $args = new_action(
@@ -350,6 +369,10 @@ sub commonstats{
         }
     }
 }
+
+#
+# Summary of LGs
+# 
 
 sub summary_map{
     my ($map_data_ref, $map_id, $LGs) = @_;
@@ -394,6 +417,10 @@ sub summaryLG{
         print join ("\t", $map_id, $total_markers, $total_length, @LG_summary), "\n";
     }
 }
+
+#
+# Summary of maps
+#
 
 sub summary_map3{
     my ($map_data_ref, $map_id) = @_;
