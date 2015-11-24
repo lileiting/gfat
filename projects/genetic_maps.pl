@@ -408,7 +408,7 @@ sub commonstats{
                        "(Markers_in_map1,Markers_in_map2)"
                     )."\n";
     }
-    
+    # Print data
     for(my $i = 0; $i <= $#map_ids - 1; $i ++){
         for (my $j = $i + 1; $j <= $#map_ids; $j++){
             if($matrix_mode){
@@ -489,36 +489,23 @@ sub summaryLG{
 # Summary of maps
 #
 
-sub summary_map3{
-    my ($map_data_ref, $map_id) = @_;
-    my @pos_ref;
-    for my $marker_name (keys %{$map_data_ref->{$map_id}}){
-        push @pos_ref, $map_data_ref->{$map_id}->{$marker_name};
-    }
-
-    my ($num_markers, $num_LG, $length) = (0, 0, 0);
-    my %LG;
-    for my $pos_info (@pos_ref){
-        $num_markers++;
-        my ($LG, $pos) = @$pos_info;
-        $LG{$LG}->{$pos}++;
-    }
-    $num_LG = scalar(keys %LG);
-    for my $LG (keys %LG){
-        my @pos_array = sort {$a <=> $b} keys %{$LG{$LG}};
-        $length += $pos_array[-1] - $pos_array[0];
-    }
-    $length = sprintf "%.1f", $length;
-    return ($num_markers, $num_LG, $length);
-}
-
 sub summarymap{
     my $args = new_action(
         -desc => 'Summary of map data'
     );
-    my %map_data = load_map_data($args);
-    for my $map_id (sort {$a cmp $b} keys %map_data){
-        my ($num_markers, $num_LG, $length) = summary_map3(\%map_data,$map_id);
+    $args = load_map_data2($args);
+    for my $map_id (sort {$a cmp $b} keys %{$args->{map_data}}){
+        my $num_LG;
+        my $num_markers;
+        my $length;
+        for my $LG (keys %{$args->{map_data}->{$map_id}}){
+            $num_LG++;
+            $num_markers += keys %{$args->{map_data}->{$map_id}->{$LG}};
+            my @positions = sort {$a <=> $b} 
+                values %{$args->{map_data}->{$map_id}->{$LG}};
+            $length += $positions[-1] - $positions[0];
+        }
+        $length = sprintf "%.1f", $length;
         print "$map_id\t$num_LG\t$num_markers\t$length\n";
     }
 }
