@@ -66,7 +66,8 @@ sub load_map_data{
             }
             my ($map_id, $marker_name, $LG, $genetic_pos)
                 = ($1, $2, $3, $4);
-            die "Duplicated marker: $marker_name!!!\n" if $map_data{$map_id}->{$marker_name};
+            die "Duplicated marker: $marker_name!!!\n" 
+                if $map_data{$map_id}->{$marker_name};
             $map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
         }
     }
@@ -410,8 +411,8 @@ sub summary2{
 sub summary_map3{
     my ($map_data_ref, $map_id) = @_;
     my @pos_ref;
-    for my $marker (keys %{$map_data_ref->{$map_id}}){
-        push @pos_ref, $map_data_ref->{$map_id}->{$marker};
+    for my $marker_name (keys %{$map_data_ref->{$map_id}}){
+        push @pos_ref, $map_data_ref->{$map_id}->{$marker_name};
     }
 
     my ($num_markers, $num_LG, $length) = (0, 0, 0);
@@ -419,13 +420,14 @@ sub summary_map3{
     for my $pos_info (@pos_ref){
         $num_markers++;
         my ($LG, $pos) = @$pos_info;
-        $LG{$pos}->{$pos}++;
+        $LG{$LG}->{$pos}++;
     }
     $num_LG = scalar(keys %LG);
     for my $LG (keys %LG){
         my @pos_array = sort {$a <=> $b} keys %{$LG{$LG}};
-        my $length += $pos_array[-1] - $pos_array[0];
+        $length += $pos_array[-1] - $pos_array[0];
     }
+    $length = sprintf "%.1f", $length;
     return ($num_markers, $num_LG, $length);
 }
 
