@@ -28,6 +28,8 @@ Availabe actions
     mergemap         | Prepare input data for mergemap
     mergemapLG       | one file per LG 
     commonstats      | Count common markers
+    commonstats2     |
+    commonstats3
     summaryLG        | Summary of input data
     summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
@@ -71,9 +73,33 @@ sub load_map_data{
             $map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
         }
     }
-    die "ERROR: No map data was loaded from input files!\n" 
+    die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
         unless (keys %map_data) > 0;
     return %map_data;
+}
+
+sub load_map_data2{
+    my $args = shift;
+    my %map_data;
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            chomp;
+            unless(/^(\S+)\t(\S+)\t(\d+)\t(-?\d+(\.\d+)?)$/){
+                warn "Ignore: $_\n";
+                next;
+            }
+            my ($map_id, $marker_name, $LG, $genetic_pos)
+                = ($1, $2, $3, $4);
+            die "Duplicated marker: $marker_name!!!\n" 
+                if $map_data{$map_id}->{$marker_name};
+            #$map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
+            $map_data{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
+        }
+    }
+    die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
+        unless (keys %map_data) > 0;
+    $args->{map_data} = \%map_data;
+    return $args;
 }
 
 sub get_all_LG_ids{
@@ -105,6 +131,39 @@ sub get_common_marker_num{
     }
     return map{$count{$_} // 0}@LGs;
 }
+
+sub get_common_marker_num2{
+    my ($map_data_ref, $map_id1, $map_id2, $LG) = @_;
+    my %map_data = %$map_data_ref;
+    #my @LGs = @$LG_ref;
+    my @markers1 = keys %{$map_data{$map_id1}};
+    my @markers2 = keys %{$map_data{$map_id2}};
+    my %count;
+    for my $marker_name (keys %{$map_data{$map_id1}}){
+        if ($map_data{$map_id2}->{$marker_name} and 
+            $map_data{$map_id1}->{$marker_name}->[0] eq
+            $map_data{$map_id2}->{$marker_name}->[0]){
+            $count{$map_data{$map_id1}->{$marker_name}->[0]}++;
+        }
+    }
+    return $count{$LG} // 0;
+}
+
+sub get_common_marker_num3{
+    my ($args, $map_id1, $map_id2, $LG) = @_;
+    unless($args->{map_data}->{$map_id1}->{$LG} and 
+           $args->{map_data}->{$map_id2}->{$LG}){
+        return 0;       
+    }
+    
+    my $common_elements = 0;
+    for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
+        $common_elements++ if $args->{map_data}->{$map_id2}->{$LG}->{$marker};
+    }
+
+    return $common_elements;
+}
+
 
 sub load_blast_data{
     my $args = shift;
@@ -366,6 +425,79 @@ sub commonstats{
             my @num_markers = get_common_marker_num(
                               \%map_data, $map1, $map2, \@LGs);
             print "$map1\t$map2\t", join("\t", @num_markers),"\n";
+        }
+    }
+}
+
+sub commonstats2{
+    my $args = new_action(
+        -desc => 'Count common markers between different maps'
+    );
+    my %map_data = load_map_data($args);
+    my @map_ids  = sort {$a cmp $b} keys %map_data;
+    my @LGs = get_all_LG_ids(%map_data);
+    #print "map1\tmap2\t", join("\t", map{"LG$_"}@LGs), "\n";
+    print join ("\t", qw/map1    map2    LG    Common_markers/,               
+                       "(Markers_in_map1,Markers_in_map2)" 
+                    )."\n";
+    for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+        for (my $j = $i + 1; $j <= $#map_ids; $j++){
+            for my $LG(@LGs){
+                my $map1 = $map_ids[$i];
+                my $map2 = $map_ids[$j];
+                my $common_markers = get_common_marker_num2(
+                              \%map_data, $map1, $map2, $LG);
+                my $markers_in_map1 = keys %{$map_data{$map1}};
+                my $markers_in_map2 = keys %{$map_data{$map2}};
+                print join("\t", 
+                        $map1, 
+                        $map2, 
+                        "LG$LG", 
+                        $common_markers,
+                        "($markers_in_map1,$markers_in_map2)"
+                    )."\n";
+            }
+        }
+    }
+}
+
+sub commonstats3{
+    my $args = new_action(
+        -desc => 'Count common markers between different maps'
+    );
+    $args = load_map_data2($args);
+    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my %LGs;
+    for my $map_id (@map_ids){
+        my @LG_keys = keys %{$args->{map_data}->{$map_id}};
+        map{$LGs{$_}++}@LG_keys;
+    }
+    my @LGs = sort {$a <=> $b} keys %LGs;
+    
+#    my %map_data = load_map_data($args);
+#    my @map_ids  = sort {$a cmp $b} keys %map_data;
+    #my @LGs = get_all_LG_ids(%map_data);
+    #print "map1\tmap2\t", join("\t", map{"LG$_"}@LGs), "\n";
+    print join ("\t", qw/map1    map2    LG    Common_markers/,               
+                       "(Markers_in_map1,Markers_in_map2)" 
+                    )."\n";
+    for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+        for (my $j = $i + 1; $j <= $#map_ids; $j++){
+            for my $LG (@LGs){
+                my $map1 = $map_ids[$i];
+                my $map2 = $map_ids[$j];
+                my $common_markers = get_common_marker_num3(
+                              $args, $map1, $map2, $LG);
+                my $markers_in_map1 = keys %{$args->{map_data}->{$map1}->{$LG}};
+                my $markers_in_map2 = keys %{$args->{map_data}->{$map2}->{$LG}};
+                print join("\t", 
+                        $map1, 
+                        $map2, 
+                        "LG$LG", 
+                        $common_markers,
+                        "($markers_in_map1,$markers_in_map2)"
+                    )."\n";
+            }
         }
     }
 }
