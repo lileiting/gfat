@@ -114,6 +114,18 @@ sub get_all_LG_ids{
     return @LGs;
 }
 
+sub get_all_LG_ids2{
+    my $args = shift;
+    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my %LGs;
+    for my $map_id (@map_ids){
+        my @LG_keys = keys %{$args->{map_data}->{$map_id}};
+        map{$LGs{$_}++} @LG_keys;
+    }
+    my @LGs = sort {$a <=> $b} keys %LGs;
+    return @LGs;
+}
+
 sub get_common_marker_num{
     my ($map_data_ref, $map_id1, $map_id2, $LG_ref) = @_;
     my %map_data = %$map_data_ref;
@@ -417,12 +429,7 @@ sub commonstats3{
     );
     $args = load_map_data2($args);
     my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
-    my %LGs;
-    for my $map_id (@map_ids){
-        my @LG_keys = keys %{$args->{map_data}->{$map_id}};
-        map{$LGs{$_}++}@LG_keys;
-    }
-    my @LGs = sort {$a <=> $b} keys %LGs;
+    my @LGs = get_all_LG_ids2($args);
     
     print join ("\t", qw/map1    map2    LG    Common_markers/,               
                        "(Markers_in_map1,Markers_in_map2)" 
