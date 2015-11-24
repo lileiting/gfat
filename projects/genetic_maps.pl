@@ -28,7 +28,6 @@ Availabe actions
     mergemap         | Prepare input data for mergemap
     mergemapLG       | one file per LG 
     commonstats      | Count common markers
-    summaryLG        | Summary of input data
     summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
 
@@ -98,19 +97,6 @@ sub load_map_data2{
         unless (keys %map_data) > 0;
     $args->{map_data} = \%map_data;
     return $args;
-}
-
-sub get_all_LG_ids{
-    my %map_data = @_;
-    my %LGs;
-    for my $map_id (keys %map_data){
-        for my $marker_name (keys %{$map_data{$map_id}}){
-            my ($LG, $genetic_pos) = @{$map_data{$map_id}->{$marker_name}};
-            $LGs{$LG}++;
-        }
-    }
-    my @LGs = sort {$a cmp $b} keys %LGs;
-    return @LGs;
 }
 
 sub get_all_LG_ids2{
@@ -437,54 +423,6 @@ sub commonstats{
                 }
             }
         }
-    }
-}
-
-#
-# Summary of LGs
-# 
-
-sub summary_map{
-    my ($map_data_ref, $map_id, $LGs) = @_;
-    my %markers = %{$map_data_ref->{$map_id}};
-    my @LGs = @$LGs;
-    my $total_markers = keys %markers;
-    my %num_markers;
-    my %LG_length = map{($_, 0)}@LGs;
-    my %LG_pos_array;
-    for my $marker (keys %markers){
-        my ($LG, $genetic_pos) = @{$markers{$marker}};
-        $num_markers{$LG}++;
-        push @{$LG_pos_array{$LG}}, $genetic_pos;
-        if($genetic_pos > $LG_length{$LG}){
-            $LG_length{$LG} = $genetic_pos;
-        }
-    }
-    for my $LG (keys %LG_pos_array){
-        my @array = @{$LG_pos_array{$LG}};
-        my ($min, $max) = (sort {$a <=> $b}@array)[0, -1];
-        $LG_length{$LG} = $max-$min;
-    }
-
-    my $total_length = sum(values %LG_length);
-    return ($total_markers, $total_length, 
-        map{($num_markers{$_} // 0, $LG_length{$_})}@LGs
-    );
-}
-
-sub summaryLG{
-    my $args = new_action(
-        -desc => 'Summary of input data'
-    );
-    my %map_data = load_map_data($args);
-    my @LGs = get_all_LG_ids(%map_data);
-
-    print "map_ID\tTotal_markers\tTotal_Length\t",
-          join("\t", map{("Num_markers-LG_$_","Length-LG_$_")}@LGs), "\n";
-    for my $map_id (sort {$a cmp $b}keys %map_data){
-        my ($total_markers, $total_length, @LG_summary) = 
-            summary_map(\%map_data, $map_id, \@LGs);
-        print join ("\t", $map_id, $total_markers, $total_length, @LG_summary), "\n";
     }
 }
 
