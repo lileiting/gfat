@@ -391,10 +391,12 @@ sub commonstats{
         -desc => 'Count common markers between different maps',
         -options => {
             "matrix|m" => 'Matrix mode -- one LG per column. 
-            [Default: line mode -- one datum per line]'
+            [Default: line mode -- one datum per line]',
+            "number|n" => 'Print number of markers for each LG each map'
         }
     );
     my $matrix_mode = $args->{options}->{matrix};
+    my $print_map_number = $args->{options}->{number};
     $args = load_map_data2($args);
     my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
     my @LGs = get_all_LG_ids2($args);
@@ -410,7 +412,8 @@ sub commonstats{
     }
     # Print data
     for(my $i = 0; $i <= $#map_ids - 1; $i ++){
-        for (my $j = $i + 1; $j <= $#map_ids; $j++){
+        for (my $j = $i; $j <= $#map_ids; $j++){
+            next if $print_map_number and $j != $i;
             if($matrix_mode){
                 my $map1 = $map_ids[$i];
                 my $map2 = $map_ids[$j];
@@ -517,7 +520,7 @@ sub summarymap{
                 my $average_intervals = $num_markers > 1 ? 
                     sprintf "%.2f", $length / ($num_markers - 1) :
                     "NA";
-                print join("\t", $map_id, $LG, $num_markers, 
+                print join("\t", $map_id, "LG$LG", $num_markers, 
                     $length, $average_intervals, $LG_start, $LG_end)."\n";
             }
         }
