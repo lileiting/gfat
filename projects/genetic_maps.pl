@@ -418,38 +418,58 @@ sub commonstats{
             my $map2 = $map_ids[$j];
             my @num_markers = get_common_marker_num(
                               \%map_data, $map1, $map2, \@LGs);
-            print "$map1\t$map2\t", join("\t", @num_markers),"\n";
+            print "$map1\t$map2\t", join("\t", @num_markers)."\n";
         }
     }
 }
 
 sub commonstats3{
     my $args = new_action(
-        -desc => 'Count common markers between different maps'
+        -desc => 'Count common markers between different maps',
+        -options => {
+            "matrix|m" => 'Matrix mode -- one LG per column. 
+            [Default: line mode -- one datum per line]'
+        }
     );
+    my $matrix_mode = $args->{options}->{matrix};
     $args = load_map_data2($args);
     my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
     my @LGs = get_all_LG_ids2($args);
     
-    print join ("\t", qw/map1    map2    LG    Common_markers/,               
-                       "(Markers_in_map1,Markers_in_map2)" 
-                    )."\n";
-    for(my $i = 0; $i <= $#map_ids - 1; $i ++){
-        for (my $j = $i + 1; $j <= $#map_ids; $j++){
-            for my $LG (@LGs){
+    if($matrix_mode){
+        print join("\t", "map1", "map2", map{"LG$_"}@LGs)."\n";
+        for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+            for (my $j = $i + 1; $j <= $#map_ids; $j++){
                 my $map1 = $map_ids[$i];
                 my $map2 = $map_ids[$j];
-                my $common_markers = get_common_marker_num3(
+                my @common_markers = map{get_common_marker_num3(
+                     $args, $map1, $map2, $_
+                    )}@LGs;
+                print join("\t", $map1, $map2, @common_markers)."\n";
+            }
+        }
+    }
+    else{
+        print join ("\t", "map1", "map2", "LG", "Common_markers",               
+                       "(Markers_in_map1,Markers_in_map2)"
+                    )."\n";
+        for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+            for (my $j = $i + 1; $j <= $#map_ids; $j++){
+                for my $LG (@LGs){
+                    my $map1 = $map_ids[$i];
+                    my $map2 = $map_ids[$j];
+                    my $common_markers = get_common_marker_num3(
                               $args, $map1, $map2, $LG);
-                my $markers_in_map1 = keys %{$args->{map_data}->{$map1}->{$LG}};
-                my $markers_in_map2 = keys %{$args->{map_data}->{$map2}->{$LG}};
-                print join("\t", 
+                    my $markers_in_map1 = keys %{$args->{map_data}->{$map1}->{$LG}};
+                    my $markers_in_map2 = keys %{$args->{map_data}->{$map2}->{$LG}};
+                    print join("\t", 
                         $map1, 
                         $map2, 
                         "LG$LG", 
                         $common_markers,
                         "($markers_in_map1,$markers_in_map2)"
                     )."\n";
+                }
             }
         }
     }
