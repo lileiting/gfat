@@ -109,16 +109,16 @@ sub get_map_ids{
     return @map_ids;
 }
 
-sub get_all_LG_ids2{
+sub get_LG_ids{
     my $args = shift;
-    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my @map_ids = get_map_ids($args);
     my %LGs;
     for my $map_id (@map_ids){
         my @LG_keys = keys %{$args->{map_data}->{$map_id}};
         map{$LGs{$_}++} @LG_keys;
     }
     my @LGs = sort {$a <=> $b} keys %LGs;
-    return @LGs;
+    return @LGs;    
 }
 
 sub get_common_marker_num{
@@ -393,7 +393,7 @@ sub commonstats_default{
     my $args = shift;
     my $print_map_number = $args->{options}->{number};
     my @map_ids = get_map_ids($args);
-    my @LGs = get_all_LG_ids2($args);
+    my @LGs = get_LG_ids($args);
     print join ("\t", "map1", "map2", "LG", "Common_markers",               
                        "(Markers_in_map1,Markers_in_map2)"
                     )."\n";
@@ -421,7 +421,7 @@ sub commonstats_matrix_mode{
     my $args = shift;
     my $print_map_number = $args->{options}->{number};
     my @map_ids = get_map_ids($args);
-    my @LGs = get_all_LG_ids2($args);
+    my @LGs = get_LG_ids($args);
     # Print title
     print join("\t", "map1", "map2", map{"LG$_"}@LGs)."\n";
 
