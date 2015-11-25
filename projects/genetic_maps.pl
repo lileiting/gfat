@@ -19,8 +19,7 @@ Description
 
     map_ID	marker_name	LG	genetic_pos
 
-    Space was not allowed in map_ID, and marker_name,
-    LG should be integer only
+    Space was not allowed in map_ID and marker_name
 
 Availabe actions
     blastn2allmaps   | Prepare input data for allmaps
@@ -117,7 +116,7 @@ sub get_LG_ids{
         my @LG_keys = keys %{$args->{map_data}->{$map_id}};
         map{$LGs{$_}++} @LG_keys;
     }
-    my @LGs = sort {$a <=> $b} keys %LGs;
+    my @LGs = sort {$a cmp $b} keys %LGs;
     return @LGs;    
 }
 
@@ -529,7 +528,7 @@ sub summarymap{
                         "LG start", "LG end")."\n" 
                 if $print_title;
         for my $map_id (@map_ids){
-            my @LGs = sort {$a <=> $b} keys %{$args->{map_data}->{$map_id}}; 
+            my @LGs = sort {$a cmp $b} keys %{$args->{map_data}->{$map_id}}; 
             for my $LG (@LGs){
                 my $num_markers = keys %{$args->{map_data}->{$map_id}->{$LG}};
                 my ($LG_start, $LG_end) = (sort {$a <=> $b} 
