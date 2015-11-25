@@ -60,6 +60,10 @@ sub main{
 
 main() unless caller;
 
+############################################################
+# Defination of Actions                                    #
+############################################################
+
 sub fromtab{
     my $args = new_action(
         -desc => 'Convert 2-column sequence to FASTA format
@@ -95,6 +99,24 @@ sub fromtab{
                 chomp $seq;
             }
             print ">$id\n$seq\n";
+        }
+    }
+}
+
+sub motif{
+    my $action = new_seqaction(
+        -description => 'Find sequences with given sequence pattern',
+        -options => {
+            "pattern|p=s" => 'Sequence pattern'
+        }
+    );
+    my $options = $action->{options};
+    my $out = $action->{out_io};
+    my $pattern = $options->{pattern};
+    for my $in (@{$action->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $seqstr = $seq->seq;
+            $out->write_seq($seq) if $seqstr =~ /$pattern/;
         }
     }
 }

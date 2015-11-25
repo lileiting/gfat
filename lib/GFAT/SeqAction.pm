@@ -303,24 +303,6 @@ sub _calculate_N50{
     }
 }
 
-sub motif{
-    my $action = new_seqaction(
-        -description => 'Find sequences with given sequence pattern',
-        -options => {
-            "pattern|p=s" => 'Sequence pattern'
-        }
-    );
-    my $options = $action->{options};
-    my $out = $action->{out_io};
-    my $pattern = $options->{pattern};
-    for my $in (@{$action->{in_ios}}){
-        while(my $seq = $in->next_seq){
-            my $seqstr = $seq->seq;
-            $out->write_seq($seq) if $seqstr =~ /$pattern/;
-        }
-    }
-}
-
 sub oneline{
     my $action = new_seqaction(
         -description => 'Print one sequence in one line'
