@@ -121,29 +121,19 @@ sub get_LG_ids{
 }
 
 sub get_common_marker_num{
-    my ($args, $map_id1, $map_id2, $LG) = @_;
-    unless($args->{map_data}->{$map_id1}->{$LG} and 
-           $args->{map_data}->{$map_id2}->{$LG}){
-        return 0;       
-    }
-    
-    my $common_markers = 0;
-    for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
-        $common_markers++ if 
-            exists $args->{map_data}->{$map_id2}->{$LG}->{$marker};
-    }
-
-    return $common_markers;
-}
-
-sub get_common_marker_num_multiple_LGs{
     my ($args, $map_id1, $map_id2, @LGs) = @_;
-    my $common_elements = 0;
-    for my $LG(@LGs){
-        $common_elements += get_common_marker_num(
-            $args, $map_id1, $map_id2, $LG);
+    my $common_markers = 0;
+    for my $LG (@LGs){
+        unless($args->{map_data}->{$map_id1}->{$LG} and 
+           $args->{map_data}->{$map_id2}->{$LG}){
+            next;       
+        }
+        for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
+            $common_markers++ if 
+                exists $args->{map_data}->{$map_id2}->{$LG}->{$marker};
+        }
     }
-    return $common_elements;
+    return $common_markers;
 }
 
 #
@@ -462,7 +452,7 @@ sub commonstats_symm_LG_mode{
             my $map1 = $map_ids[$i];
             if($LG eq 'all_LGs'){
                 print join("\t", $map1, map{
-                    get_common_marker_num_multiple_LGs($args, $map1, $_, @LGs)
+                    get_common_marker_num($args, $map1, $_, @LGs)
                     }@map_ids)."\n";
             }
             else{
