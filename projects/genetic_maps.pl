@@ -85,11 +85,11 @@ sub load_map_data2{
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
             chomp;
-            unless(/^(\S+)\t(\S+)\t(\d+)\t(-?\d+(\.\d+)?)$/){
-                warn "Ignore: $_\n";
+            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
+                warn "[load_map_data2] WARNING: $_\n";
                 next;
             }
-            my ($map_id, $marker_name, $LG, $genetic_pos)
+            my ($map_id, $LG, $marker_name, $genetic_pos)
                 = ($1, $2, $3, $4);
             die "Duplicated marker: $marker_name!!!\n" 
                 if $map_data{$map_id}->{$marker_name};
