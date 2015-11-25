@@ -109,8 +109,8 @@ sub get_map_ids{
 }
 
 sub get_LG_ids{
-    my $args = shift;
-    my @map_ids = get_map_ids($args);
+    my ($args, @map_ids) = @_;
+    @map_ids = get_map_ids($args) unless @map_ids;
     my %LGs;
     for my $map_id (@map_ids){
         my @LG_keys = keys %{$args->{map_data}->{$map_id}};
@@ -510,7 +510,7 @@ sub summarymap{
     my $print_title = $args->{options}->{title};
     my $LG_mode = $args->{options}->{LG};
     $args = load_map_data2($args);
-    my @map_ids = sort{$a cmp $b} keys %{$args->{map_data}};
+    my @map_ids = get_map_ids($args);
     if ($LG_mode){
         # Print title
         print join("\t", "Map ID", "LG", "Number of markers", 
@@ -518,7 +518,7 @@ sub summarymap{
                         "LG start", "LG end")."\n" 
                 if $print_title;
         for my $map_id (@map_ids){
-            my @LGs = sort {$a cmp $b} keys %{$args->{map_data}->{$map_id}}; 
+            my @LGs = get_LG_ids($args, $map_id);
             for my $LG (@LGs){
                 my $num_markers = keys %{$args->{map_data}->{$map_id}->{$LG}};
                 my ($LG_start, $LG_end) = (sort {$a <=> $b} 
