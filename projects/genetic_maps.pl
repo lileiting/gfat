@@ -449,6 +449,32 @@ sub commonstats_matrix_mode{
     } 
 }
 
+sub commonstats_symm_LG_mode{
+    my $args = shift;
+    my @map_ids = get_map_ids($args);
+    my @LGs = get_LG_ids($args);
+    
+    for my $LG (@LGs, "all_LGs"){
+        # Print title
+        print "=" x 60, "\n";
+        print join("\t", "LG-$LG", @map_ids)."\n";
+        for(my $i = 0; $i <= $#map_ids; $i++){
+            my $map1 = $map_ids[$i];
+            if($LG eq 'all_LGs'){
+                print join("\t", $map1, map{
+                    get_common_marker_num_multiple_LGs($args, $map1, $_, @LGs)
+                    }@map_ids)."\n";
+            }
+            else{
+                print join("\t", $map1, map{
+                    get_common_marker_num($args, $map1, $_, $LG)
+                    }@map_ids)."\n";
+            }
+        }
+    }
+    return 0;
+}
+
 sub commonstats{
     my $args = new_action(
         -desc => 'Count common markers between different maps',
@@ -460,13 +486,21 @@ sub commonstats{
         }
     );
     my $matrix_mode = $args->{options}->{matrix};
-    my $LG_mode = $args->{options}->{LG};
+    my $symm_LG_mode = $args->{options}->{LG};
     $args = load_map_data2($args);
 
     if($matrix_mode){
+        # Row is map pair
+        # Column is LG number
         commonstats_matrix_mode($args)
     }
+    elsif($symm_LG_mode){
+        # Multiple matrix, one per LG
+        # For each matrix, row is map ID, column is map ID
+        commonstats_symm_LG_mode($args);
+    }
     else{
+        # map1 map2 LG common_number ...
         commonstats_default($args)
     }
 }
