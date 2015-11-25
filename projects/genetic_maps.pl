@@ -53,6 +53,10 @@ main() unless caller;
 # Action defination                                        #
 ############################################################
 
+#
+# Map data
+#
+
 sub load_map_data{
     my $args = shift;
     my %map_data;
@@ -99,6 +103,12 @@ sub load_map_data2{
     return $args;
 }
 
+sub get_map_ids{
+    my $args = shift;
+    my @map_ids = sort{$a cmp $b} keys %{$args->{map_data}};
+    return @map_ids;
+}
+
 sub get_all_LG_ids2{
     my $args = shift;
     my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
@@ -126,6 +136,9 @@ sub get_common_marker_num{
     return $common_elements;
 }
 
+#
+# Blast data
+#
 
 sub load_blast_data{
     my $args = shift;
@@ -149,6 +162,10 @@ sub load_blast_data{
         unless (keys %blast_data) > 0;
     return %blast_data;
 }
+
+#
+# Bowtie data
+# 
 
 sub load_bowtie_data{
     my $args = shift;
@@ -375,7 +392,7 @@ sub linear_map_chart{
 sub commonstats_default{
     my $args = shift;
     my $print_map_number = $args->{options}->{number};
-    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my @map_ids = get_map_ids($args);
     my @LGs = get_all_LG_ids2($args);
     print join ("\t", "map1", "map2", "LG", "Common_markers",               
                        "(Markers_in_map1,Markers_in_map2)"
@@ -403,7 +420,7 @@ sub commonstats_default{
 sub commonstats_matrix_mode{
     my $args = shift;
     my $print_map_number = $args->{options}->{number};
-    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my @map_ids = get_map_ids($args);
     my @LGs = get_all_LG_ids2($args);
     # Print title
     print join("\t", "map1", "map2", map{"LG$_"}@LGs)."\n";
