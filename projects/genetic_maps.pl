@@ -540,7 +540,8 @@ sub summarymap{
         my $num_LG;
         my $num_markers;
         my $length;
-        for my $LG (keys %{$args->{map_data}->{$map_id}}){
+        my @LGs = get_LG_ids($args, $map_id);
+        for my $LG (@LGs){
             $num_LG++;
             $num_markers += keys %{$args->{map_data}->{$map_id}->{$LG}};
             my @positions = sort {$a <=> $b} 
