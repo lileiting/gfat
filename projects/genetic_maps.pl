@@ -130,7 +130,8 @@ sub get_common_marker_num{
     
     my $common_markers = 0;
     for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
-        $common_markers++ if $args->{map_data}->{$map_id2}->{$LG}->{$marker};
+        $common_markers++ if 
+            exists $args->{map_data}->{$map_id2}->{$LG}->{$marker};
     }
 
     return $common_markers;
