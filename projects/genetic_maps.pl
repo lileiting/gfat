@@ -128,12 +128,12 @@ sub get_common_marker_num{
         return 0;       
     }
     
-    my $common_elements = 0;
+    my $common_markers = 0;
     for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
-        $common_elements++ if $args->{map_data}->{$map_id2}->{$LG}->{$marker};
+        $common_markers++ if $args->{map_data}->{$map_id2}->{$LG}->{$marker};
     }
 
-    return $common_elements;
+    return $common_markers;
 }
 
 sub get_common_marker_num_multiple_LGs{
