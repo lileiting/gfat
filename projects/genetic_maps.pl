@@ -536,7 +536,7 @@ sub summarymap{
     # Print title
     print join("\t", "Map ID", "Number of LGs", 
         "Number of markers", "Total length")."\n" if $print_title;
-    for my $map_id (sort {$a cmp $b} keys %{$args->{map_data}}){
+    for my $map_id (@map_ids){
         my $num_LG;
         my $num_markers;
         my $length;
