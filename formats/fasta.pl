@@ -104,19 +104,36 @@ sub fromtab{
 }
 
 sub motif{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Find sequences with given sequence pattern',
         -options => {
-            "pattern|p=s" => 'Sequence pattern'
+            "pattern|p=s" => 'Sequence pattern',
+            "summary|s" => 'Print summary information, 
+                          rather than sequence only'
         }
     );
-    my $options = $action->{options};
-    my $out = $action->{out_io};
-    my $pattern = $options->{pattern};
-    for my $in (@{$action->{in_ios}}){
+    my $out = $args->{options}->{out_io};
+    my $pattern = $args->{options}->{pattern};
+    my $print_summary = $args->{options}->{summary};
+    
+    for my $in (@{$args->{in_ios}}){
         while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
             my $seqstr = $seq->seq;
-            $out->write_seq($seq) if $seqstr =~ /$pattern/;
+            next unless $seqstr =~ /$pattern/;
+            if($print_summary){
+                while($seqstr =~ /$pattern/g){
+                    my $matched_str = $&;
+                    my $end = pos($seqstr);
+                    my $start = $end - length($matched_str) + 1;
+                    print join("\t", $seqid, $pattern, $matched_str,
+                         $start, $end
+                        )."\n";
+                }
+            }
+            else{
+                $out->write_seq($seq);
+            }
         }
     }
 }
