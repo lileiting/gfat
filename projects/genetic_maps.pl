@@ -372,44 +372,19 @@ sub linear_map_chart{
 # Common markers statistics
 #
 
-sub commonstats{
-    my $args = new_action(
-        -desc => 'Count common markers between different maps',
-        -options => {
-            "matrix|m" => 'Matrix mode -- one LG per column. 
-            [Default: line mode -- one datum per line]',
-            "number|n" => 'Print number of markers for each LG each map'
-        }
-    );
-    my $matrix_mode = $args->{options}->{matrix};
+sub commonstats_default{
+    my $args = shift;
     my $print_map_number = $args->{options}->{number};
-    $args = load_map_data2($args);
     my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
     my @LGs = get_all_LG_ids2($args);
-    
-    # Print title
-    if($matrix_mode){
-        print join("\t", "map1", "map2", map{"LG$_"}@LGs)."\n";
-    }
-    else{
-        print join ("\t", "map1", "map2", "LG", "Common_markers",               
+    print join ("\t", "map1", "map2", "LG", "Common_markers",               
                        "(Markers_in_map1,Markers_in_map2)"
                     )."\n";
-    }
-    # Print data
+                    
     for(my $i = 0; $i <= $#map_ids - 1; $i ++){
         for (my $j = $i; $j <= $#map_ids; $j++){
             next if $print_map_number and $j != $i;
-            if($matrix_mode){
-                my $map1 = $map_ids[$i];
-                my $map2 = $map_ids[$j];
-                my @common_markers = map{get_common_marker_num(
-                     $args, $map1, $map2, $_
-                    )}@LGs;
-                print join("\t", $map1, $map2, @common_markers)."\n";                
-            }
-            else{
-                for my $LG (@LGs){
+            for my $LG (@LGs){
                     my $map1 = $map_ids[$i];
                     my $map2 = $map_ids[$j];
                     my $common_markers = get_common_marker_num(
@@ -420,9 +395,52 @@ sub commonstats{
                         keys %{$args->{map_data}->{$map2}->{$LG}};
                     print join("\t", $map1, $map2, "LG$LG", $common_markers,
                         "($markers_in_map1,$markers_in_map2)")."\n";
-                }
             }
         }
+    }
+}
+
+sub commonstats_matrix_mode{
+    my $args = shift;
+    my $print_map_number = $args->{options}->{number};
+    my @map_ids = sort {$a cmp $b} keys %{$args->{map_data}};
+    my @LGs = get_all_LG_ids2($args);
+    # Print title
+    print join("\t", "map1", "map2", map{"LG$_"}@LGs)."\n";
+
+    # Print data
+    for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+        for (my $j = $i; $j <= $#map_ids; $j++){
+            next if $print_map_number and $j != $i;
+            my $map1 = $map_ids[$i];
+            my $map2 = $map_ids[$j];
+            my @common_markers = map{get_common_marker_num(
+                    $args, $map1, $map2, $_
+                )}@LGs;
+            print join("\t", $map1, $map2, @common_markers)."\n";
+        }
+    } 
+}
+
+sub commonstats{
+    my $args = new_action(
+        -desc => 'Count common markers between different maps',
+        -options => {
+            "matrix|m" => 'Matrix mode -- one LG per column. 
+                          [Default: line mode -- one datum per line]',
+            "number|n" => 'Print number of markers for each LG each map',
+            "LG|L|l"   => 'Print common markers matrix LG-by-LG'
+        }
+    );
+    my $matrix_mode = $args->{options}->{matrix};
+    my $LG_mode = $args->{options}->{LG};
+    $args = load_map_data2($args);
+
+    if($matrix_mode){
+        commonstats_matrix_mode($args)
+    }
+    else{
+        commonstats_default($args)
     }
 }
 
