@@ -136,6 +136,16 @@ sub get_common_marker_num{
     return $common_elements;
 }
 
+sub get_common_marker_num_multiple_LGs{
+    my ($args, $map_id1, $map_id2, @LGs) = @_;
+    my $common_elements = 0;
+    for my $LG(@LGs){
+        $common_elements += get_common_marker_num(
+            $args, $map_id1, $map_id2, $LG);
+    }
+    return $common_elements;
+}
+
 #
 # Blast data
 #
