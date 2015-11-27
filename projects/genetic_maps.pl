@@ -121,6 +121,11 @@ sub get_LG_ids{
     return @LGs;    
 }
 
+sub get_LG_hash{
+    my ($args, $map_id, $LG) = @_;
+    return %{$args->{map_data}->{$map_id}->{$LG}};
+}
+
 sub get_marker_ids{
     my ($args, $map_id, $LG) = @_;
     my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
@@ -423,11 +428,6 @@ sub remove_conflict_bin_markers{
         }
     }
     return $args;
-}
-
-sub get_LG_hash{
-    my ($args, $map_id, $LG) = @_;
-    return %{$args->{map_data}->{$map_id}->{$LG}};
 }
 
 sub remove_solo_bin_markers{
