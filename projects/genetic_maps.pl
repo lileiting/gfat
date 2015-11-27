@@ -388,8 +388,85 @@ sub print_bin_markers{
     }
 }
 
+sub _remove_conflict_bin_markers_LG{
+    my ($args, $map_id, $LG) = @_;
+    my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
+    
+    my %seen;
+    my %conflicts;
+    for my $marker(keys %LG){
+        if(exists $args->{binmarker}->{$marker}){
+            if($seen{$args->{binmarker}->{$marker}}){
+                $conflicts{$args->{binmarker}->{$marker}} = 1;
+            }
+            else{
+                $seen{$args->{binmarker}->{$marker}} = 1;
+            }
+        }
+    }
+    
+    for my $marker (keys $args->{binmarker}){
+        if($conflicts{$args->{binmarker}->{$marker}}){
+            delete $args->{binmarker}->{$marker};
+        }
+    }
+    return $args;
+}
+
+sub remove_conflict_bin_markers{
+    my $args = shift;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            _remove_conflict_bin_markers_LG($args, $map_id, $LG);
+        }
+    }
+    return $args;
+}
+
+sub get_LG_hash{
+    my ($args, $map_id, $LG) = @_;
+    return %{$args->{map_data}->{$map_id}->{$LG}};
+}
+
+sub remove_solo_bin_markers{
+    my $args = shift;
+    my @map_ids = get_map_ids $args;
+    my %count;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %LG = get_LG_hash $args, $map_id, $LG;
+            for my $marker (keys %LG){
+                if(exists $args->{binmarker}->{$marker}){
+                    $count{$args->{binmarker}->{$marker}}++;
+                }
+            }
+        }
+    }
+    
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %LG = get_LG_hash $args, $map_id, $LG;
+            for my $marker (keys %LG){
+                if(exists $args->{binmarker}->{$marker}){
+                    delete $args->{binmarker}->{$marker} if 
+                        $count{$args->{binmarker}->{$marker}} == 1;
+                }
+            }
+        }
+    }
+    
+    return $args;
+}
+
 sub print_merged_marker_set{
     my $args = shift;
+    $args = remove_conflict_bin_markers($args);
+    $args = remove_solo_bin_markers($args);
+    
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids($args, $map_id);
