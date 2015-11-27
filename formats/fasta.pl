@@ -122,8 +122,8 @@ sub motif{
             my $seqstr = $seq->seq;
             next unless $seqstr =~ /$pattern/;
             if($print_summary){
-                while($seqstr =~ /$pattern/g){
-                    my $matched_str = $&;
+                while($seqstr =~ /($pattern)/g){
+                    my $matched_str = $1;
                     my $end = pos($seqstr);
                     my $start = $end - length($matched_str) + 1;
                     print join("\t", $seqid, $pattern, $matched_str,
