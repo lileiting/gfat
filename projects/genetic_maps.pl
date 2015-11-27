@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 use FindBin;
-use List::Util qw(sum);
+use List::Util qw(sum max);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
@@ -237,6 +237,12 @@ sub build_simple_network{
     return @net;
 }
 
+sub new_bin_number{
+    my $args = shift;
+    my $max = max(values %{$args->{binmarker}});
+    return $max + 1;
+}
+
 sub load_blastn_self_data{
     my $args = shift;
     return $args unless $args->{options}->{self};
@@ -255,6 +261,78 @@ sub load_blastn_self_data{
     for my $bin_marker (@bin_markers){
         my ($marker, $bin_number) = @$bin_marker;
         $args->{binmarker}->{$marker} = $bin_number;
+    }
+    return $args;
+}
+
+sub get_uniq_markers{
+    my @window = @_;
+    my @markers = map{$_->[2]}@window;
+    my %markers = map {$_, 1} @markers;
+    return sort {$a cmp $b} keys %markers;
+}
+
+sub load_blastn_scaffold_data{
+    # Blastn data structure
+    # $args->{blastn_data}->{$scaffold} = ([$start, $end, $marker], ...)
+    
+    my $args = shift;
+    return $args unless $args->{options}->{blastn};
+    my @blastn_files =  split(/,/,join(',', @{$args->{options}->{blastn}}));
+    for my $blastn_file (@blastn_files){
+        open my $fh, $blastn_file or die $!;
+        while(<$fh>){
+            next if /^\s*$/ or /^\s*#/;
+            my($marker, $scaffold, $start, $end) = (split /\t/)[0,1,8,9];
+            ($start, $end) = ($end, $start) unless $start <= $end;
+            push @{$args->{blastn_data}->{$scaffold}}, [$start, $end, $marker];
+        }
+        close $fh;
+    }
+    
+    my $window = $args->{options}->{window} // 10000;
+    for my $scaffold (keys %{$args->{blastn_data}}){
+        my @arrays = sort{$a->[0] <=> $b->[0]
+                         }@{$args->{blastn_data}->{$scaffold}};
+        my @window;
+        my $window_start;
+        for my $array (@arrays){
+            my ($start, $end, $marker) = @$array;
+            if(@window == 0){
+                push @window, $array;
+                $window_start = $start;
+            }
+            elsif($end - $window_start <= $window){
+                push @window, $array;
+            }
+            else{
+                my @markers = get_uniq_markers(@window);
+                if(@markers > 2){
+                    warn "Processing @markers ...\n";
+                    my $bin_number;
+                    for my $marker (@markers){
+                        if(exists $args->{binmarker}->{$marker}){
+                            if($bin_number){
+                                die "Conflicts in bin number" unless 
+                                    $bin_number == 
+                                        $args->{binmarker}->{$marker}; 
+                            }
+                            else{
+                                $bin_number = $args->{binmarker}->{$marker};
+                            }
+                        }
+                    }
+                    unless($bin_number){
+                        $bin_number = new_bin_number($args);
+                    }
+                    for my $marker (@markers){
+                        $args->{binmarker}->{$marker} = $bin_number;
+                    }
+                }
+                @window = ();
+                $window_start = undef;
+            }
+        }
     }
     return $args;
 }
@@ -287,7 +365,8 @@ sub binmarkers{
             "blastn|b=s@" => 'Blastn file of SNP flanking sequence 
                               against scaffolds [could be multiple]',
             "self|s=s@" => 'Blastn file of SNP flanking sequence 
-                            against SNP flanking sequence [could be multiple]'
+                            against SNP flanking sequence [could be multiple]',
+            "window|w=i" => 'Bin marker window size [default: 10000]'
         }
     );
     die "WARNING: blastn files are required!\n" 
@@ -295,7 +374,7 @@ sub binmarkers{
         
     $args = load_map_data2($args);
     $args = load_blastn_self_data($args);
-    #$args = load_blastn_scaffold_data($args);
+    $args = load_blastn_scaffold_data($args);
     print_bin_markers($args);
 
     return 1;
