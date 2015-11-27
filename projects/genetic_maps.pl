@@ -233,6 +233,28 @@ sub build_simple_network{
     return @net;
 }
 
+sub load_blastn_self_data{
+    my $args = shift;
+    return $args unless $args->{options}->{self};
+    my @blastn_self_files = split(/,/, join(',', @{$args->{options}->{self}}));
+    my @marker_pairs;
+    for my $blastn_self_file (@blastn_self_files){
+        open my $fh, $blastn_self_file or die $!;
+        while(<$fh>){
+            next if /^\s*$/ or /^\s*#/;
+            my ($marker1, $marker2) = split /\t/;
+            push @marker_pairs, [$marker1, $marker2];
+        }
+        close $fh;
+    }
+    my @bin_markers = build_simple_network(@marker_pairs);
+    for my $bin_marker (@bin_markers){
+        my ($marker, $bin_number) = @$bin_marker;
+        $args->{binmarker}->{$marker} = $bin_number;
+    }
+    return $args;
+}
+
 sub write_allmaps_file{
     my ($map_data_ref, $physical_data_ref) = @_;
     my %map_data = %$map_data_ref;
