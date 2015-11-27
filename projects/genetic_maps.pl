@@ -29,6 +29,7 @@ Availabe actions
     commonstats      | Count common markers
     summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
+    binmarkers       | Find bin markers
 
 usage
     exit;
@@ -122,10 +123,8 @@ sub get_LG_ids{
 
 sub get_marker_ids{
     my ($args, $map_id, $LG) = @_;
-    my @marker_ids = sort {$args->{map_data}->{$map_id}->{$LG}->{$a} <=> 
-                           $args->{map_data}->{$map_id}->{$LG}->{$b} or
-                           $a cmp $b
-                            } keys %{$args->{map_data}->{$map_id}->{$LG}};
+    my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
+    my @marker_ids = sort {$LG{$a} <=> $LG{$b} or $a cmp $b} keys %LG;
     return @marker_ids;
 }
 
@@ -389,6 +388,28 @@ sub print_bin_markers{
     }
 }
 
+sub print_merged_marker_set{
+    my $args = shift;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids($args, $map_id);
+        for my $LG (@LGs){
+            my @markers = get_marker_ids($args, $map_id, $LG);
+            for my $marker (@markers){
+                my $genetic_pos = 
+                    $args->{map_data}->{$map_id}->{$LG}->{$marker};
+                print join("\t", $map_id, $LG, $marker, $genetic_pos)."\n";
+                if(exists $args->{binmarker}->{$marker}){
+                        my $binmarker = sprintf "Bin%06d",
+                            $args->{binmarker}->{$marker};
+                        print join("\t", $map_id, $LG, 
+                            $binmarker, $genetic_pos)."\n";
+                }
+            }
+        }
+    }
+}
+
 sub binmarkers{
     my $args = new_action(
         -desc => 'Create bin markers for SNPs',
@@ -397,7 +418,8 @@ sub binmarkers{
                               against scaffolds [could be multiple]',
             "self|s=s@" => 'Blastn file of SNP flanking sequence 
                             against SNP flanking sequence [could be multiple]',
-            "window|w=i" => 'Bin marker window size [default: 10000]'
+            "window|w=i" => 'Bin marker window size [default: 10000]',
+            "print|p"    => 'Print bin markers only[default: all markers]'
         }
     );
     die "WARNING: blastn files are required!\n" 
@@ -406,7 +428,13 @@ sub binmarkers{
     $args = load_map_data2($args);
     $args = load_blastn_self_data($args);
     $args = load_blastn_scaffold_data($args);
-    print_bin_markers($args);
+    
+    if($args->{options}->{print}){
+        print_bin_markers($args);
+    }
+    else{
+        print_merged_marker_set($args);
+    }
 
     return 1;
 }
