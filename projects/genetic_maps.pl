@@ -278,6 +278,28 @@ sub print_bin_markers{
     }
 }
 
+sub binmarkers{
+    my $args = new_action(
+        -desc => 'Create bin markers for SNPs',
+        -options => {
+            "blastn|b=s@" => 'Blastn file of SNP flanking sequence 
+                              against scaffolds [could be multiple]',
+            "self|s=s@" => 'Blastn file of SNP flanking sequence 
+                            against SNP flanking sequence [could be multiple]'
+        }
+    );
+    die "WARNING: blastn files are required!\n" 
+        unless $args->{options}->{blastn} or $args->{options}->{self};
+        
+    $args = load_map_data2($args);
+    $args = load_blastn_self_data($args);
+    #$args = load_blastn_scaffold_data($args);
+    print_bin_markers($args);
+
+    return 1;
+}
+
+
 #
 # Create ALLMAPS file
 #
