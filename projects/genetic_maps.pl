@@ -255,6 +255,25 @@ sub load_blastn_self_data{
     return $args;
 }
 
+sub print_bin_markers{
+    my $args = shift;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids($args, $map_id);
+        for my $LG (@LGs){
+            my @markers = get_marker_ids($args, $map_id, $LG);
+            for my $marker(@markers){
+                if(exists $args->{binmarker}->{$marker}){
+                    my $genetic_pos = 
+                        $args->{map_data}->{$map_id}->{$LG}->{$marker};
+                    print join("\t", $map_id, $LG, $marker, $genetic_pos,
+                        "Bin".$args->{binmarker}->{$marker})."\n";
+                }
+            }
+        }
+    }
+}
+
 sub write_allmaps_file{
     my ($map_data_ref, $physical_data_ref) = @_;
     my %map_data = %$map_data_ref;
