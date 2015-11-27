@@ -202,6 +202,10 @@ sub load_bowtie_data{
     return %bowtie_data;
 }
 
+#
+# Create bin markers
+#
+
 sub build_simple_network{
     # Input: @array = ([a, b], [b,c], [d, e], ...)
     # Output: @net = ([a, 0], [b, 0], [c, 0], [d, 1], [e, 1], ...)
@@ -273,6 +277,10 @@ sub print_bin_markers{
         }
     }
 }
+
+#
+# Create ALLMAPS file
+#
 
 sub write_allmaps_file{
     my ($map_data_ref, $physical_data_ref) = @_;
