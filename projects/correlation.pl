@@ -87,14 +87,26 @@ sub pcor{
 
 sub filter{
     my $args = new_action(
-        -desc => 'Filter results from pcor'
+        -desc => 'Filter results from pcor',
+        -options => {
+            "rate|r=f@" => 'Pearson correlation coefficient 
+                           threshold [default: 0.8, 0.9, 
+                           0.95, 0.99]'
+        }
     );
-    my @rates = (0.99, 0.95, 0.90, 0.80);
+    my @rates;
+    if($args->{options}->{rate}){ 
+        @rates = split(/,/, join(",", @{$args->{options}->{rate}}));
+    }
+    else{
+        @rates = (0.99, 0.95, 0.90, 0.80);
+    }
 
     my $in_fh = $args->{in_fhs}->[0];
     my $infile = $args->{infiles}->[0];
     my %fhs;
     for my $rate (@rates){
+        warn "Rate: $rate\n";
         open $fhs{$rate}->{cor}, ">", "$infile.$rate.cor" or die $!;
         open $fhs{$rate}->{sif}, ">", "$infile.$rate.sif" or die $!;
     }
