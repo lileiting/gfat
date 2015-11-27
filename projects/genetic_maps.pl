@@ -120,6 +120,15 @@ sub get_LG_ids{
     return @LGs;    
 }
 
+sub get_marker_ids{
+    my ($args, $map_id, $LG) = @_;
+    my @marker_ids = sort {$args->{map_data}->{$map_id}->{$LG}->{$a} <=> 
+                           $args->{map_data}->{$map_id}->{$LG}->{$b} or
+                           $a cmp $b
+                            } keys %{$args->{map_data}->{$map_id}->{$LG}};
+    return @marker_ids;
+}
+
 sub get_common_marker_num{
     my ($args, $map_id1, $map_id2, @LGs) = @_;
     my $common_markers = 0;
