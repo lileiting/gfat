@@ -272,16 +272,31 @@ sub get_uniq_markers{
     return sort {$a cmp $b} keys %markers;
 }
 
+sub print_conflicts{
+    my ($args, @markers) = @_;
+    for my $marker (@markers){
+        if($args->{binmarker}->{$marker}){
+            print "$marker\t",$args->{binmarker}->{$marker},"\n";
+        }
+    }
+    return 1;
+}
+
 sub determine_bin_number{
     my ($args, @window) = @_;
     my @markers = get_uniq_markers(@window);
-    warn "Processing @markers ...\n";
+    #warn "Processing markers: @markers ...\n";
     my $bin_number;
     for my $marker (@markers){
         if(exists $args->{binmarker}->{$marker}){
             if($bin_number){
-                die "Conflicts in bin number" unless 
-                    $bin_number == $args->{binmarker}->{$marker}; 
+                unless($bin_number == $args->{binmarker}->{$marker}){
+                    $args->{conflicts_count}++;
+                    warn "### Conflict ", $args->{conflicts_count}, 
+                        ": ", $args->{status}->{scaffold}, " @markers\n";
+                    #print_conflicts($args, @markers);
+                    return $args;
+                }
             }
             else{
                 $bin_number = $args->{binmarker}->{$marker};
@@ -299,8 +314,10 @@ sub determine_bin_number{
 
 sub analyze_blastn_scaffold_data{
     my $args = shift;
+    my $window_count;
     my $window = $args->{options}->{window} // 10000;
-    for my $scaffold (keys %{$args->{blastn_data}}){
+    for my $scaffold ( keys %{$args->{blastn_data}}){
+        $args->{status}->{scaffold} = $scaffold;
         my @arrays = sort{$a->[0] <=> $b->[0]
                          }@{$args->{blastn_data}->{$scaffold}};
         my @window;
@@ -317,6 +334,8 @@ sub analyze_blastn_scaffold_data{
             else{
                 my @markers = get_uniq_markers(@window);
                 if(@markers > 2){
+                    $window_count++; 
+                    #warn "Process window $window_count ...\n";
                     $args = determine_bin_number($args, @window);
                 }
                 @window = ();
