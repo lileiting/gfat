@@ -211,7 +211,7 @@ sub build_simple_network{
     # Output: @net = ([a, 0], [b, 0], [c, 0], [d, 1], [e, 1], ...)
     my @input = @_;
     my $first_pair = shift @input;
-    my $net_index = 0;
+    my $net_index = 1;
     my %net;
     map{$net{$_} = $net_index} @$first_pair;
     for my $pair (@input){
@@ -270,8 +270,10 @@ sub print_bin_markers{
                 if(exists $args->{binmarker}->{$marker}){
                     my $genetic_pos = 
                         $args->{map_data}->{$map_id}->{$LG}->{$marker};
+                    my $binmarker = sprintf "Bin%06d",
+                        $args->{binmarker}->{$marker};
                     print join("\t", $map_id, $LG, $marker, $genetic_pos,
-                        "Bin".$args->{binmarker}->{$marker})."\n";
+                        $binmarker)."\n";
                 }
             }
         }
