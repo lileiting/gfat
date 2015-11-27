@@ -720,10 +720,13 @@ sub commonstats{
     my $args = new_action(
         -desc => 'Count common markers between different maps',
         -options => {
-            "matrix|m" => 'Matrix mode -- one LG per column. 
+            "matrix|m" => 'Matrix mode -- one LG per column. Not compatible 
+                           with --LG
                           [Default: line mode -- one datum per line]',
-            "number|n" => 'Print number of markers for each LG each map',
-            "LG|L|l"   => 'Print common markers matrix LG-by-LG'
+            "number|n" => 'Print number of markers for each LG each map, only
+                           valid with the option --matrix',
+            "LG|L|l"   => 'Print common markers matrix LG-by-LG. Not compatible
+                           with --matrix'
         }
     );
     my $matrix_mode = $args->{options}->{matrix};
