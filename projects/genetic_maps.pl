@@ -272,24 +272,33 @@ sub get_uniq_markers{
     return sort {$a cmp $b} keys %markers;
 }
 
-sub load_blastn_scaffold_data{
-    # Blastn data structure
-    # $args->{blastn_data}->{$scaffold} = ([$start, $end, $marker], ...)
-    
-    my $args = shift;
-    return $args unless $args->{options}->{blastn};
-    my @blastn_files =  split(/,/,join(',', @{$args->{options}->{blastn}}));
-    for my $blastn_file (@blastn_files){
-        open my $fh, $blastn_file or die $!;
-        while(<$fh>){
-            next if /^\s*$/ or /^\s*#/;
-            my($marker, $scaffold, $start, $end) = (split /\t/)[0,1,8,9];
-            ($start, $end) = ($end, $start) unless $start <= $end;
-            push @{$args->{blastn_data}->{$scaffold}}, [$start, $end, $marker];
+sub determine_bin_number{
+    my ($args, @window) = @_;
+    my @markers = get_uniq_markers(@window);
+    warn "Processing @markers ...\n";
+    my $bin_number;
+    for my $marker (@markers){
+        if(exists $args->{binmarker}->{$marker}){
+            if($bin_number){
+                die "Conflicts in bin number" unless 
+                    $bin_number == $args->{binmarker}->{$marker}; 
+            }
+            else{
+                $bin_number = $args->{binmarker}->{$marker};
+            }
         }
-        close $fh;
     }
-    
+    unless($bin_number){
+        $bin_number = new_bin_number($args);
+    }
+    for my $marker (@markers){
+        $args->{binmarker}->{$marker} = $bin_number;
+    }
+    return $args;
+}
+
+sub analyze_blastn_scaffold_data{
+    my $args = shift;
     my $window = $args->{options}->{window} // 10000;
     for my $scaffold (keys %{$args->{blastn_data}}){
         my @arrays = sort{$a->[0] <=> $b->[0]
@@ -308,32 +317,35 @@ sub load_blastn_scaffold_data{
             else{
                 my @markers = get_uniq_markers(@window);
                 if(@markers > 2){
-                    warn "Processing @markers ...\n";
-                    my $bin_number;
-                    for my $marker (@markers){
-                        if(exists $args->{binmarker}->{$marker}){
-                            if($bin_number){
-                                die "Conflicts in bin number" unless 
-                                    $bin_number == 
-                                        $args->{binmarker}->{$marker}; 
-                            }
-                            else{
-                                $bin_number = $args->{binmarker}->{$marker};
-                            }
-                        }
-                    }
-                    unless($bin_number){
-                        $bin_number = new_bin_number($args);
-                    }
-                    for my $marker (@markers){
-                        $args->{binmarker}->{$marker} = $bin_number;
-                    }
+                    $args = determine_bin_number($args, @window);
                 }
                 @window = ();
                 $window_start = undef;
             }
         }
     }
+    return $args;
+}
+
+sub load_blastn_scaffold_data{
+    # Blastn data structure
+    # $args->{blastn_data}->{$scaffold} = ([$start, $end, $marker], ...)
+    
+    my $args = shift;
+    return $args unless $args->{options}->{blastn};
+    my @blastn_files =  split(/,/,join(',', @{$args->{options}->{blastn}}));
+    for my $blastn_file (@blastn_files){
+        open my $fh, $blastn_file or die $!;
+        while(<$fh>){
+            next if /^\s*$/ or /^\s*#/;
+            my($marker, $scaffold, $start, $end) = (split /\t/)[0,1,8,9];
+            ($start, $end) = ($end, $start) unless $start <= $end;
+            push @{$args->{blastn_data}->{$scaffold}}, [$start, $end, $marker];
+        }
+        close $fh;
+    }
+    
+    $args = analyze_blastn_scaffold_data($args);
     return $args;
 }
 
