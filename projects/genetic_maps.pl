@@ -464,9 +464,6 @@ sub remove_solo_bin_markers{
 
 sub print_merged_marker_set{
     my $args = shift;
-    $args = remove_conflict_bin_markers($args);
-    $args = remove_solo_bin_markers($args);
-    
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids($args, $map_id);
@@ -496,7 +493,8 @@ sub binmarkers{
             "self|s=s@" => 'Blastn file of SNP flanking sequence 
                             against SNP flanking sequence [could be multiple]',
             "window|w=i" => 'Bin marker window size [default: 10000]',
-            "print|p"    => 'Print bin markers only[default: all markers]'
+            "print|p"    => 'Print bin markers only[default: all markers]',
+            "remove|r"   => 'Remove conflict bin markers'
         }
     );
     die "WARNING: blastn files are required!\n" 
@@ -505,7 +503,10 @@ sub binmarkers{
     $args = load_map_data2($args);
     $args = load_blastn_self_data($args);
     $args = load_blastn_scaffold_data($args);
-    
+    if($args->{options}->{remove}){
+        $args = remove_conflict_bin_markers($args);
+        $args = remove_solo_bin_markers($args);
+    }
     if($args->{options}->{print}){
         print_bin_markers($args);
     }
