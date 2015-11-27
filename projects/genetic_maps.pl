@@ -202,6 +202,37 @@ sub load_bowtie_data{
     return %bowtie_data;
 }
 
+sub build_simple_network{
+    # Input: @array = ([a, b], [b,c], [d, e], ...)
+    # Output: @net = ([a, 0], [b, 0], [c, 0], [d, 1], [e, 1], ...)
+    my @input = @_;
+    my $first_pair = shift @input;
+    my $net_index = 0;
+    my %net;
+    map{$net{$_} = $net_index} @$first_pair;
+    for my $pair (@input){
+        my ($id1, $id2) = @$pair;
+        if(exists $net{$id1} and exists $net{$id2}){
+            next;
+        }
+        elsif(exists $net{$id1} or exists $net{$id2}){
+            if(exists $net{$id1}){
+                $net{$id2} = $net{$id1};
+            }
+            else{
+                $net{$id1} = $net{$id2};
+            }
+        }
+        else{
+            $net_index++;
+            $net{$id1} = $net_index;
+            $net{$id2} = $net_index;
+        }
+    }
+    my @net = map {[$_, $net{$_}]} sort {$net{$a} <=> $net{$b}} keys %net;
+    return @net;
+}
+
 sub write_allmaps_file{
     my ($map_data_ref, $physical_data_ref) = @_;
     my %map_data = %$map_data_ref;
