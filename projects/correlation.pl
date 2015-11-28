@@ -91,7 +91,7 @@ sub cal_cor{
     my $pvalue = 1;
     my $t;
     if($cor =~ /^-?\d+(\.\d+)?$/){
-        warn "Cor: $id1 : $id2 : $cor\n";
+        #warn "Cor: $id1 : $id2 : $cor\n";
         $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
         $pvalue = (1 - gsl_cdf_tdist_P(abs($t), $n - 2)) * 2;
     }
