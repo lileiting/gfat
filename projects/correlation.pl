@@ -27,6 +27,9 @@ Available Actions
     filter | Filter the results from pcor 
 
     cor2sif| A shortcut for running both pcor and filter
+    
+    sifinfo| Print information for sif format files (number 
+             of nodes and edges)
 
 usage
     exit;
@@ -168,3 +171,29 @@ sub cor2sif{
     system("perl $0 filter $infile.cor");
 }
 
+sub sifinfo{
+    my $args = new_action(
+        -desc => 'Print information in a sif format file: number of nodes
+                  and edges'
+    );
+    my @in_fhs = @{$args->{in_fhs}};
+    my @infiles = @{$args->{infiles}};
+    for(my $i = 0; $i < scalar(@in_fhs); $i++){
+        my $in_fh = $in_fhs[$i];
+        my $infile = $infiles[$i];
+        my %nodes;
+        my $edges;
+        while(<$in_fh>){
+            next if /^\s*$/ or /^\s*#/;
+            $edges++;
+            chomp;
+            @_ = split /\t/;
+            $nodes{$_[0]}++;
+            $nodes{$_[2]}++;
+        }
+        my $nodes = keys %nodes;
+        print join("\t", $infile, $nodes, $edges)."\n";
+    }
+}
+
+__END__
