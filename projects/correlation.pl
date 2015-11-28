@@ -85,16 +85,17 @@ sub cal_cor{
     my $data2 = [@vector2];
     my $n;
     ($data1, $data2, $n) = remove_missing_data($data1, $data2);
-    return($id1, $id2, 'nan', 1) if $n < 3;
+    return($id1, $id2, 'nan', 1, $n, 'nan') if $n < 3;
     my $cor = gsl_stats_correlation($data1, 1, $data2, 1, $n);
-    return($id1, $id2, 1, 0) if $cor == 1;
+    return($id1, $id2, 1, 0, $n, 'nan') if $cor == 1;
     my $pvalue = 1;
+    my $t;
     if($cor =~ /^-?\d+(\.\d+)?$/){
         #warn "Cor: $id1 - $id2 - $cor\n";
-        my $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
-        $pvalue = (1 - gsl_cdf_tdist_P($t, $n - 2)) * 2;
+        $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
+        $pvalue = (1 - gsl_cdf_tdist_P(abs($t), $n - 2)) * 2;
     }
-    return ($id1, $id2, $cor, $pvalue);
+    return ($id1, $id2, $cor, $pvalue, $n, $t);
 }
 
 sub pcor{
@@ -107,8 +108,8 @@ sub pcor{
 
     for(my $i = 1; $i <= $#{$matrix} - 1; $i++){
         for (my $j = $i + 1; $j <= $#{$matrix}; $j++){
-            my ($id1, $id2, $cor, $pvalue) = cal_cor($matrix, $i, $j);;
-            print "$id1\t$id2\t$cor\t$pvalue\n";
+            my ($id1, $id2, $cor, $pvalue, $n, $t) = cal_cor($matrix, $i, $j);;
+            print join("\t", $id1, $id2, $cor, $pvalue, $n, $t)."\n";
         }
     }
 }
