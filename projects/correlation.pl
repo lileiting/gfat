@@ -59,16 +59,37 @@ sub load_matrix{
     return \@matrix;
 }
 
+sub remove_missing_data{
+    my ($data1, $data2) = @_;
+    my $n1 = scalar(@$data1);
+    my $n2 = scalar(@$data2);
+    die unless $n1 == $n2;
+    my @valid_index;
+    for (my $i = 0; $i < $n1; $i++){
+        my $num1 = $data1->[$i];
+        my $num2 = $data2->[$i];
+        push @valid_index, $i unless $num1 == -2 or $num2 == -2;
+    }
+    my $n = scalar(@valid_index);
+    $data1 = [@{$data1}[@valid_index]];
+    $data2 = [@{$data2}[@valid_index]];
+    return ($data1, $data2, $n);
+}
+
 sub cal_cor{
     my ($matrix, $i, $j) = @_;
     my ($id1, @vector1) = @{$matrix->[$i]};
     my ($id2, @vector2) = @{$matrix->[$j]};
-    my $n = scalar(@vector1);
-    die unless scalar(@vector2) == $n;
-    my $cor = gsl_stats_correlation([@vector1], 1, [@vector2], 1, $n);
+    my $data1 = [@vector1];
+    my $data2 = [@vector2];
+    my $n;
+    ($data1, $data2, $n) = remove_missing_data($data1, $data2);
+    return($id1, $id2, 'nan', 1) if $n < 3;
+    my $cor = gsl_stats_correlation($data1, 1, $data2, 1, $n);
+    return($id1, $id2, 1, 0) if $cor == 1;
     my $pvalue = 1;
     if($cor =~ /^-?\d+(\.\d+)?$/){
-        warn "Cor: $id1 - $id2 - $cor\n";
+        #warn "Cor: $id1 - $id2 - $cor\n";
         my $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
         $pvalue = (1 - gsl_cdf_tdist_P($t, $n - 2)) * 2;
     }
