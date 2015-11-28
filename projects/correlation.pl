@@ -87,11 +87,11 @@ sub cal_cor{
     ($data1, $data2, $n) = remove_missing_data($data1, $data2);
     return($id1, $id2, 'nan', 1, $n, 'nan') if $n < 3;
     my $cor = gsl_stats_correlation($data1, 1, $data2, 1, $n);
-    return($id1, $id2, 1, 0, $n, 'nan') if $cor == 1;
+    return($id1, $id2, 1,     0, $n, 'nan') if $cor >= 1;
     my $pvalue = 1;
     my $t;
     if($cor =~ /^-?\d+(\.\d+)?$/){
-        #warn "Cor: $id1 - $id2 - $cor\n";
+        warn "Cor: $id1 : $id2 : $cor\n";
         $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
         $pvalue = (1 - gsl_cdf_tdist_P(abs($t), $n - 2)) * 2;
     }
@@ -108,7 +108,7 @@ sub pcor{
 
     for(my $i = 1; $i <= $#{$matrix} - 1; $i++){
         for (my $j = $i + 1; $j <= $#{$matrix}; $j++){
-            my ($id1, $id2, $cor, $pvalue, $n, $t) = cal_cor($matrix, $i, $j);;
+            my ($id1, $id2, $cor, $pvalue, $n, $t) = cal_cor($matrix, $i, $j);
             print join("\t", $id1, $id2, $cor, $pvalue, $n, $t)."\n";
         }
     }
@@ -123,12 +123,13 @@ sub filter{
                            0.95, 0.99]'
         }
     );
+    my $sig_level = 0.01;
     my @rates;
     if($args->{options}->{rate}){ 
         @rates = split(/,/, join(",", @{$args->{options}->{rate}}));
     }
     else{
-        @rates = (0.99, 0.95, 0.90, 0.80);
+        @rates = (0.99, 0.95, 0.90, 0.80, 0.70);
     }
 
     my $in_fh = $args->{in_fhs}->[0];
@@ -141,10 +142,10 @@ sub filter{
     }
 
     while(<$in_fh>){
-        next unless /^(\S+)\t(\S+)\t(-?\d+\.\d+)$/;
-        my ($id1, $id2, $cor) = ($1, $2, $3);
+        next unless /^(\S+)\t(\S+)\t(\S+)\t(\S+)/;
+        my ($id1, $id2, $cor, $pvalue) = ($1, $2, $3, $4);
         for my $rate (@rates){
-            if ($cor >= $rate){
+            if ($cor >= $rate and $pvalue < $sig_level){
                 print {$fhs{$rate}->{cor}} $_;
                 print {$fhs{$rate}->{sif}} "$id1\tco\t$id2\n";
             }
