@@ -6,8 +6,8 @@ use Getopt::Long qw(:config gnu_getopt);
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
-use Statistics::Basic qw(:all);
-use Number::Format;
+use Math::GSL::Statistics qw/gsl_stats_correlation/;
+use Math::GSL::CDF qw/gsl_cdf_tdist_P/;
 
 sub main_usage{
     print <<"usage";
@@ -63,10 +63,16 @@ sub cal_cor{
     my ($matrix, $i, $j) = @_;
     my ($id1, @vector1) = @{$matrix->[$i]};
     my ($id2, @vector2) = @{$matrix->[$j]};
-    my $cor = correlation([@vector1], [@vector2]);
-    my $nf = Number::Format->new();
-    $cor = $cor ne 'n/a' ? $nf->round($cor, 6) : $cor;
-    return ($id1, $id2, $cor);
+    my $n = scalar(@vector1);
+    die unless scalar(@vector2) == $n;
+    my $cor = gsl_stats_correlation([@vector1], 1, [@vector2], 1, $n);
+    my $pvalue = 1;
+    if($cor =~ /^-?\d+(\.\d+)?$/){
+        warn "Cor: $id1 - $id2 - $cor\n";
+        my $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
+        $pvalue = (1 - gsl_cdf_tdist_P($t, $n - 2)) * 2;
+    }
+    return ($id1, $id2, $cor, $pvalue);
 }
 
 sub pcor{
