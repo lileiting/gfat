@@ -179,7 +179,7 @@ sub sifinfo{
         my $in_fh = $in_fhs[$i];
         my $infile = $infiles[$i];
         my %nodes;
-        my $edges;
+        my $edges = 0;
         while(<$in_fh>){
             next if /^\s*$/ or /^\s*#/;
             $edges++;
