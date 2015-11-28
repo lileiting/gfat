@@ -63,12 +63,13 @@ sub remove_missing_data{
     my ($data1, $data2) = @_;
     my $n1 = scalar(@$data1);
     my $n2 = scalar(@$data2);
-    die unless $n1 == $n2;
+    die "number of elements in two vectors are not same: $n1, $n2" 
+        unless $n1 == $n2;
     my @valid_index;
     for (my $i = 0; $i < $n1; $i++){
         my $num1 = $data1->[$i];
         my $num2 = $data2->[$i];
-        push @valid_index, $i unless $num1 == -2 or $num2 == -2;
+        push @valid_index, $i if $num1 > -2 and $num2 > -2;
     }
     my $n = scalar(@valid_index);
     $data1 = [@{$data1}[@valid_index]];
@@ -106,8 +107,8 @@ sub pcor{
 
     for(my $i = 1; $i <= $#{$matrix} - 1; $i++){
         for (my $j = $i + 1; $j <= $#{$matrix}; $j++){
-            my ($id1, $id2, $cor) = cal_cor($matrix, $i, $j);;
-            print "$id1\t$id2\t$cor\n";
+            my ($id1, $id2, $cor, $pvalue) = cal_cor($matrix, $i, $j);;
+            print "$id1\t$id2\t$cor\t$pvalue\n";
         }
     }
 }
