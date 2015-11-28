@@ -93,11 +93,8 @@ sub cal_cor{
     return($id1, $id2, 1,     0, $n, 'nan') if $cor >= 1;
     my $pvalue = 1;
     my $t;
-    if($cor =~ /^-?\d+(\.\d+)?$/){
-        #warn "Cor: $id1 : $id2 : $cor\n";
-        $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
-        $pvalue = (1 - gsl_cdf_tdist_P(abs($t), $n - 2)) * 2;
-    }
+    $t =  $cor / sqrt((1 - $cor ** 2) / ($n - 2));
+    $pvalue = (1 - gsl_cdf_tdist_P(abs($t), $n - 2)) * 2;
     return ($id1, $id2, $cor, $pvalue, $n, $t);
 }
 
