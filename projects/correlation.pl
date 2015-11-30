@@ -119,7 +119,7 @@ sub filter{
         -desc => 'Filter results from pcor',
         -options => {
             "rate|r=f@" => 'Pearson correlation coefficient 
-                           threshold [default: 0.8, 0.9, 
+                           threshold [default: 0.7, 0.8, 0.9, 
                            0.95, 0.99]'
         }
     );
