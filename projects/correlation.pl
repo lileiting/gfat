@@ -26,10 +26,11 @@ Available Actions
     pcor   | calculate pairwise correlation
     filter | Filter the results from pcor 
 
-    cor2sif| A shortcut for running both pcor and filter
+    p1     | A shortcut for running both pcor and filter
     
     sifinfo| Print information for sif format files (number 
              of nodes and edges)
+    cor2sif| Convert *.cor format to *.sif format
 
 usage
     exit;
@@ -158,7 +159,7 @@ sub filter{
     }
 }
 
-sub cor2sif{
+sub p1{
     my $args = new_action(
         -desc => 'A shortcut for running both pcor and filter'
     );
@@ -190,6 +191,27 @@ sub sifinfo{
         }
         my $nodes = keys %nodes;
         print join("\t", $infile, $nodes, $edges)."\n";
+    }
+}
+
+sub cor2sif{
+    my $args = new_action(
+        -desc => 'Convert *.cor format to *.sif format'
+    );
+    my @in_fhs = @{$args->{in_fhs}};
+    my @infiles = @{$args->{infiles}};
+    for(my $i = 0; $i < scalar(@in_fhs); $i++){
+        my $in_fh = $in_fhs[$i];
+        my $infile = $infiles[$i];
+        my $outfile = "$infile.sif";
+        open my $out_fh, ">", $outfile or die $!;
+        warn "Processing file $infile ...\n";
+        while(<$in_fh>){
+            next if /^\s*$/ or /^\s*#/;
+            chomp;
+            @_ = split /\t/;
+            print $out_fh "$_[0]\tco\t$_[1]\n";
+        }
     }
 }
 
