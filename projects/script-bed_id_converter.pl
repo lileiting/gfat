@@ -3,11 +3,16 @@
 use warnings;
 use strict;
 use FindBin;
+use Getopt::Long;
 
 sub main_usage{
     print <<"usage";
 
-$FindBin::Script <gff> <in.fasta>
+USAGE
+
+    $FindBin::Script <gff> <in.fasta>
+
+DESCRIPTION
 
     This script will extract chromosome, start position, end
     position and ID information from GFF file, and create a
@@ -22,12 +27,28 @@ $FindBin::Script <gff> <in.fasta>
 
     Output file would be writen to a new file <in.fasta>.out
 
+OPTIONS
+
+    -d,--desc,--description 
+        Print old IDs as description in new sequence 
+        default: no
+                             
+    -h,--help
+        Print this usage
+
 usage
     exit;
 }
 
 sub main{
+    main_usage unless @ARGV;
+    my $help;
+    my $desc;
+    GetOptions("description|desc|d" => \$desc,
+               "help|h" => \$help);
+    main_usage if $help;
     main_usage unless @ARGV == 2;
+
     my ($gff_file, $infasta) = @ARGV;
     my %id_map = load_gff($gff_file);
     my $newfile = "$infasta.out";
@@ -35,12 +56,13 @@ sub main{
     open my $out_fh, ">$newfile" or die $!;
     open my $in_fh, $infasta or die;
     while(<$in_fh>){
-        if(/^>(\S+)(.*)/){
+        if(/^>(\S+)/){
             my $old_id = $1;
-            my $desc = $2;
             die "CAUTION: no corresponding ID for $old_id!!!"
                 unless $id_map{$old_id};
-            print $out_fh ">".$id_map{$old_id}." $old_id$desc\n";
+            print $out_fh ">", $id_map{$old_id}, 
+                             $desc ? " $old_id" : "",
+                              "\n";
         }
         else{
             print $out_fh $_;
