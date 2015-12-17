@@ -57,28 +57,6 @@ main() unless caller;
 # Map data
 #
 
-sub load_map_data{
-    my $args = shift;
-    my %map_data;
-    for my $fh (@{$args->{in_fhs}}){
-        while(<$fh>){
-            chomp;
-            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
-                warn "Ignore: $_\n";
-                next;
-            }
-            my ($map_id, $LG, $marker_name, $genetic_pos)
-                = ($1, $2, $3, $4);
-            die "Duplicated marker: $marker_name!!!\n" 
-                if $map_data{$map_id}->{$marker_name};
-            $map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
-        }
-    }
-    die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
-        unless (keys %map_data) > 0;
-    return %map_data;
-}
-
 sub load_map_data2{
     my $args = shift;
     my %map_data;
@@ -91,8 +69,8 @@ sub load_map_data2{
             }
             my ($map_id, $LG, $marker_name, $genetic_pos)
                 = ($1, $2, $3, $4);
-            die "Duplicated marker: $marker_name!!!\n" 
-                if $map_data{$map_id}->{$marker_name};
+            #die "Duplicated marker: $marker_name!!!\n" 
+            #    if $map_data{$map_id}->{$marker_name};
             #$map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
             $map_data{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
         }
@@ -618,30 +596,24 @@ sub mergemapLG{
         -desc => 'Prepare input data for mergemap LG-by-LG'
     );
 
-    my %map_data = load_map_data($args);
+    my %map_data = load_map_data2($args);
     my %maps_config;
-    for my $map_id (keys %map_data){
-        my %hash;
-        #open my $fh, ">", "mergemap-input-$map_id.map" or die $!;
-        for my $marker_name (keys %{$map_data{$map_id}}){
-            my ($LG, $genetic_pos) = @{$map_data{$map_id}->{$marker_name}};
-            push @{$hash{$LG}}, [$genetic_pos, $marker_name];
-        }
-        
-        for my $LG (sort {$a cmp $b} keys %hash){
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
             my $outfile = "mergemap-input-LG_$LG-$map_id.map";
             push @{$maps_config{$LG}}, $outfile;
             open my $fh, ">", $outfile or die $!;
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
-            for my $pos_info (sort {$a->[0] <=> $b->[0]} @{$hash{$LG}}){
-                my ($genetic_pos, $marker_name) = @$pos_info;
-                print $fh "$marker_name\t$genetic_pos\n";
+            for my $marker (keys %{$args->{map_data}->{$map_id}->{$LG}}){
+                my $LG_pos = $args->{map_data}->{$map_id}->{$LG}->{$marker};
+                print $fh "$marker\t$LG_pos\n";
             }
             print $fh ";ENDOFGROUP\n";
             close $fh;
         }
-        #close $fh;
     }
 
     for my $LG (sort {$a cmp $b} keys %maps_config){
