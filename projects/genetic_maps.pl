@@ -566,7 +566,7 @@ sub mergemap{
         -desc => 'Prepare input data for mergemap'
     );
 
-    my %map_data = load_map_data2($args);
+    $args = load_map_data2($args);
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
         open my $fh, ">", "mergemap-input-$map_id.map" or die $!;
@@ -594,7 +594,7 @@ sub mergemapLG{
         -desc => 'Prepare input data for mergemap LG-by-LG'
     );
 
-    my %map_data = load_map_data2($args);
+    $args = load_map_data2($args);
     my %maps_config;
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
@@ -605,8 +605,9 @@ sub mergemapLG{
             open my $fh, ">", $outfile or die $!;
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
-            for my $marker (keys %{$args->{map_data}->{$map_id}->{$LG}}){
-                my $LG_pos = $args->{map_data}->{$map_id}->{$LG}->{$marker};
+            my %hash = %{$args->{map_data}->{$map_id}->{$LG}};
+            for my $marker (sort {$hash{$a} <=> $hash{$b}} keys %hash){
+                my $LG_pos = $hash{$marker};
                 print $fh "$marker\t$LG_pos\n";
             }
             print $fh ";ENDOFGROUP\n";
@@ -625,11 +626,13 @@ sub mergemapLG{
         close $fh;
     }
 
+    my $exe = "$FindBin::Bin/consensus_map.exe";
+    die unless -e $exe;
     open my $shell_fh, ">", "mergemap-commands.sh" or die $!;
     print $shell_fh 
 '#!/bin/sh
 set -x
-dir='.$FindBin::RealBin.'
+dir='.$FindBin::Bin.'
 for i in $(ls mergemap-input-LG_*.maps_config)
 do
     $dir/consensus_map.exe $i
