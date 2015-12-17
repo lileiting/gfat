@@ -566,19 +566,17 @@ sub mergemap{
         -desc => 'Prepare input data for mergemap'
     );
 
-    my %map_data = load_map_data($args);
-    for my $map_id (keys %map_data){
-        my %hash;
+    my %map_data = load_map_data2($args);
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
         open my $fh, ">", "mergemap-input-$map_id.map" or die $!;
-        for my $marker_name (keys %{$map_data{$map_id}}){
-            my ($LG, $genetic_pos) = @{$map_data{$map_id}->{$marker_name}};
-            push @{$hash{$LG}}, [$genetic_pos, $marker_name];
-        }
-        for my $LG (sort {$a cmp $b} keys %hash){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
-            for my $pos_info (sort {$a->[0] <=> $b->[0]} @{$hash{$LG}}){
-                my ($genetic_pos, $marker_name) = @$pos_info;
+            for my $marker_name (keys %{$args->{map_data}->{$map_id}->{$LG}}){
+                my $genetic_pos = 
+                    $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
                 print $fh "$marker_name\t$genetic_pos\n";
             }
             print $fh ";ENDOFGROUP\n";
