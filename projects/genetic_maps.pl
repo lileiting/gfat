@@ -626,16 +626,13 @@ sub mergemapLG{
         close $fh;
     }
 
-    my $exe = "$FindBin::Bin/consensus_map.exe";
-    die unless -e $exe;
     open my $shell_fh, ">", "mergemap-commands.sh" or die $!;
     print $shell_fh 
 '#!/bin/sh
 set -x
-dir='.$FindBin::Bin.'
 for i in $(ls mergemap-input-LG_*.maps_config)
 do
-    $dir/consensus_map.exe $i
+    consensus_map.exe $i
     for j in lg0.dot lg0_consensus.dot lg0_linear.dot linear_map_chart.txt
     do
         mv $j $i-$j
