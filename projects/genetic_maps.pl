@@ -30,6 +30,7 @@ Availabe actions
     summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
     binmarkers       | Find bin markers
+    input4R          | Get input data for R codes
     drawfigureR      | print R codes for drawing genetic map figure
 
 usage
@@ -870,6 +871,27 @@ axis(side=2,at=c(-8,seq(0,500,20)),tick=-0.1,labels=c("",seq(0,500,20)),lwd=2)
 dev.off()
 ';
     exit;
+}
+
+sub input4R{
+    my $args = new_action(
+        -desc => 'Get input data for R codes'
+    );
+    
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            chomp;
+            my ($map_id, $LG, $marker, $LG_pos) = split /\t/;
+            my $color;
+            if($marker =~ /^JPsnp|^Py|^ss|^TsuSNP/){
+                $color = 'red';
+            }
+            else{
+                $color = 'black'
+            }
+            print join("\t", $LG, $LG_pos, $color)."\n";
+        }
+    }
 }
 
 __END__
