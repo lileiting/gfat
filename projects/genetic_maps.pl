@@ -607,7 +607,7 @@ sub mergemapLG{
             print $fh ";BEGINOFGROUP\n";
             my %hash = %{$args->{map_data}->{$map_id}->{$LG}};
             for my $marker (sort {$hash{$a} <=> $hash{$b}} keys %hash){
-                my $LG_pos = $hash{$marker};
+                my $LG_pos = sprintf "%.1f", $hash{$marker};
                 print $fh "$marker\t$LG_pos\n";
             }
             print $fh ";ENDOFGROUP\n";
