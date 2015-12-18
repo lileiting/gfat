@@ -30,6 +30,7 @@ Availabe actions
     summarymap       | Summary of input data
     linear_map_chart | read linear_map_chart files
     binmarkers       | Find bin markers
+    drawfigureR      | print R codes for drawing genetic map figure
 
 usage
     exit;
@@ -854,6 +855,21 @@ sub summarymap{
         print "$map_id\t$num_LG\t$num_markers\t$length\n";
     }
     }
+}
+
+sub drawfigureR{
+    print '
+pdf("y_figure.pdf")
+map <- read.table("y_data.markers.txt")
+par(mar=c(5,5,1,1),family="serif",font=2,cex.lab=1.5,cex.axis=1)
+plot(map$V1,map$V2,col=map$V3,pch=95,axes=F,xlab="Linkage group number",ylab="Genetic distance",type="n",,cex=1.2,cex.lab=1)
+segments(map$V1-0.3,map$V2,map$V1+0.3,map$V2,lwd=1,col=map$V3)
+for (i in 1:17){y1<-map$V2[map$V1==i];n<-length(y1);lines(rep(i,n),y1,lwd=1)}
+axis(side=1,at=0:17,tick=-0.1,lwd=2,labels=0:17)
+axis(side=2,at=c(-8,seq(0,500,20)),tick=-0.1,labels=c("",seq(0,500,20)),lwd=2)
+dev.off()
+';
+    exit;
 }
 
 __END__
