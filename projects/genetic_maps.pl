@@ -116,6 +116,18 @@ sub get_marker_ids{
     return @marker_ids;
 }
 
+sub get_LG_indexed_map_data{
+    my $args = shift;
+    my %LG_indexed_map_data;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        $LG_indexed_map_data{$LG}->{$map_id} = 
+            $args->{map_data}->{$map_id}->{$LG};
+    }
+    return %LG_indexed_map_data;
+}
+
 sub get_common_marker_num{
     my ($args, $map_id1, $map_id2, @LGs) = @_;
     my $common_markers = 0;
