@@ -980,6 +980,8 @@ sub karyotype{
     $args = load_map_data $args;
     my %karyotype = get_LG_indexed_map_data $args;
     for my $LG (sort {$a cmp $b} keys %karyotype){
+        my $karyotype_file = qq/data-karyotype-pear-LG$LG.txt/;
+        open my $karyotype_fh, ">", $karyotype_file or die $!;
         my $map_id_count = 0;
         for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
@@ -988,8 +990,10 @@ sub karyotype{
             $map_id_count++;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
-            print "chr - map$map_id_count $map_id $min $max chr$map_id_count\n";
+            print $karyotype_fh 
+                "chr - map$map_id_count $map_id $min $max chr$map_id_count\n";
         }
+        close $karyotype_fh;
     }
 }
 
