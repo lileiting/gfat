@@ -107,7 +107,7 @@ sub get_LG_ids{
 
 sub get_markers_hash{
     my ($args, $map_id, $LG) = @_;
-    die qq/CAUTION: Undefined hash for map "$map_id" and LG "$LG"!\n/
+    die qq/CAUTION: Undefined hash for map "$map_id" and LG "$LG"!/
         unless exists $args->{map_data}->{$map_id}->{$LG};
     return %{$args->{map_data}->{$map_id}->{$LG}};
 }
@@ -156,7 +156,7 @@ sub get_common_marker_num{
 sub load_blast_data{
     my $args = shift;
     my $blast_file = $args->{options}->{blast};
-    die "# CAUTION: BLAST file is required!\n" unless $blast_file;
+    die "# CAUTION: BLAST file is required!" unless $blast_file;
 
     my %blast_data;
     open my $blast_fh, $blast_file or die $!;
@@ -171,7 +171,7 @@ sub load_blast_data{
         push @{$blast_data{$marker_name}}, [$scf, $scf_pos];
     }
     close $blast_fh;
-    die "ERROR: No blast data was loaded!\n" 
+    die "ERROR: No blast data was loaded!" 
         unless (keys %blast_data) > 0;
     return %blast_data;
 }
@@ -183,7 +183,7 @@ sub load_blast_data{
 sub load_bowtie_data{
     my $args = shift;
     my $bowtie_file = $args->{options}->{bowtie};
-    die "# CAUTION: Bowtie file is required!\n" unless $bowtie_file;
+    die "# CAUTION: Bowtie file is required!" unless $bowtie_file;
 
     my %bowtie_data;
     open my $bowtie_fh, $bowtie_file or die $!;
@@ -497,7 +497,7 @@ sub binmarkers{
             "remove|r"   => 'Remove conflict bin markers'
         }
     );
-    die "WARNING: blastn files are required!\n" 
+    die "WARNING: blastn files are required!" 
         unless $args->{options}->{blastn} or $args->{options}->{self};
         
     $args = load_map_data($args);
@@ -917,7 +917,7 @@ sub input4R{
                 $color = 'black';
                 $color = 'blue' if $marker =~ /^Bin/;
             }
-            else{die "Color mode ERROR: $mode!!!\n"}
+            else{die "Color mode ERROR: $mode!!!"}
             print join("\t", $LG, $LG_pos, $color)."\n";
         }
     }
@@ -931,7 +931,7 @@ sub consensus2allmaps{
             [marker,scaffold,start,end]'
         }
     );
-    die "CAUTION: -s is required!\n" unless $args->{options}->{scaffold};
+    die "CAUTION: -s is required!" unless $args->{options}->{scaffold};
     
     $args = load_map_data $args;
     my %consensus_map;
