@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 use FindBin;
-use List::Util qw(sum max);
+use List::Util qw(sum max min);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
@@ -17,7 +17,7 @@ Description
     Manipulate genetic map data
     Default genetic map input data format is 4-column
 
-    map_ID	marker_name	LG	genetic_pos
+    map_ID    LG    marker_name    genetic_pos
 
     Space was not allowed in map_ID and marker_name
 
@@ -33,6 +33,7 @@ Availabe actions
     input4R          | Get input data for R codes
     drawfigureR      | print R codes for drawing genetic map figure
     consensus2allmaps| Convert consensus map data as ALLMAPS input format 
+    karyotype        | Prepare karyotype for circos figures
 
 usage
     exit;
@@ -82,7 +83,7 @@ sub load_map_data{
         }
     }
     die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
-        unless (keys %map_data) > 0;
+        unless (keys %{$args->{map_data}}) > 0;
     return $args;
 }
 
@@ -122,8 +123,10 @@ sub get_LG_indexed_map_data{
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids $args, $map_id;
-        $LG_indexed_map_data{$LG}->{$map_id} = 
-            $args->{map_data}->{$map_id}->{$LG};
+        for my $LG(@LGs){
+            $LG_indexed_map_data{$LG}->{$map_id} = 
+                $args->{map_data}->{$map_id}->{$LG};
+        }
     }
     return %LG_indexed_map_data;
 }
@@ -966,6 +969,26 @@ sub consensus2allmaps{
     close $aln_fh;
     warn "Number of alignments: $num_aln\n";
     warn "Number of valid alignments: $valid_aln\n";
+}
+
+sub karyotype{
+    my $args = new_action(
+        -desc => 'Prepare karyotype for circos figures',
+    );
+    $args = load_map_data $args;
+    my %karyotype = get_LG_indexed_map_data $args;
+    for my $LG (keys %karyotype){
+        my $map_id_count = 0;
+        for my $map_id (%{$karyotype{$LG}}){
+            my %markers_hash = get_markers_hash $args, $map_id, $LG;
+            my $min = min(values %markers_hash);
+            my $max = max(values %markers_hash);
+            $map_id_count++;
+            # Karyotype format:
+            # chr - ID LABEL START END COLOR
+            print "chr - map$map_id_count $min $max chr$map_id_count\n";
+        }
+    }
 }
 
 __END__
