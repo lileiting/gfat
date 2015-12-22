@@ -973,6 +973,145 @@ sub consensus2allmaps{
     warn "Number of valid alignments: $valid_aln\n";
 }
 
+sub print_conf_file{
+    my ($conf_file, $karyotype_file, $highlights_file, $segdup_file) = @_;
+    open my $conf_fh, ">", $conf_file or die $!;
+    print $conf_fh <<"end_of_conf_file";
+show_links      = no
+show_highlights = no
+show_text       = no
+show_heatmaps   = no
+show_scatter    = no
+show_histogram  = no
+karyotype = $karyotype_file
+chromosomes_order_by_karyotype = yes
+chromosomes_units              = 1000000
+chromosomes_display_default    = yes
+<plots>
+	label_font = light
+	label_size =25p
+	rpadding   = 10p
+    <plot>
+     	type=highlight
+            file = $highlights_file
+        r0 = dims(ideogram,radius_inner) - 0.08r
+        r1 = dims(ideogram,radius_inner) - 0.02r
+		z    = 10
+	 </plot>
+</plots>
+<highlights>
+z = 0
+</highlights>
+<links>
+<link>
+file = $segdup_file
+color         = orange
+radius        = 0.9r
+bezier_radius = 0.1r
+thickness     = 3
+</link>
+</links>
+<ideogram>
+show = yes
+show_bands = yes
+fill_bands = yes
+band_transparency = 4
+<spacing>
+default = 0.003r
+</spacing>
+radius           = 0.7r
+thickness        = 50p
+fill             = yes
+stroke_color     = dgrey
+stroke_thickness = 2p
+show_label       = yes
+label_font       = default
+label_radius     = 1.02r
+label_size       = 30
+label_parallel   = no
+</ideogram>
+show_ticks        = yes
+show_tick_labels  = yes
+show_grid         = yes
+<ticks>
+tick_label_font  = light
+radius           = dims(ideogram,radius_outer)
+label_offset     = 5p
+label_size       = 16p
+multiplier       = 1e-6
+color            = black
+thickness        = 1p
+<tick>
+spacing        = 10u
+size           = 14p
+show_label     = yes
+format         = %d
+suffix         = Mb
+</tick>
+<tick>
+label_separation = 1p
+spacing          = 2u
+size             = 7p
+show_label       = no
+format           = %d
+</tick>
+</ticks>
+<image>
+<<include etc/image.conf>>
+</image>
+<<include etc/colors_fonts_patterns.conf>>
+<<include etc/housekeeping.conf>>    
+
+end_of_conf_file
+    close $conf_fh;
+}
+
+sub convert_LG_pos_to_range{
+    my ($LG_hash, $LG_range, $map_id, $marker) = @_;
+    my ($min, $max) = @{$LG_range->{$map_id}};
+    my $LG_pos = $LG_hash->{$map_id}->{$marker} * 100_000;
+    my ($start, $end);
+    if($LG_pos - 100 < $min){
+        $start = $min;
+    }
+    else{
+        $start = $LG_pos - 100;
+    }
+    if($LG_pos + 100 > $max){
+        $end = $max;
+    }
+    else{
+        $end = $LG_pos + 100;
+    }
+    return ($start, $end);
+}
+
+sub print_segdup_data{
+    my ($LG_hash, $LG_range, $segdup_fh) = @_;
+    my %LG_hash = %$LG_hash;
+    my %LG_range = %$LG_range;
+    my @map_ids = sort {$a cmp $b} keys %LG_hash;
+    for (my $i = 0; $i < $#map_ids; $i++){
+        for(my $j = $i + 1; $j <= $#map_ids; $j++){
+            my $map_id1 = $map_ids[$i];
+            my $map_id2 = $map_ids[$j];
+            my @markers = keys %{$LG_hash{$map_id1}};
+            for my $marker (@markers){
+                if(exists $LG_hash{$map_id2}->{$marker}){
+                    my ($start1, $end1) = convert_LG_pos_to_range
+                        $LG_hash, $LG_range, $map_id1, $marker;
+                    my ($start2, $end2) = convert_LG_pos_to_range
+                        $LG_hash, $LG_range, $map_id2, $marker;
+                    printf $segdup_fh "%s %d %d %s %d %d %s\n",
+                        $map_id1, $start1, $end1, 
+                        $map_id2, $start2, $end2,
+                        "color=black";
+                }
+            }
+        }
+    }
+}
+
 sub karyotype{
     my $args = new_action(
         -desc => 'Prepare karyotype data for circos figures',
@@ -982,36 +1121,48 @@ sub karyotype{
     for my $LG (sort {$a cmp $b} keys %karyotype){
         my $karyotype_file = qq/data-karyotype-pear-LG$LG.txt/;
         my $highlights_file = qq/data-highlights-pear-LG$LG.txt/;
+        my $segdup_file = qq/data-segdup-pear-LG$LG.txt/;
+        my $conf_file = qq/conf-pear-LG$LG.txt/;
+        print_conf_file $conf_file, 
+            $karyotype_file, 
+            $highlights_file,
+            $segdup_file;
         open my $karyotype_fh, ">", $karyotype_file or die $!;
         open my $highlights_fh, ">", $highlights_file or die $!;
+        open my $segdup_fh, ">", $segdup_file or die $!;
+        my %LG_hash;
+        my %LG_range;
         my $map_id_count = 0;
         for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
             my $min = min(values %markers_hash);
             my $max = max(values %markers_hash);
             $map_id_count++;
+            my $new_map_id = "map$map_id_count";
+            $LG_hash{$new_map_id} = \%markers_hash;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
             $min *= 100_000;
             $max *= 100_000;
+            $LG_range{$new_map_id} = [$min, $max];
             print $karyotype_fh 
-                "chr - map$map_id_count $map_id $min $max chr$map_id_count\n";
+                "chr - $new_map_id $map_id $min $max chr$map_id_count\n";
 
             my @sorted_markers_list = 
                 sort {$markers_hash{$a} <=> $markers_hash{$b}} 
                 keys %markers_hash;
             for my $marker (@sorted_markers_list){
                 my $LG_pos = $markers_hash{$marker};
+                my ($start, $end) = convert_LG_pos_to_range
+                    \%LG_hash, \%LG_range, $new_map_id, $marker;
                 printf $highlights_fh "%s %d %d\n",
-                    "map$map_id_count",
-                    $LG_pos * 100_000 - 100 < 0 ? 0 : $LG_pos * 100_100 - 100,
-                    $LG_pos * 100_000 + 100 > $max ? 
-                        $max : 
-                        $LG_pos * 100_000 + 100 ;
+                    $new_map_id, $start, $end;
             }
         }
+        print_segdup_data \%LG_hash, \%LG_range, $segdup_fh;
         close $karyotype_fh;
         close $highlights_fh;
+        close $segdup_fh;
     }
 }
 
