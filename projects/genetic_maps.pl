@@ -104,7 +104,7 @@ sub get_LG_ids{
     return @LGs;    
 }
 
-sub get_LG_hash{
+sub get_markers_hash{
     my ($args, $map_id, $LG) = @_;
     return %{$args->{map_data}->{$map_id}->{$LG}};
 }
@@ -432,7 +432,7 @@ sub remove_solo_bin_markers{
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
-            my %LG = get_LG_hash $args, $map_id, $LG;
+            my %LG = get_markers_hash $args, $map_id, $LG;
             for my $marker (keys %LG){
                 if(exists $args->{binmarker}->{$marker}){
                     $count{$args->{binmarker}->{$marker}}++;
@@ -444,7 +444,7 @@ sub remove_solo_bin_markers{
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
-            my %LG = get_LG_hash $args, $map_id, $LG;
+            my %LG = get_markers_hash $args, $map_id, $LG;
             for my $marker (keys %LG){
                 if(exists $args->{binmarker}->{$marker}){
                     delete $args->{binmarker}->{$marker} if 
