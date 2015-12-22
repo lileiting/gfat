@@ -32,6 +32,7 @@ Availabe actions
     binmarkers       | Find bin markers
     input4R          | Get input data for R codes
     drawfigureR      | print R codes for drawing genetic map figure
+    consensus2allmaps| Convert consensus map data as ALLMAPS input format 
 
 usage
     exit;
@@ -875,23 +876,82 @@ dev.off()
 
 sub input4R{
     my $args = new_action(
-        -desc => 'Get input data for R codes'
+        -desc => 'Get input data for R codes',
+        -options => {
+            "mode|m=s" => 'color mode, ssr or bin: 
+                         ssr (=red, others = black);  
+                         bin (= red, others = black). Default: ssr'
+        }
     );
+    my $mode = $args->{options}->{mode} // 'ssr';
     
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
             chomp;
             my ($map_id, $LG, $marker, $LG_pos) = split /\t/;
             my $color;
-            if($marker =~ /^JPsnp|^Py|^ss|^TsuSNP/){
-                $color = 'red';
+            if($mode =~ /^s(sr)?$/i){
+                $color = "red";
+                $color = 'black' if $marker =~ /^JPsnp|^Py|^ss|^TsuSNP|^Bin/;
             }
-            else{
-                $color = 'black'
+            elsif($mode =~ /^b(in)?$/i){
+                $color = 'black';
+                $color = 'blue' if $marker =~ /^Bin/;
             }
+            else{die "Color mode ERROR: $mode!!!\n"}
             print join("\t", $LG, $LG_pos, $color)."\n";
         }
     }
+}
+
+sub consensus2allmaps{
+    my $args = new_action(
+        -desc => 'Prepare data for ALLMAPS using consensus map',
+        -options => {
+            "scaffold|s=s" => 'alignment of markers against scaffold sequences,
+            [marker,scaffold,start,end]'
+        }
+    );
+    die "CAUTION: -s is required!\n" unless $args->{options}->{scaffold};
+    
+    $args = load_map_data2 $args;
+    my %consensus_map;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
+            for my $marker (keys %LG){
+                my $genetic_pos = $LG{$marker};
+                push @{$consensus_map{$marker}}, [$map_id, $LG, $genetic_pos];
+            }
+        }
+    }
+    warn "Number of markers: ".
+         (keys %consensus_map)."\n";
+    warn "Number of duplicated markers: ".
+         (grep {@{$consensus_map{$_}} > 1} keys %consensus_map)."\n";
+    warn "Number of uniq markers: ".
+         (grep {@{$consensus_map{$_}} == 1} keys %consensus_map)."\n";   
+
+    my $num_aln = 0;
+    my $valid_aln = 0;
+    my $aln_scaffold = $args->{options}->{scaffold};
+    open my $aln_fh, $aln_scaffold or die $!;
+    while(<$aln_fh>){
+        $num_aln++;
+        chomp;
+        my ($marker, $scaffold, $start, $end) = split /\t/;
+        my $scf_pos = int(($start + $end) / 2);
+        next unless exists $consensus_map{$marker};
+        next if @{$consensus_map{$marker}} > 1;
+        my ($map_id, $LG, $genetic_pos) = @{$consensus_map{$marker}->[0]};
+        print "$scaffold,$scf_pos,$LG,$genetic_pos\n";
+        $valid_aln++;
+    }
+    close $aln_fh;
+    warn "Number of alignments: $num_aln\n";
+    warn "Number of valid alignments: $valid_aln\n";
 }
 
 __END__
