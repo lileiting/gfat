@@ -60,7 +60,7 @@ main() unless caller;
 # Map data
 #
 
-sub load_map_data2{
+sub load_map_data{
     my ($args, @map_files) = @_;
     my @fhs = @{$args->{in_fhs}};
     for my $map_file (@map_files){
@@ -71,7 +71,7 @@ sub load_map_data2{
         while(<$fh>){
             chomp;
             unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
-                warn "[load_map_data2] WARNING: $_\n";
+                warn "[load_map_data] WARNING: $_\n";
                 next;
             }
             my ($map_id, $LG, $marker_name, $genetic_pos)
@@ -483,7 +483,7 @@ sub binmarkers{
     die "WARNING: blastn files are required!\n" 
         unless $args->{options}->{blastn} or $args->{options}->{self};
         
-    $args = load_map_data2($args);
+    $args = load_map_data($args);
     $args = load_blastn_self_data($args);
     $args = load_blastn_scaffold_data($args);
     if($args->{options}->{remove}){
@@ -571,7 +571,7 @@ sub mergemap{
         -desc => 'Prepare input data for mergemap'
     );
 
-    $args = load_map_data2($args);
+    $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
         open my $fh, ">", "mergemap-input-$map_id.map" or die $!;
@@ -599,7 +599,7 @@ sub mergemapLG{
         -desc => 'Prepare input data for mergemap LG-by-LG'
     );
 
-    $args = load_map_data2($args);
+    $args = load_map_data($args);
     my %maps_config;
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
@@ -784,7 +784,7 @@ sub commonstats{
     );
     my $matrix_mode = $args->{options}->{matrix};
     my $symm_LG_mode = $args->{options}->{LG};
-    $args = load_map_data2($args);
+    $args = load_map_data($args);
 
     if($matrix_mode){
         # Row is map pair
@@ -816,7 +816,7 @@ sub summarymap{
     );
     my $print_title = $args->{options}->{title};
     my $LG_mode = $args->{options}->{LG};
-    $args = load_map_data2($args);
+    $args = load_map_data($args);
     my @map_ids = get_map_ids($args);
     if ($LG_mode){
         # Print title
@@ -916,7 +916,7 @@ sub consensus2allmaps{
     );
     die "CAUTION: -s is required!\n" unless $args->{options}->{scaffold};
     
-    $args = load_map_data2 $args;
+    $args = load_map_data $args;
     my %consensus_map;
     my @map_ids = get_map_ids $args;
     for my $map_id (@map_ids){
