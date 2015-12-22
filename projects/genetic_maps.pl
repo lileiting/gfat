@@ -72,9 +72,8 @@ sub load_map_data2{
             }
             my ($map_id, $LG, $marker_name, $genetic_pos)
                 = ($1, $2, $3, $4);
-            #die "Duplicated marker: $marker_name!!!\n" 
-            #    if $map_data{$map_id}->{$marker_name};
-            #$map_data{$map_id}->{$marker_name} = [$LG, $genetic_pos];
+            die "Duplicated marker: $marker_name!!!\n" 
+                if $map_data{$map_id}->{$marker_name};
             $map_data{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
         }
     }
