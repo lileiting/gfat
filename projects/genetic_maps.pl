@@ -975,13 +975,15 @@ sub consensus2allmaps{
 
 sub karyotype{
     my $args = new_action(
-        -desc => 'Prepare karyotype for circos figures',
+        -desc => 'Prepare karyotype data for circos figures',
     );
     $args = load_map_data $args;
     my %karyotype = get_LG_indexed_map_data $args;
     for my $LG (sort {$a cmp $b} keys %karyotype){
         my $karyotype_file = qq/data-karyotype-pear-LG$LG.txt/;
+        my $highlights_file = qq/data-highlights-pear-LG$LG.txt/;
         open my $karyotype_fh, ">", $karyotype_file or die $!;
+        open my $highlights_fh, ">", $highlights_file or die $!;
         my $map_id_count = 0;
         for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
@@ -990,10 +992,26 @@ sub karyotype{
             $map_id_count++;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
+            $min *= 100_000;
+            $max *= 100_000;
             print $karyotype_fh 
                 "chr - map$map_id_count $map_id $min $max chr$map_id_count\n";
+
+            my @sorted_markers_list = 
+                sort {$markers_hash{$a} <=> $markers_hash{$b}} 
+                keys %markers_hash;
+            for my $marker (@sorted_markers_list){
+                my $LG_pos = $markers_hash{$marker};
+                printf $highlights_fh "%s %d %d\n",
+                    "map$map_id_count",
+                    $LG_pos * 100_000 - 100 < 0 ? 0 : $LG_pos * 100_100 - 100,
+                    $LG_pos * 100_000 + 100 > $max ? 
+                        $max : 
+                        $LG_pos * 100_000 + 100 ;
+            }
         }
         close $karyotype_fh;
+        close $highlights_fh;
     }
 }
 
