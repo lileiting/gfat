@@ -107,6 +107,8 @@ sub get_LG_ids{
 
 sub get_markers_hash{
     my ($args, $map_id, $LG) = @_;
+    die qq/CAUTION: Undefined hash for map "$map_id" and LG "$LG"!\n/
+        unless exists $args->{map_data}->{$map_id}->{$LG};
     return %{$args->{map_data}->{$map_id}->{$LG}};
 }
 
@@ -977,16 +979,16 @@ sub karyotype{
     );
     $args = load_map_data $args;
     my %karyotype = get_LG_indexed_map_data $args;
-    for my $LG (keys %karyotype){
+    for my $LG (sort {$a cmp $b} keys %karyotype){
         my $map_id_count = 0;
-        for my $map_id (%{$karyotype{$LG}}){
+        for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
             my $min = min(values %markers_hash);
             my $max = max(values %markers_hash);
             $map_id_count++;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
-            print "chr - map$map_id_count $min $max chr$map_id_count\n";
+            print "chr - map$map_id_count $map_id $min $max chr$map_id_count\n";
         }
     }
 }
