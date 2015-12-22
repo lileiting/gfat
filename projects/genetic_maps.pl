@@ -83,6 +83,28 @@ sub load_map_data2{
     return $args;
 }
 
+sub add_map_data{
+    my ($args, @map_files) = @_;
+    for my $map_file (@map_files){
+        open my $map_fh, $map_file or die $!;
+        while(<$map_fh>){
+            chomp;
+            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
+                warn "[load_map_data2] WARNING: $_\n";
+                next;
+            }
+            my ($map_id, $LG, $marker_name, $genetic_pos)
+                = ($1, $2, $3, $4);
+            die "Duplicated marker: $marker_name!!!\n" 
+                if $map_data{$map_id}->{$marker_name};
+            $args->{map_data}->{$map_id}->{$LG}->{$marker_name} 
+                = $genetic_pos;
+        }
+        close $map_fh;
+    }
+    return $args;
+}
+
 sub get_map_ids{
     my $args = shift;
     my @map_ids = sort{$a cmp $b} keys %{$args->{map_data}};
