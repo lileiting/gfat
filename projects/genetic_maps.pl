@@ -61,9 +61,13 @@ main() unless caller;
 #
 
 sub load_map_data2{
-    my $args = shift;
-    my %map_data;
-    for my $fh (@{$args->{in_fhs}}){
+    my ($args, @map_files) = @_;
+    my @fhs = @{$args->{in_fhs}};
+    for my $map_file (@map_files){
+        open my $map_fh, "<", $map_file or die $!;
+        push @fhs, $map_fh;
+    }
+    for my $fh (@fhs){
         while(<$fh>){
             chomp;
             unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
@@ -73,35 +77,12 @@ sub load_map_data2{
             my ($map_id, $LG, $marker_name, $genetic_pos)
                 = ($1, $2, $3, $4);
             die "Duplicated marker: $marker_name!!!\n" 
-                if $map_data{$map_id}->{$marker_name};
-            $map_data{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
+                if exists $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
+            $args->{map_data}->{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
         }
     }
     die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
         unless (keys %map_data) > 0;
-    $args->{map_data} = \%map_data;
-    return $args;
-}
-
-sub add_map_data{
-    my ($args, @map_files) = @_;
-    for my $map_file (@map_files){
-        open my $map_fh, $map_file or die $!;
-        while(<$map_fh>){
-            chomp;
-            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
-                warn "[load_map_data2] WARNING: $_\n";
-                next;
-            }
-            my ($map_id, $LG, $marker_name, $genetic_pos)
-                = ($1, $2, $3, $4);
-            die "Duplicated marker: $marker_name!!!\n" 
-                if $map_data{$map_id}->{$marker_name};
-            $args->{map_data}->{$map_id}->{$LG}->{$marker_name} 
-                = $genetic_pos;
-        }
-        close $map_fh;
-    }
     return $args;
 }
 
