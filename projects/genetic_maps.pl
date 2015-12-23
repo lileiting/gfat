@@ -977,16 +977,35 @@ sub print_conf_file{
     my ($conf_file, $karyotype_file, $highlights_file, $segdup_file) = @_;
     open my $conf_fh, ">", $conf_file or die $!;
     print $conf_fh <<"end_of_conf_file";
-show_links      = no
-show_highlights = no
-show_text       = no
-show_heatmaps   = no
-show_scatter    = no
-show_histogram  = no
-karyotype = $karyotype_file
-chromosomes_order_by_karyotype = yes
-chromosomes_units              = 1000000
-chromosomes_display_default    = yes
+    show_links      = no
+    show_highlights = no
+    show_text       = no
+    show_heatmaps   = no
+    show_scatter    = no
+    show_histogram  = no
+    karyotype = $karyotype_file
+    chromosomes_order_by_karyotype = yes
+    chromosomes_units              = 1000000
+    chromosomes_display_default    = yes
+<ideogram>
+    show = yes
+    show_bands = yes
+    fill_bands = yes
+    band_transparency = 4
+    <spacing>
+        default = 0.003r
+    </spacing>
+    radius           = 0.7r
+    thickness        = 5p
+    fill             = yes
+    stroke_color     = dgrey
+    stroke_thickness = 2p
+    show_label       = yes
+    label_font       = default
+    label_radius     = 1.02r
+    label_size       = 30
+    label_parallel   = no
+</ideogram>
 <plots>
 	label_font = light
 	label_size =25p
@@ -994,67 +1013,48 @@ chromosomes_display_default    = yes
     <plot>
      	type=highlight
             file = $highlights_file
-        r0 = dims(ideogram,radius_inner) - 0.08r
-        r1 = dims(ideogram,radius_inner) - 0.02r
+        r0 = dims(ideogram,radius_inner) - 0.02r
+        r1 = dims(ideogram,radius_inner) + 0.03r
 		z    = 10
 	 </plot>
 </plots>
 <highlights>
-z = 0
+    z = 0
 </highlights>
 <links>
-<link>
-file = $segdup_file
-color         = orange
-radius        = 0.9r
-bezier_radius = 0.1r
-thickness     = 3
-</link>
+    <link>
+        file = $segdup_file
+        color         = orange
+        radius        = 0.95r
+        bezier_radius = 0.1r
+        thickness     = 1
+    </link>
 </links>
-<ideogram>
-show = yes
-show_bands = yes
-fill_bands = yes
-band_transparency = 4
-<spacing>
-default = 0.003r
-</spacing>
-radius           = 0.7r
-thickness        = 50p
-fill             = yes
-stroke_color     = dgrey
-stroke_thickness = 2p
-show_label       = yes
-label_font       = default
-label_radius     = 1.02r
-label_size       = 30
-label_parallel   = no
-</ideogram>
-show_ticks        = yes
-show_tick_labels  = yes
-show_grid         = yes
+    show_ticks        = yes
+    show_tick_labels  = yes
+    show_grid         = yes
 <ticks>
-tick_label_font  = light
-radius           = dims(ideogram,radius_outer)
-label_offset     = 5p
-label_size       = 16p
-multiplier       = 1e-6
-color            = black
-thickness        = 1p
-<tick>
-spacing        = 10u
-size           = 14p
-show_label     = yes
-format         = %d
-suffix         = Mb
-</tick>
-<tick>
-label_separation = 1p
-spacing          = 2u
-size             = 7p
-show_label       = no
-format           = %d
-</tick>
+    tick_label_font  = light
+    radius           = dims(ideogram,radius_outer)
+    label_offset     = 5p
+    label_size       = 16p
+    multiplier       = 1e-6
+    color            = black
+    thickness        = 1p
+    <tick>
+        spacing        = 10u
+        size           = 14p
+        show_label     = yes
+        format         = %d
+        suffix         = Mb
+    </tick>
+    <tick>
+        label_separation = 1p
+        spacing          = 2u
+        size             = 7p
+        show_label       = no
+        format           = %d
+    </tick>
 </ticks>
 <image>
 <<include etc/image.conf>>
