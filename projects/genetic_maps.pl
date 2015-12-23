@@ -1086,10 +1086,28 @@ sub convert_LG_pos_to_range{
     return ($start, $end);
 }
 
+sub determine_color{
+    my ($LG_map_id, $map_id1, $map_id2) = @_;
+    my $color = 'black';
+    my ($id_count1, $id_count2) = ($map_id1, $map_id2);
+    $id_count1 =~ s/map//;
+    $id_count2 =~ s/map//;
+    my $original_id1 = $LG_map_id->{$map_id1};
+    my $original_id2 = $LG_map_id->{$map_id2};
+    if($original_id1 =~ /pear_consensus/i){
+        $color = "chr$id_count2";
+    }
+    elsif($original_id2 =~ /pear_consensus/i){
+        $color = "chr$id_count1";
+    }
+    return $color;
+}
+
 sub print_segdup_data{
-    my ($LG_hash, $LG_range, $segdup_fh) = @_;
+    my ($LG_hash, $LG_range, $LG_map_id, $segdup_fh) = @_;
     my %LG_hash = %$LG_hash;
     my %LG_range = %$LG_range;
+    my %LG_map_id = %$LG_map_id;
     my @map_ids = sort {$a cmp $b} keys %LG_hash;
     for (my $i = 0; $i < $#map_ids; $i++){
         for(my $j = $i + 1; $j <= $#map_ids; $j++){
@@ -1102,10 +1120,11 @@ sub print_segdup_data{
                         $LG_hash, $LG_range, $map_id1, $marker;
                     my ($start2, $end2) = convert_LG_pos_to_range
                         $LG_hash, $LG_range, $map_id2, $marker;
+                    my $color = determine_color \%LG_map_id, $map_id1, $map_id2;
                     printf $segdup_fh "%s %d %d %s %d %d %s\n",
                         $map_id1, $start1, $end1, 
                         $map_id2, $start2, $end2,
-                        "color=black";
+                        "color=$color";
                 }
             }
         }
@@ -1132,6 +1151,7 @@ sub karyotype{
         open my $segdup_fh, ">", $segdup_file or die $!;
         my %LG_hash;
         my %LG_range;
+        my %LG_map_id;
         my $map_id_count = 0;
         for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
@@ -1140,6 +1160,7 @@ sub karyotype{
             $map_id_count++;
             my $new_map_id = "map$map_id_count";
             $LG_hash{$new_map_id} = \%markers_hash;
+            $LG_map_id{$new_map_id} = $map_id;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
             $min *= 100_000;
@@ -1159,7 +1180,7 @@ sub karyotype{
                     $new_map_id, $start, $end;
             }
         }
-        print_segdup_data \%LG_hash, \%LG_range, $segdup_fh;
+        print_segdup_data \%LG_hash, \%LG_range, \%LG_map_id, $segdup_fh;
         close $karyotype_fh;
         close $highlights_fh;
         close $segdup_fh;
