@@ -1087,28 +1087,22 @@ sub convert_LG_pos_to_range{
 }
 
 sub determine_color{
-    my ($LG_map_id, $map_id1, $map_id2) = @_;
+    my ($map_ids, $i, $j) = @_;
     my $color = 'black';
-    my ($id_count1, $id_count2) = ($map_id1, $map_id2);
-    $id_count1 =~ s/map//;
-    $id_count2 =~ s/map//;
-    my $original_id1 = $LG_map_id->{$map_id1};
-    my $original_id2 = $LG_map_id->{$map_id2};
-    if($original_id1 =~ /pear_consensus/i){
-        $color = "chr$id_count2";
+    if($map_ids->[$i] =~ /pear_consensus/i){
+        $color = "chr$j";
     }
-    elsif($original_id2 =~ /pear_consensus/i){
-        $color = "chr$id_count1";
+    elsif($map_ids->[$j] =~ /pear_consensus/i){
+        $color = "chr$i";
     }
     return $color;
 }
 
 sub print_segdup_data{
-    my ($LG_hash, $LG_range, $LG_map_id, $segdup_fh) = @_;
+    my ($LG_hash, $LG_range, $map_ids, $segdup_fh) = @_;
     my %LG_hash = %$LG_hash;
     my %LG_range = %$LG_range;
-    my %LG_map_id = %$LG_map_id;
-    my @map_ids = sort {$a cmp $b} keys %LG_hash;
+    my @map_ids = @$map_ids;
     for (my $i = 0; $i < $#map_ids; $i++){
         for(my $j = $i + 1; $j <= $#map_ids; $j++){
             my $map_id1 = $map_ids[$i];
@@ -1120,7 +1114,7 @@ sub print_segdup_data{
                         $LG_hash, $LG_range, $map_id1, $marker;
                     my ($start2, $end2) = convert_LG_pos_to_range
                         $LG_hash, $LG_range, $map_id2, $marker;
-                    my $color = determine_color \%LG_map_id, $map_id1, $map_id2;
+                    my $color = determine_color \@map_ids, $i, $j;
                     printf $segdup_fh "%s %d %d %s %d %d %s\n",
                         $map_id1, $start1, $end1, 
                         $map_id2, $start2, $end2,
@@ -1151,36 +1145,30 @@ sub karyotype{
         open my $segdup_fh, ">", $segdup_file or die $!;
         my %LG_hash;
         my %LG_range;
-        my %LG_map_id;
-        my $map_id_count = 0;
-        for my $map_id (sort {$a cmp $b} keys %{$karyotype{$LG}}){
+        my @map_ids = sort {$a cmp $b} keys %{$karyotype{$LG}};
+        for (my $map_id_count = 0; $map_id_count < @map_ids; $map_id_count++){
+            my $map_id = $map_ids[$map_id_count];
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
-            my $min = min(values %markers_hash);
-            my $max = max(values %markers_hash);
-            $map_id_count++;
-            my $new_map_id = "map$map_id_count";
-            $LG_hash{$new_map_id} = \%markers_hash;
-            $LG_map_id{$new_map_id} = $map_id;
+            my $min = min(values %markers_hash) * 100_000;
+            my $max = max(values %markers_hash) * 100_000;
+            $LG_hash{$map_id} = \%markers_hash;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
-            $min *= 100_000;
-            $max *= 100_000;
-            $LG_range{$new_map_id} = [$min, $max];
+            $LG_range{$map_id} = [$min, $max];
             print $karyotype_fh 
-                "chr - $new_map_id $map_id $min $max chr$map_id_count\n";
-
+                "chr - $map_id $map_id $min $max chr$map_id_count\n";
             my @sorted_markers_list = 
                 sort {$markers_hash{$a} <=> $markers_hash{$b}} 
                 keys %markers_hash;
             for my $marker (@sorted_markers_list){
                 my $LG_pos = $markers_hash{$marker};
                 my ($start, $end) = convert_LG_pos_to_range
-                    \%LG_hash, \%LG_range, $new_map_id, $marker;
+                    \%LG_hash, \%LG_range, $map_id, $marker;
                 printf $highlights_fh "%s %d %d\n",
-                    $new_map_id, $start, $end;
+                    $map_id, $start, $end;
             }
         }
-        print_segdup_data \%LG_hash, \%LG_range, \%LG_map_id, $segdup_fh;
+        print_segdup_data \%LG_hash, \%LG_range, \@map_ids, $segdup_fh;
         close $karyotype_fh;
         close $highlights_fh;
         close $segdup_fh;
