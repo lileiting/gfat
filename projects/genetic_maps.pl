@@ -975,6 +975,9 @@ sub consensus2allmaps{
 
 sub print_conf_file{
     my ($conf_file, $karyotype_file, $highlights_file, $segdup_file) = @_;
+    my $figure_file = $conf_file;
+    $figure_file =~ s/conf-/figure-/;
+    $figure_file =~ s/.txt/.png/;
     open my $conf_fh, ">", $conf_file or die $!;
     print $conf_fh <<"end_of_conf_file";
     show_links      = no
@@ -1002,7 +1005,7 @@ sub print_conf_file{
     stroke_thickness = 2p
     show_label       = yes
     label_font       = default
-    label_radius     = 1.02r
+    label_radius     = 1.05r
     label_size       = 30
     label_parallel   = no
 </ideogram>
@@ -1035,29 +1038,32 @@ sub print_conf_file{
     show_grid         = yes
 <ticks>
     tick_label_font  = light
-    radius           = dims(ideogram,radius_outer)
+    radius           = dims(ideogram,radius_outer) + 0.02r
     label_offset     = 5p
     label_size       = 16p
     multiplier       = 1e-6
     color            = black
     thickness        = 1p
     <tick>
-        spacing        = 10u
+        spacing        = 50u
         size           = 14p
         show_label     = yes
         format         = %d
-        suffix         = Mb
+        suffix         = cM
     </tick>
-    <tick>
-        label_separation = 1p
-        spacing          = 2u
-        size             = 7p
-        show_label       = no
-        format           = %d
-    </tick>
+    #<tick>
+    #    label_separation = 1p
+    #    spacing          = 10u
+    #    size             = 7p
+    #    show_label       = no
+    #    format           = %d
+    #</tick>
 </ticks>
 <image>
 <<include etc/image.conf>>
+    file  = $figure_file
+    png   = yes
+    svg   = yes
 </image>
 <<include etc/colors_fonts_patterns.conf>>
 <<include etc/housekeeping.conf>>    
@@ -1069,30 +1075,29 @@ end_of_conf_file
 sub convert_LG_pos_to_range{
     my ($LG_hash, $LG_range, $map_id, $marker) = @_;
     my ($min, $max) = @{$LG_range->{$map_id}};
-    my $LG_pos = $LG_hash->{$map_id}->{$marker} * 100_000;
-    my ($start, $end);
-    if($LG_pos - 100 < $min){
-        $start = $min;
-    }
-    else{
-        $start = $LG_pos - 100;
-    }
-    if($LG_pos + 100 > $max){
-        $end = $max;
-    }
-    else{
-        $end = $LG_pos + 100;
-    }
+    my $LG_pos = $LG_hash->{$map_id}->{$marker} * 1_000_000;
+    my ($start, $end) = ($LG_pos - 1000, $LG_pos + 1000);
+    $start = $min if $LG_pos - 1000 < $min;
+    $end   = $max if $LG_pos + 1000 > $max;
     return ($start, $end);
+}
+
+sub is_consensus_map{
+    my $map_id = shift;
+    if($map_id =~ /mergemap_consensus/i){
+        return 1;
+    }else{
+        return 0;
+    }
 }
 
 sub determine_color{
     my ($map_ids, $i, $j) = @_;
-    my $color = 'black';
-    if($map_ids->[$i] =~ /pear_consensus/i){
+    my $color = 'grey';
+    if(is_consensus_map($map_ids->[$i])){
         $color = "chr$j";
     }
-    elsif($map_ids->[$j] =~ /pear_consensus/i){
+    elsif(is_consensus_map($map_ids->[$j])){
         $color = "chr$i";
     }
     return $color;
@@ -1107,6 +1112,8 @@ sub print_segdup_data{
         for(my $j = $i + 1; $j <= $#map_ids; $j++){
             my $map_id1 = $map_ids[$i];
             my $map_id2 = $map_ids[$j];
+            #next unless is_consensus_map($map_id1) or
+            #            is_consensus_map($map_id2);
             my @markers = keys %{$LG_hash{$map_id1}};
             for my $marker (@markers){
                 if(exists $LG_hash{$map_id2}->{$marker}){
@@ -1149,8 +1156,8 @@ sub karyotype{
         for (my $map_id_count = 0; $map_id_count < @map_ids; $map_id_count++){
             my $map_id = $map_ids[$map_id_count];
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
-            my $min = min(values %markers_hash) * 100_000;
-            my $max = max(values %markers_hash) * 100_000;
+            my $min = min(values %markers_hash) * 1_000_000;
+            my $max = max(values %markers_hash) * 1_000_000;
             $LG_hash{$map_id} = \%markers_hash;
             # Karyotype format:
             # chr - ID LABEL START END COLOR
