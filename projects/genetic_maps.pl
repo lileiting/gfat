@@ -112,7 +112,7 @@ sub get_markers_hash{
     return %{$args->{map_data}->{$map_id}->{$LG}};
 }
 
-sub get_marker_ids{
+sub get_marker_names{
     my ($args, $map_id, $LG) = @_;
     my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
     my @marker_ids = sort {$LG{$a} <=> $LG{$b} or $a cmp $b} keys %LG;
@@ -378,7 +378,7 @@ sub print_bin_markers{
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids($args, $map_id);
         for my $LG (@LGs){
-            my @markers = get_marker_ids($args, $map_id, $LG);
+            my @markers = get_marker_names($args, $map_id, $LG);
             for my $marker(@markers){
                 if(exists $args->{binmarker}->{$marker}){
                     my $genetic_pos = 
@@ -468,7 +468,7 @@ sub print_merged_marker_set{
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids($args, $map_id);
         for my $LG (@LGs){
-            my @markers = get_marker_ids($args, $map_id, $LG);
+            my @markers = get_marker_names($args, $map_id, $LG);
             for my $marker (@markers){
                 my $genetic_pos = 
                     $args->{map_data}->{$map_id}->{$LG}->{$marker};
@@ -590,13 +590,17 @@ sub mergemap{
 
     $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
+    open my $config_fh, ">", "mergemap.maps_config" or die $!;
     for my $map_id (@map_ids){
-        open my $fh, ">", "mergemap-input-$map_id.map" or die $!;
+        my $map_file = "mergemap-input-$map_id.map";
+        open my $fh, ">", $map_file or die $!;
+        print $config_fh "$map_id 1 $map_file\n";
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
-            for my $marker_name (keys %{$args->{map_data}->{$map_id}->{$LG}}){
+            my @marker_ids = get_marker_names $args, $map_id, $LG;
+            for my $marker_name (@marker_ids){
                 my $genetic_pos = 
                     $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
                 print $fh "$marker_name\t$genetic_pos\n";
@@ -605,6 +609,7 @@ sub mergemap{
         }
         close $fh;
     }
+    close $config_fh;
 }
 
 #
@@ -1084,7 +1089,7 @@ sub convert_LG_pos_to_range{
 
 sub is_consensus_map{
     my $map_id = shift;
-    if($map_id =~ /mergemap_consensus/i){
+    if($map_id =~ /mergemap/i){
         return 1;
     }else{
         return 0;
