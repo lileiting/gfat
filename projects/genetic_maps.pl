@@ -34,6 +34,7 @@ Availabe actions
     drawfigureR      | print R codes for drawing genetic map figure
     consensus2allmaps| Convert consensus map data as ALLMAPS input format 
     karyotype        | Prepare karyotype for circos figures
+    conflicts        | Print conflicts
 
 usage
     exit;
@@ -117,6 +118,11 @@ sub get_marker_names{
     my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
     my @marker_ids = sort {$LG{$a} <=> $LG{$b} or $a cmp $b} keys %LG;
     return @marker_ids;
+}
+
+sub get_genetic_pos{
+    my ($args, $map_id, $LG, $marker_name) = @_;
+    return $args->{map_data}->{$map_id}->{$LG}->{$marker_name};   
 }
 
 sub get_LG_indexed_map_data{
@@ -1185,6 +1191,51 @@ sub karyotype{
         close $highlights_fh;
         close $segdup_fh;
     }
+}
+
+sub conflicts{
+    my $args = new_action(
+        -desc => 'print conflicts',
+        -options => {
+            "invert_match|v" => 'Invert match'
+        }
+    );
+    my $invert_match = $args->{options}->{invert_match};
+    $args = load_map_data $args;
+    my %conflicts;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my @marker_names = get_marker_names $args, $map_id, $LG;
+            for my $marker_name (@marker_names){
+                my $genetic_pos = 
+                    get_genetic_pos $args, $map_id, $LG, $marker_name;
+                push @{$conflicts{$marker_name}}, [$map_id, $LG, $genetic_pos];
+            }
+            
+        }
+    }
+    
+    for my $marker_name (sort {$a cmp $b} keys %conflicts){
+        my @info = @{$conflicts{$marker_name}};
+        my %hash;
+        for my $info (@info){
+            my ($map_id, $LG, $genetic_pos) = @$info;
+            $hash{$LG}++;
+        }
+        my $is_conflict = keys %hash > 1 ? 1 : 0;
+        $is_conflict = !$is_conflict if $invert_match;
+        if($is_conflict){
+            for my $info (@info){
+                my ($map_id, $LG, $genetic_pos) = @$info;
+                print join ("\t", 
+                    $map_id, $LG, $marker_name, $genetic_pos
+                    )."\n";
+            }
+        }
+    }
+    
 }
 
 __END__
