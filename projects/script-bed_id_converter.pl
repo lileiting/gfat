@@ -83,10 +83,15 @@ sub find_id_in_feature{
         my ($key, $value) = split /=/, $pair;
         $hash{$key} = $value;
     }
-    unless(exists $hash{ID}){
-        $hash{ID} = undef;
+    if(exists $hash{ID}){
+        return $hash{ID};
     }
-    return $hash{ID}
+    elsif(exists $hash{Parent}){
+        return $hash{Parent};
+    }
+    else{
+        return undef;
+    }
 }
 
 sub load_gff{
@@ -112,3 +117,4 @@ sub load_gff{
 
 __END__
 Leiting Li, 2015/12/2
+Updated 2016/1/8
