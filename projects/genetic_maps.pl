@@ -591,8 +591,16 @@ sub bowtie2allmaps{
 
 sub mergemap{
     my $args = new_action(
-        -desc => 'Prepare input data for mergemap'
+        -desc => 'Prepare input data for mergemap',
+        -options => {
+            "number|n=i" => 'Suppress LGs with number of markers less than 
+                            NUM (default: None)',
+            "length|l=i" => 'Supress LGs with length less than NUM cM (
+                             default: None)'
+        }
     );
+    my $number = $args->{options}->{number} // 0;
+    my $length = $args->{options}->{length} // 0;
 
     $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
@@ -603,9 +611,15 @@ sub mergemap{
         print $config_fh "$map_id 1 $map_file\n";
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
+            my %markers_hash = get_markers_hash $args, $map_id, $LG;
+            my @marker_ids = sort {$markers_hash{$a} <=> $markers_hash{$b}}
+                              keys %markers_hash;
+            my ($min, $max) = (sort{$a <=> $b} values %markers_hash)[0,-1];
+            my $LG_length = $max - $min;
+            next if $number > 0 and @marker_ids < $number 
+                    or $length > 0 and $LG_length < $length;
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
-            my @marker_ids = get_marker_names $args, $map_id, $LG;
             for my $marker_name (@marker_ids){
                 my $genetic_pos = 
                     $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
