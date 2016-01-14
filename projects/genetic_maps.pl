@@ -615,13 +615,16 @@ sub mergemap{
         -desc => 'Prepare input data for mergemap',
         -options => {
             "number|n=i" => 'Suppress LGs with number of markers less than 
-                            NUM (default: None)',
-            "length|l=i" => 'Supress LGs with length less than NUM cM (
-                             default: None)'
+                            NUM (default: disable)',
+            "length|l=i" => 'Supress LGs with length less than 
+                             the threshold (cM) (default: disable)',
+            "interval|i=f" => 'Supress LGs with average marker intervals 
+                               greater than the threshold (default: disable)'
         }
     );
     my $number = $args->{options}->{number} // 0;
     my $length = $args->{options}->{length} // 0;
+    my $interval = $args->{options}->{interval} // 0;
 
     $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
@@ -637,8 +640,10 @@ sub mergemap{
                               keys %markers_hash;
             my ($min, $max) = (sort{$a <=> $b} values %markers_hash)[0,-1];
             my $LG_length = $max - $min;
+            my $average_interval = $LG_length / (@marker_ids - 1);
             next if $number > 0 and @marker_ids < $number 
-                    or $length > 0 and $LG_length < $length;
+                    or $length > 0 and $LG_length < $length
+                    or $interval > 0 and $average_interval > $interval;
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
             for my $marker_name (@marker_ids){
