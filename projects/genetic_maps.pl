@@ -35,6 +35,7 @@ Availabe actions
     consensus2allmaps| Convert consensus map data as ALLMAPS input format 
     karyotype        | Prepare karyotype for circos figures
     conflicts        | Print conflicts
+    report           | Report merged genetic map
 
 usage
     exit;
@@ -137,6 +138,26 @@ sub get_LG_indexed_map_data{
         }
     }
     return %LG_indexed_map_data;
+}
+
+sub get_marker_indexed_map_data{
+    my $args = shift;
+    my %marker_indexed_map_data;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %hash = get_markers_hash $args, $map_id, $LG;
+            for my $marker (keys %hash){
+                my $genetic_pos = $hash{$marker};
+                die "Error for marker $marker!!!"
+                    if exists $marker_indexed_map_data{$marker}->{$map_id};
+                $marker_indexed_map_data{$marker}->{$map_id} = 
+                    join("|", $map_id, $LG, $genetic_pos);
+            }
+        }
+    }
+    return %marker_indexed_map_data;
 }
 
 sub get_common_marker_num{
@@ -1250,6 +1271,49 @@ sub conflicts{
         }
     }
     
+}
+
+sub report{
+    my $args = new_action(
+        -desc => 'Report the consensus map. Main function is to map marker in
+                  consensus map against the original map',
+        -options => {
+            "linear_map_chart|l=s" => 'File "linear_map_chart.txt"'
+        }
+    );
+
+    my $linear_map_chart = $args->{options}->{linear_map_chart};
+    die qq/File "linear_map_chart.txt" is required!\n/ 
+        unless $linear_map_chart;
+    $args = load_map_data $args;
+    my @map_ids = get_map_ids $args;
+    my %marker_info = get_marker_indexed_map_data $args;
+    open my $fh, $linear_map_chart or die $!;
+    my $group;
+    while(<$fh>){
+        next if /^\s*$/ or /^\s*;/;
+        if (/^group\s+(\S+)/){
+            $group = $1;
+        }
+        elsif(/^(\S+)\s+(-?\d+(\.\d+)?)/){
+            my ($marker_info, $pos) = ($1, $2);
+            die "CAUTION: Group number is unknown!" unless $group;
+            my @markers = split /,/, $marker_info;
+            for my $marker (@markers){
+                print join("\t",
+                          $linear_map_chart, 
+                          $group,
+                          $marker,
+                          $pos,
+                          map{$marker_info{$marker}->{$_} // "NA"}@map_ids
+                    )."\n";
+            }
+        }
+        else{
+            die "CAUTION: $_";
+        }
+    }
+    close $fh;
 }
 
 __END__
