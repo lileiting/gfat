@@ -61,6 +61,7 @@ Find bin markers based positions on scaffolds, greedy method
     convert_aln      |  Convert blastn or bowtie results data to a 4-column data
                         MARKER  SCAFFOLD  START  END
     greedy           | Creating bin markers
+    annotate_binmarkers
 
 usage
     exit;
@@ -1518,7 +1519,77 @@ sub greedy{
         print_bin(\@data, $i, $j - 1, $bin_count);
         $i = $j - 1; 
     }
+}
 
+sub is_same_map_same_LG{
+    my ($markers_data, @markers) = @_;
+    my %check;
+    for my $marker (@markers){
+        for my $map_id (keys %{$markers_data->{$marker}}){
+            my ($map_id, $LG, $genetic_pos) =     
+                @{$markers_data->{$marker}->{$map_id}};
+            $check{$map_id}->{$LG}++;
+        }
+    }
+    my $count = 0;
+    for my $key1 (keys %check){
+        for my $key2 (keys %{$check{$key1}}){
+            $count++;
+        }
+    }
+    die if $count == 0;
+    return $count > 1 ? 0 : 1;
+}
+
+sub annotate_binmarkers{
+    my $args = new_action(
+        -desc => 'annotate binmarkers',
+        -options => {
+            "binmarkers|b=s" => 'bin markers data created by action binmarkers2'
+        }
+    );
+    
+    $args = load_map_data $args;
+    my %markers_data = get_marker_indexed_map_data $args;
+    my $bin_markers_file = $args->{options}->{binmarkers};
+    open my $bin_markers_fh, $bin_markers_file or die $!;
+    while(<$bin_markers_fh>){
+        chomp;
+        my ($binmarker, $scaffold, $start, $end, $count, $marker_list)
+            = split /\t/;
+        next if $count == 1;
+        my @markers = split /,/, $marker_list;
+        
+        # If all markers were in the same map, same LG, then omit this
+        # bin marker
+        next if is_same_map_same_LG \%markers_data, @markers;
+
+        # If this bin marker should keep and there were multiple
+        # markers in one LG, then choose average LG position as 
+        # the position of this bin marker.
+
+        my %bin_marker_info;
+        for my $marker (@markers){
+            for my $map_id (keys %{$markers_data{$marker}}){
+                my ($map_id, $LG, $genetic_pos) = 
+                    @{$markers_data{$marker}->{$map_id}};
+                $bin_marker_info{$map_id}->{$LG}->{$marker} = $genetic_pos;
+            }
+        }
+
+        for my $map_id (keys %bin_marker_info){
+            for my $LG (keys %{$bin_marker_info{$map_id}}){
+               my %hash = %{$bin_marker_info{$map_id}->{$LG}};
+               my $bin_marker_pos = sprintf "%.1f",
+                    sum(values %hash) / scalar(values %hash);
+               print join("\t", $binmarker, $map_id, $LG, $bin_marker_pos, 
+                                join(",", sort {$a cmp $b} keys %hash),
+                                join(",", map {$hash{$_}} sort {$a cmp $b} keys %hash)
+                         )."\n";
+            }
+        }
+    }
+    close $bin_markers_fh;
 }
 
 __END__
