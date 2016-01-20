@@ -189,7 +189,7 @@ sub get_marker_indexed_map_data{
                 die "Error for marker $marker!!!"
                     if exists $marker_indexed_map_data{$marker}->{$map_id};
                 $marker_indexed_map_data{$marker}->{$map_id} = 
-                    join("|", $map_id, $LG, $genetic_pos);
+                    [$map_id, $LG, $genetic_pos];
             }
         }
     }
@@ -1346,7 +1346,10 @@ sub report{
                           $group,
                           $marker,
                           $pos,
-                          map{$marker_info{$marker}->{$_} // "NA"}@map_ids
+                          map{
+                              defined $marker_info{$marker}->{$_} ? 
+                              join("|", @{$marker_info{$marker}->{$_}}) : "NA"
+                          }@map_ids
                     )."\n";
             }
         }
