@@ -1498,12 +1498,9 @@ sub greedy{
     );
     my $window = $args->{options}->{window} // 10_000;
     my @data;
-    my $count;
     my @fhs = get_in_fhs $args;
     for my $fh (@fhs){
         while(<$fh>){
-            $count++;
-            print "$count\n";
             chomp;
             push @data, [split /\t/];
         }
