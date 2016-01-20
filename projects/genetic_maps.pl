@@ -1,11 +1,17 @@
 #!/usr/bin/env perl
 
+############################################################
+# Toolkit to analyse genetic map data                      #
+############################################################
+
 use warnings;
 use strict;
 use FindBin;
 use List::Util qw(sum max min);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+
+#~~~~~~~~~~~~~~~~~~~~~~~~ Main usage ~~~~~~~~~~~~~~~~~~~~~~#
 
 sub main_usage{
     print <<"usage";
@@ -22,24 +28,45 @@ Description
     Space was not allowed in map_ID and marker_name
 
 Availabe actions
+
+Run ALLMAPS
     blastn2allmaps   | Prepare input data for allmaps
     bowtie2allmaps   | Prepare input data for allmaps
+
+Run MergeMap
     mergemap         | Prepare input data for mergemap
     mergemapLG       | one file per LG 
+
+Analyse map-data (4-column)
     commonstats      | Count common markers
     summarymap       | Summary of input data
+    conflicts        | Print conflicts
+
+Analyse MapChart-style data
     linear_map_chart | read linear_map_chart files
-    binmarkers       | Find bin markers
+    report           | Report merged genetic map
+    consensus2allmaps| Convert consensus map data as ALLMAPS input format 
+
+Draw genetic map figure
     input4R          | Get input data for R codes
     drawfigureR      | print R codes for drawing genetic map figure
-    consensus2allmaps| Convert consensus map data as ALLMAPS input format 
+
+Draw Circos figure
     karyotype        | Prepare karyotype for circos figures
-    conflicts        | Print conflicts
-    report           | Report merged genetic map
+
+Create bin markers:
+    binmarkers       | Find bin markers, very complicated method, deprecated
+
+Find bin markers based positions on scaffolds, greedy method
+    convert_aln      |  Convert blastn or bowtie results data to a 4-column data
+                        MARKER  SCAFFOLD  START  END
+    greedy           | Creating bin markers
 
 usage
     exit;
 }
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~ Main ~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 sub main{
     main_usage unless @ARGV;
@@ -56,12 +83,21 @@ sub main{
 main() unless caller;
 
 ############################################################
-# Action defination                                        #
+# Definition of the 4-column map data structure            
+# 1. map ID
+# 2. LG
+# 3. marker name
+# 4. genetic position
 ############################################################
 
-#
-# Map data
-#
+# load_map_data
+# get_map_ids
+# get_LG_ids
+# get_markers_hash
+# get_marker_names
+# get_genetic_pos
+# get_LG_indexed_map_data
+# get_common_marker_number
 
 sub load_map_data{
     my ($args, @map_files) = @_;
@@ -1061,16 +1097,16 @@ sub print_conf_file{
     label_parallel   = no
 </ideogram>
 <plots>
-	label_font = light
-	label_size =25p
-	rpadding   = 10p
+    label_font = light
+    label_size =25p
+    rpadding   = 10p
     <plot>
-     	type=highlight
+         type=highlight
             file = $highlights_file
         r0 = dims(ideogram,radius_inner) - 0.02r
         r1 = dims(ideogram,radius_inner) + 0.03r
-		z    = 10
-	 </plot>
+        z    = 10
+     </plot>
 </plots>
 <highlights>
     z = 0
@@ -1319,6 +1355,170 @@ sub report{
         }
     }
     close $fh;
+}
+
+############################################################
+# Create bin markers          
+############################################################
+
+sub add_scf_prefix{
+    my ($scaffold, $file) = @_;
+    if($file =~ /Pbr/){
+        $scaffold = "Pbr-$scaffold";
+    }
+    elsif($file =~ /Pco/){
+        $scaffold = "Pco-$scaffold";
+    }
+    return $scaffold;
+}
+
+sub convert_aln{
+    my $args = new_action(
+        -desc => 'Convert blastn or bowtie data into a special data format,
+              which consisted of 4 columns, MARKER SCAFFOLD START END',
+        -options => {
+        "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
+                          -perc_identity 95 -outfmt "6 std qlen slen qcovs 
+                          qcovhsp"',
+        "bowtie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+                          -X 500 -a'
+        }
+    );
+
+    my @results;
+
+    $args = load_map_data $args;
+    my %markers_in_map = get_marker_indexed_map_data $args;
+
+    my @blastn_files;
+    @blastn_files = split(",", join(",", @{$args->{options}->{blastn}}))
+        if $args->{options}->{blastn};
+    my @bowtie_files;
+    @bowtie_files = split(",", join(",", @{$args->{options}->{bowtie}}))
+        if $args->{options}->{bowtie};
+    for my $blastn_file (@blastn_files){
+        open my $blastn_fh, $blastn_file or die $!;
+        while(<$blastn_fh>){
+            @_ = split /\t/;
+            die qq/CAUTION: BLASTN parameter -outfmt "6 std qlen slen 
+                        qcovs qcovhsp"/ unless @_ == 16;
+            my $marker = $_[0];
+            my $scaffold = $_[1];
+            my $start = $_[8];
+            my $end = $_[9];
+            my $qcovs = $_[14];
+            next unless $qcovs >= 95;
+            next unless exists $markers_in_map{$marker};
+            push @results, [$marker, 
+                            add_scf_prefix($scaffold, $blastn_file), 
+                            $start, $end];
+        }
+        close $blastn_fh;
+    }
+
+    for my $bowtie_file(@bowtie_files){
+        open my $bowtie_fh, $bowtie_file or die $!;
+        while(my $aln1 = <$bowtie_fh>){
+            my ($id1, $strand1, $scf1, $pos1, $seq1) = split /\t/, $aln1;
+            my $aln2 = <$bowtie_fh>;
+            my ($id2, $strand2, $scf2, $pos2, $seq2) = split /\t/, $aln2;
+            $id1 =~ s|/[12]$||;
+            $id2 =~ s|/[12]$||;
+            die "ERROR in:\n  $aln1  $aln2"unless $id1 eq $id2
+                                            and $scf1 eq $scf2
+                                            and $strand1 eq '+'
+                                            and $strand2 eq '-';
+            my $start = $pos1 + 1;
+            my $end = $pos2 + length($seq2);
+            next unless exists $markers_in_map{$id1};
+            push @results, [$id1, add_scf_prefix($scf1, $bowtie_file),
+                             $start, $end];
+        }
+        close $bowtie_fh;
+    }
+    @results = sort{$a->[1] cmp $b->[1]
+                or  $a->[2] <=> $b->[2]
+                }@results;
+    for (@results){
+        print join("\t", @$_)."\n";
+    }
+}
+
+sub are_bin_markers{
+    my ($array_ref, $i, $j, $window) = @_;
+    my @positions;
+    my %scaffolds;
+    for ($i .. $j){
+        my ($id, $scf, $start, $end) = @{$array_ref->[$_]};
+        push @positions, $start, $end;
+        $scaffolds{$scf}++;
+    }
+    my $min_pos = min(@positions);
+    my $max_pos = max(@positions);
+    return 0 if keys %scaffolds > 1;
+    return 0 if ($max_pos - $min_pos + 1) > $window;
+    return 1;
+}
+
+sub print_bin{
+    my ($array_ref, $i, $j, $bin_count) = @_;
+    my @positions;
+    my %scaffolds;
+    my %ids;
+    for ($i .. $j){
+        my ($id, $scf, $start, $end) = @{$array_ref->[$_]};
+        push @positions, $start, $end;
+        $scaffolds{$scf}++;
+        $ids{$id}++;
+    }
+    my @ids = sort {$a cmp $b} keys %ids;
+    my $min_pos = min(@positions);
+    my $max_pos = max(@positions);
+    my ($scaffold) = keys %scaffolds;
+    printf "Bin%04d\t%s\t%d\t%d\t%d\t%s\n", 
+        $bin_count,
+        $scaffold, 
+        $min_pos, 
+        $max_pos, 
+        scalar(@ids),
+        join(",", @ids);
+    return 1;
+}
+
+sub greedy{
+    my $args = new_action(
+        -desc => 'binmarkers 2.0, use results from action convert_aln as
+                  input data',
+        -options => {
+            "window|w=i" => 'Window size, default: 10000'
+        }
+    );
+    my $window = $args->{options}->{window} // 10_000;
+    my @data;
+    my $count;
+    my @fhs = get_in_fhs $args;
+    for my $fh (@fhs){
+        while(<$fh>){
+            $count++;
+            print "$count\n";
+            chomp;
+            push @data, [split /\t/];
+        }
+    }
+
+    my $bin_count = 0;
+    my %binmarkers;
+    for(my $i = 0; $i <= $#data; $i++){
+        my $j = $i + 1;
+        while($j <= $#data){
+            last unless are_bin_markers(\@data, $i, $j, $window);
+            $j++;
+        }
+        $bin_count++;
+        print_bin(\@data, $i, $j - 1, $bin_count);
+        $i = $j - 1; 
+    }
+
 }
 
 __END__
