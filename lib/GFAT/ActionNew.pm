@@ -9,7 +9,7 @@ use Text::Wrap;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action);
+@EXPORT = qw(new_action get_in_fhs);
 @EXPORT_OK = @EXPORT;
 
 sub resolve_options_usage{
@@ -123,6 +123,11 @@ sub new_action{
     $action{out_fh} = $out_fh;
     $action{options} = \%options;
     return \%action;
+}
+
+sub get_in_fhs{
+    my $args = shift;
+    return @{$args->{in_fhs}};
 }
 
 1;

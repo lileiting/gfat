@@ -65,7 +65,7 @@ main() unless caller;
 
 sub load_map_data{
     my ($args, @map_files) = @_;
-    my @fhs = @{$args->{in_fhs}};
+    my @fhs = get_in_fhs $args;
     for my $map_file (@map_files){
         open my $map_fh, "<", $map_file or die $!;
         push @fhs, $map_fh;
