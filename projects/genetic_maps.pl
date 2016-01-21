@@ -110,7 +110,7 @@ sub load_map_data{
     for my $fh (@fhs){
         while(<$fh>){
             chomp;
-            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)$/){
+            unless(/^(\S+)\t(\S+)\t(\S+)\t(-?\d+(\.\d+)?)\b/){
                 warn "[load_map_data] WARNING: $_\n";
                 next;
             }
