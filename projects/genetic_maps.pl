@@ -1545,15 +1545,24 @@ sub annotate_binmarkers{
     my $args = new_action(
         -desc => 'annotate binmarkers',
         -options => {
-            "binmarkers|b=s" => 'bin markers data created by action binmarkers2'
+            "binmarkers|b=s" => 'bin markers data created by action 
+                                binmarkers2',
+            "threshold|t=f" => 'If markers in a bin have genetic position 
+                                difference larger than the threshold (cM), then 
+                                remove this bin marker [default: 10].
+                                Set as unlimited if threshold less than or 
+                                equal to 0'
         }
     );
     
     $args = load_map_data $args;
     my %markers_data = get_marker_indexed_map_data $args;
     my $bin_markers_file = $args->{options}->{binmarkers};
+    my $threshold = $args->{options}->{threshold} // 10;
+    die "CAUTION: bin markers file is required with -b" 
+        unless $bin_markers_file;
     open my $bin_markers_fh, $bin_markers_file or die $!;
-    while(<$bin_markers_fh>){
+    LABEL: while(<$bin_markers_fh>){
         chomp;
         my ($binmarker, $scaffold, $start, $end, $count, $marker_list)
             = split /\t/;
