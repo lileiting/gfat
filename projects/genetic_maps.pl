@@ -41,6 +41,7 @@ Analyse map-data (4-column)
     commonstats      | Count common markers
     summarymap       | Summary of input data
     conflicts        | Print conflicts
+    remove_redundant | Remove redundant markers that in the same map location
 
 Analyse MapChart-style data
     linear_map_chart | read linear_map_chart files
@@ -1639,6 +1640,37 @@ sub annotate_binmarkers{
         }
     }
     close $bin_markers_fh;
+}
+
+sub remove_redundant{
+    my $args = new_action(
+        -desc => 'Remove redundant markers that are in the same location in 
+                  a map'
+    );
+    $args = load_map_data $args;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my @LGs= get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %hash = get_markers_hash $args, $map_id, $LG;
+            my %tmp;
+            for my $marker(keys %hash){
+                push @{$tmp{$hash{$marker}}}, $marker;
+            }
+            for my $position (sort {$a <=> $b} keys %tmp){
+                my @markers = @{$tmp{$position}};
+                my @selected;
+                map{push @selected, $_ if $markers[$_] =~ /^Bin/}(0..$#markers);
+                if(@selected == 0){
+                    push @selected, int(rand(scalar(@markers)));
+                }
+                for my $marker(@markers[@selected]){
+                    print join("\t", $map_id, $LG, $marker, $hash{$marker}
+                            )."\n";
+                }
+            }
+        }
+    }
 }
 
 __END__
