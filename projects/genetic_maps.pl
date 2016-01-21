@@ -42,6 +42,7 @@ Analyse map-data (4-column)
     summarymap       | Summary of input data
     conflicts        | Print conflicts
     remove_redundant | Remove redundant markers that in the same map location
+    list_commons     | list common markers
 
 Analyse MapChart-style data
     linear_map_chart | read linear_map_chart files
@@ -831,9 +832,38 @@ sub linear_map_chart{
     }
 }
 
-#
-# Common markers statistics
-#
+############################################################
+# Common markers
+############################################################
+
+sub list_commons{
+    my $args = new_action(
+        -desc => 'List common markers'
+    );
+    
+    $args = load_map_data $args;
+    my @results;
+    my %marker_indexed_map_data = get_marker_indexed_map_data $args;
+    for my $marker (keys %marker_indexed_map_data){
+        my @array = values %{$marker_indexed_map_data{$marker}};
+        next if @array == 1;
+        for(my $i = 0; $i < $#array; $i++){
+            for(my $j = $i + 1; $j <= $#array; $j++){
+                my ($map_id1, $LG1, $pos1) = @{$array[$i]};
+                my ($map_id2, $LG2, $pos2) = @{$array[$j]};
+                push @results, [$marker,  $map_id1, $LG1, $pos1, 
+                                          $map_id2, $LG2, $pos2];
+            }
+        }
+    }
+    @results = sort {$a->[2] <=> $b->[2] or 
+                    $a->[3] <=> $b->[3]
+                    }@results;
+    for my $result (@results){
+        print join ("\t", @$result)."\n";
+    }
+    
+}
 
 sub commonstats_default{
     my $args = shift;
