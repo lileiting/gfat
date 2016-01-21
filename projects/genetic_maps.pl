@@ -675,9 +675,11 @@ sub mergemap{
             my %markers_hash = get_markers_hash $args, $map_id, $LG;
             my @marker_ids = sort {$markers_hash{$a} <=> $markers_hash{$b}}
                               keys %markers_hash;
-            my ($min, $max) = (sort{$a <=> $b} values %markers_hash)[0,-1];
+            my $max = max(values %markers_hash);
+            my $min = min(values %markers_hash);
             my $LG_length = $max - $min;
-            my $average_interval = $LG_length / (@marker_ids - 1);
+            my $average_interval = @marker_ids > 1 ? 
+                                  $LG_length / (@marker_ids - 1) : 0;
             next if $number > 0 and @marker_ids < $number 
                     or $length > 0 and $LG_length < $length
                     or $interval > 0 and $average_interval > $interval;
@@ -1588,10 +1590,14 @@ sub annotate_binmarkers{
 
         for my $map_id (keys %bin_marker_info){
             for my $LG (keys %{$bin_marker_info{$map_id}}){
-               my %hash = %{$bin_marker_info{$map_id}->{$LG}};
-               my $bin_marker_pos = sprintf "%.1f",
-                    sum(values %hash) / scalar(values %hash);
-               print join("\t", $binmarker, $map_id, $LG, $bin_marker_pos, 
+                my %hash = %{$bin_marker_info{$map_id}->{$LG}};
+                my @positions = values %hash;
+                my $bin_marker_pos = sprintf "%.1f",
+                    sum(@positions) / scalar(@positions);
+                next LABEL if $threshold > 0 and 
+                              max(@positions) - min(@positions) > $threshold;
+                print join("\t",  $map_id, $LG, 
+                                $binmarker, $bin_marker_pos, 
                                 join(",", sort {$a cmp $b} keys %hash),
                                 join(",", map {$hash{$_}} sort {$a cmp $b} keys %hash)
                          )."\n";
