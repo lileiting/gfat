@@ -132,6 +132,30 @@ sub get_map_ids{
     return @map_ids;
 }
 
+sub is_number{
+    my @items = @_;
+    map{return 0 unless /^-?\d+(\.\d+)?$/}@items;
+    return 1;
+}
+
+sub is_scaffold_name{
+    my @items = @_;
+    map{return 0 unless /^\S+?\d+(\.\d+)?$/}@items;
+    return 1;
+}
+
+sub sort_by_scaffold_number{
+    my @items = @_;
+    my @sorted;
+    for my $item (@items){
+        die unless $item =~ /^(\S+?)(\d+(\.\d+)?)$/;
+        push @sorted, [$1, $2];
+    }
+    @sorted = sort {$a->[1] <=> $b->[1]}@sorted;
+    @items = map{join "", @$_}@sorted;
+    return @items;
+}
+
 sub get_LG_ids{
     my ($args, @map_ids) = @_;
     @map_ids = get_map_ids($args) unless @map_ids;
@@ -140,7 +164,17 @@ sub get_LG_ids{
         my @LG_keys = keys %{$args->{map_data}->{$map_id}};
         map{$LGs{$_}++} @LG_keys;
     }
-    my @LGs = sort {$a cmp $b} keys %LGs;
+    my @LGs = keys %LGs;
+    if(is_number @LGs){
+        @LGs = sort{$a <=> $b}@LGs;
+    }
+    elsif(is_scaffold_name @LGs){
+        @LGs = sort_by_scaffold_number @LGs;
+    }
+    else{
+        @LGs = sort{$a cmp $b}@LGs;
+    }
+    
     return @LGs;    
 }
 
