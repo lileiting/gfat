@@ -1012,24 +1012,28 @@ sub summarymap{
         }
     }
     else{
-    # Print title
-    print join("\t", "Map ID", "Number of LGs", 
-        "Number of markers", "Total length")."\n" if $print_title;
-    for my $map_id (@map_ids){
-        my $num_LG;
-        my $num_markers;
-        my $length;
-        my @LGs = get_LG_ids($args, $map_id);
-        for my $LG (@LGs){
-            $num_LG++;
-            $num_markers += keys %{$args->{map_data}->{$map_id}->{$LG}};
-            my @positions = sort {$a <=> $b} 
-                values %{$args->{map_data}->{$map_id}->{$LG}};
-            $length += $positions[-1] - $positions[0];
+        # Print title
+        print join("\t", "Map ID", "Number of LGs", 
+            "Number of markers", "Total length")."\n" if $print_title;
+        for my $map_id (@map_ids){
+            my $num_LG;
+            my $num_markers;
+            my $length;
+            my @LGs = get_LG_ids($args, $map_id);
+            for my $LG (@LGs){
+                $num_LG++;
+                $num_markers += keys %{$args->{map_data}->{$map_id}->{$LG}};
+                my @positions = sort {$a <=> $b} 
+                    values %{$args->{map_data}->{$map_id}->{$LG}};
+                $length += $positions[-1] - $positions[0];
+            }
+            $length = sprintf "%.1f", $length;
+            my $average_interval = sprintf "%.2f", 
+                $length / ($num_markers - $num_LG);
+            print join("\t", $map_id, $num_LG."_LGs", 
+                $num_markers, $length, $average_interval
+                )."\n";
         }
-        $length = sprintf "%.1f", $length;
-        print "$map_id\t$num_LG\t$num_markers\t$length\n";
-    }
     }
 }
 
