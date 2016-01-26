@@ -1030,7 +1030,7 @@ sub summarymap{
                 my $average_intervals = $num_markers > 1 ? 
                     sprintf "%.2f", $length / ($num_markers - 1) :
                     "NA";
-                print join("\t", $map_id, "LG$LG", $num_markers, 
+                print join("\t", $map_id, "$LG", $num_markers, 
                     $length, $average_intervals, $LG_start, $LG_end)."\n";
             }
         }
