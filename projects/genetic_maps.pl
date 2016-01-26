@@ -237,8 +237,8 @@ sub get_common_marker_num{
     my ($args, $map_id1, $map_id2, @LGs) = @_;
     my $common_markers = 0;
     for my $LG (@LGs){
-        unless($args->{map_data}->{$map_id1}->{$LG} and 
-           $args->{map_data}->{$map_id2}->{$LG}){
+        unless(exists $args->{map_data}->{$map_id1}->{$LG} and 
+           exists $args->{map_data}->{$map_id2}->{$LG}){
             next;       
         }
         for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
@@ -692,12 +692,15 @@ sub mergemap{
             "length|l=i" => 'Supress LGs with length less than 
                              the threshold (cM) (default: disable)',
             "interval|i=f" => 'Supress LGs with average marker intervals 
-                               greater than the threshold (default: disable)'
+                               greater than the threshold (default: disable)',
+            "commons|c=i" => 'Supress LGs with common markers less than
+                              threshold (default: disable)'
         }
     );
     my $number = $args->{options}->{number} // 0;
     my $length = $args->{options}->{length} // 0;
     my $interval = $args->{options}->{interval} // 0;
+    my $commons = $args->{options}->{commons} // 0;
 
     $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
@@ -716,9 +719,30 @@ sub mergemap{
             my $LG_length = $max - $min;
             my $average_interval = @marker_ids > 1 ? 
                                   $LG_length / (@marker_ids - 1) : 0;
+            my $common_markers;
+            my @common_markers;
+            for my $map_id2 (@map_ids){
+                next if $map_id eq $map_id2;
+                push @common_markers, get_common_marker_num 
+                    $args, $map_id, $map_id2, $LG;
+            }
+            $common_markers = sum(@common_markers);
+
             next if $number > 0 and @marker_ids < $number 
                     or $length > 0 and $LG_length < $length
-                    or $interval > 0 and $average_interval > $interval;
+                    or $interval > 0 and $average_interval > $interval
+                    or $commons > 0 and $common_markers < $commons;
+
+            printf  "Common markers for %s LG %s: %s ".
+                    "(min: %d, max: %d, sum: %d, valid: %d)\n",         
+                    $map_id, $LG,
+                    join(",", @common_markers),
+                    min(@common_markers), max(@common_markers), 
+                    sum(@common_markers), scalar(grep{$_ > 0}@common_markers);
+            printf "Number of markers: %d; Length: %.1f; Interval: %.2f\n",
+                scalar(@marker_ids), $LG_length, $average_interval;
+
+
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
             for my $marker_name (@marker_ids){
