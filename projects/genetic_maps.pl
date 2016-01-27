@@ -1017,7 +1017,7 @@ sub summarymap{
     if ($LG_mode){
         # Print title
         print join("\t", "Map ID", "LG", "Number of markers", 
-                        "Length", "Average intervals", 
+                        "Length", "Average marker interval", 
                         "LG start", "LG end")."\n" 
                 if $print_title;
         for my $map_id (@map_ids){
@@ -1030,7 +1030,7 @@ sub summarymap{
                 my $average_intervals = $num_markers > 1 ? 
                     sprintf "%.2f", $length / ($num_markers - 1) :
                     "NA";
-                print join("\t", $map_id, "$LG", $num_markers, 
+                print join("\t", $map_id, $LG, $num_markers, 
                     $length, $average_intervals, $LG_start, $LG_end)."\n";
             }
         }
@@ -1038,7 +1038,8 @@ sub summarymap{
     else{
         # Print title
         print join("\t", "Map ID", "Number of LGs", 
-            "Number of markers", "Total length")."\n" if $print_title;
+            "Number of markers", "Total length", "Average marker interval").
+            "\n" if $print_title;
         for my $map_id (@map_ids){
             my $num_LG;
             my $num_markers;
