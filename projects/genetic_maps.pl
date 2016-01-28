@@ -1472,6 +1472,32 @@ sub add_scf_prefix{
     return $scaffold;
 }
 
+sub read_blastn_files{
+    my ($args, @blastn_files) = @_;
+    my %markers_in_map = get_marker_indexed_map_data $args;
+    my @results;
+    for my $blastn_file (@blastn_files){
+        open my $blastn_fh, $blastn_file or die $!;
+        while(<$blastn_fh>){
+            @_ = split /\t/;
+            die qq/CAUTION: BLASTN parameter -outfmt "6 std qlen slen 
+                        qcovs qcovhsp"/ unless @_ == 16;
+            my $marker = $_[0];
+            my $scaffold = $_[1];
+            my $start = $_[8];
+            my $end = $_[9];
+            my $qcovs = $_[14];
+            next unless $qcovs >= 95;
+            next unless exists $markers_in_map{$marker};
+            push @results, [$marker, 
+                            add_scf_prefix($scaffold, $blastn_file), 
+                            $start, $end];
+        }
+        close $blastn_fh;
+    }
+    return @results;
+}
+
 sub convert_aln{
     my $args = new_action(
         -desc => 'Convert blastn or bowtie data into a special data format,
@@ -1496,25 +1522,7 @@ sub convert_aln{
     my @bowtie_files;
     @bowtie_files = get_option_array $args->{options}->{bowtie}
         if exists $args->{options}->{bowtie};
-    for my $blastn_file (@blastn_files){
-        open my $blastn_fh, $blastn_file or die $!;
-        while(<$blastn_fh>){
-            @_ = split /\t/;
-            die qq/CAUTION: BLASTN parameter -outfmt "6 std qlen slen 
-                        qcovs qcovhsp"/ unless @_ == 16;
-            my $marker = $_[0];
-            my $scaffold = $_[1];
-            my $start = $_[8];
-            my $end = $_[9];
-            my $qcovs = $_[14];
-            next unless $qcovs >= 95;
-            next unless exists $markers_in_map{$marker};
-            push @results, [$marker, 
-                            add_scf_prefix($scaffold, $blastn_file), 
-                            $start, $end];
-        }
-        close $blastn_fh;
-    }
+    push @results, read_blastn_files $args, @blastn_files;
 
     for my $bowtie_file(@bowtie_files){
         open my $bowtie_fh, $bowtie_file or die $!;
