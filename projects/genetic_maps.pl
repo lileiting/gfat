@@ -1492,10 +1492,10 @@ sub convert_aln{
 
     my @blastn_files;
     @blastn_files = get_option_array $args->{options}->{blastn}
-        if $args->{options}->{blastn};
+        if exists $args->{options}->{blastn};
     my @bowtie_files;
     @bowtie_files = get_option_array $args->{options}->{bowtie}
-        if $args->{options}->{bowtie};
+        if exists $args->{options}->{bowtie};
     for my $blastn_file (@blastn_files){
         open my $blastn_fh, $blastn_file or die $!;
         while(<$blastn_fh>){
