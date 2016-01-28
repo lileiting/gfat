@@ -1498,6 +1498,33 @@ sub read_blastn_files{
     return @results;
 }
 
+sub read_bowtie_files{
+    my ($args, @bowtie_files) = @_;
+    my %markers_in_map = get_marker_indexed_map_data $args;
+    my @results;
+    for my $bowtie_file(@bowtie_files){
+        open my $bowtie_fh, $bowtie_file or die $!;
+        while(my $aln1 = <$bowtie_fh>){
+            my ($id1, $strand1, $scf1, $pos1, $seq1) = split /\t/, $aln1;
+            my $aln2 = <$bowtie_fh>;
+            my ($id2, $strand2, $scf2, $pos2, $seq2) = split /\t/, $aln2;
+            $id1 =~ s|/[12]$||;
+            $id2 =~ s|/[12]$||;
+            die "ERROR in:\n  $aln1  $aln2"unless $id1 eq $id2
+                                            and $scf1 eq $scf2
+                                            and $strand1 eq '+'
+                                            and $strand2 eq '-';
+            my $start = $pos1 + 1;
+            my $end = $pos2 + length($seq2);
+            next unless exists $markers_in_map{$id1};
+            push @results, [$id1, add_scf_prefix($scf1, $bowtie_file),
+                             $start, $end];
+        }
+        close $bowtie_fh;
+    }
+    return @results;
+}
+
 sub convert_aln{
     my $args = new_action(
         -desc => 'Convert blastn or bowtie data into a special data format,
@@ -1523,27 +1550,8 @@ sub convert_aln{
     @bowtie_files = get_option_array $args->{options}->{bowtie}
         if exists $args->{options}->{bowtie};
     push @results, read_blastn_files $args, @blastn_files;
+    push @results, read_bowtie_files $args, @bowtie_files;
 
-    for my $bowtie_file(@bowtie_files){
-        open my $bowtie_fh, $bowtie_file or die $!;
-        while(my $aln1 = <$bowtie_fh>){
-            my ($id1, $strand1, $scf1, $pos1, $seq1) = split /\t/, $aln1;
-            my $aln2 = <$bowtie_fh>;
-            my ($id2, $strand2, $scf2, $pos2, $seq2) = split /\t/, $aln2;
-            $id1 =~ s|/[12]$||;
-            $id2 =~ s|/[12]$||;
-            die "ERROR in:\n  $aln1  $aln2"unless $id1 eq $id2
-                                            and $scf1 eq $scf2
-                                            and $strand1 eq '+'
-                                            and $strand2 eq '-';
-            my $start = $pos1 + 1;
-            my $end = $pos2 + length($seq2);
-            next unless exists $markers_in_map{$id1};
-            push @results, [$id1, add_scf_prefix($scf1, $bowtie_file),
-                             $start, $end];
-        }
-        close $bowtie_fh;
-    }
     @results = sort{$a->[1] cmp $b->[1]
                 or  $a->[2] <=> $b->[2]
                 }@results;
