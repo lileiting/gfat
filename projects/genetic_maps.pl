@@ -1537,18 +1537,13 @@ sub convert_aln{
                           -X 500 -a'
         }
     );
-
-    my @results;
-
     $args = load_map_data $args;
-    my %markers_in_map = get_marker_indexed_map_data $args;
 
-    my @blastn_files;
-    @blastn_files = get_option_array $args->{options}->{blastn}
-        if exists $args->{options}->{blastn};
-    my @bowtie_files;
-    @bowtie_files = get_option_array $args->{options}->{bowtie}
-        if exists $args->{options}->{bowtie};
+    my (@results, @blastn_files, @bowtie_files);
+
+    my %markers_in_map = get_marker_indexed_map_data $args;
+    @blastn_files = get_option_array $args, 'blastn';
+    @bowtie_files = get_option_array $args, 'bowtie';
     push @results, read_blastn_files $args, @blastn_files;
     push @results, read_bowtie_files $args, @bowtie_files;
 
