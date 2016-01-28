@@ -1491,10 +1491,10 @@ sub convert_aln{
     my %markers_in_map = get_marker_indexed_map_data $args;
 
     my @blastn_files;
-    @blastn_files = split(",", join(",", @{$args->{options}->{blastn}}))
+    @blastn_files = get_option_array $args->{options}->{blastn}
         if $args->{options}->{blastn};
     my @bowtie_files;
-    @bowtie_files = split(",", join(",", @{$args->{options}->{bowtie}}))
+    @bowtie_files = get_option_array $args->{options}->{bowtie}
         if $args->{options}->{bowtie};
     for my $blastn_file (@blastn_files){
         open my $blastn_fh, $blastn_file or die $!;

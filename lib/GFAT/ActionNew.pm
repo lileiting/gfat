@@ -9,7 +9,7 @@ use Text::Wrap;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action get_in_fhs);
+@EXPORT = qw(new_action get_in_fhs get_option_array);
 @EXPORT_OK = @EXPORT;
 
 sub resolve_options_usage{
@@ -128,6 +128,11 @@ sub new_action{
 sub get_in_fhs{
     my $args = shift;
     return @{$args->{in_fhs}};
+}
+
+sub get_option_array{
+    my $str = shift;
+    return split(",", join(",", @$str));
 }
 
 1;
