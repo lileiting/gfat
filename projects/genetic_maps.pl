@@ -1530,29 +1530,24 @@ sub convert_aln{
         -desc => 'Convert blastn or bowtie data into a special data format,
               which consisted of 4 columns, MARKER SCAFFOLD START END',
         -options => {
-        "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
+            "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
                           -perc_identity 95 -outfmt "6 std qlen slen qcovs 
                           qcovhsp"',
-        "bowtie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+            "bowtie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
                           -X 500 -a'
         }
     );
     $args = load_map_data $args;
-
-    my (@results, @blastn_files, @bowtie_files);
-
+    my @results;
     my %markers_in_map = get_marker_indexed_map_data $args;
-    @blastn_files = get_option_array $args, 'blastn';
-    @bowtie_files = get_option_array $args, 'bowtie';
+    my @blastn_files = get_option_array $args, 'blastn';
+    my @bowtie_files = get_option_array $args, 'bowtie';
     push @results, read_blastn_files $args, @blastn_files;
     push @results, read_bowtie_files $args, @bowtie_files;
-
     @results = sort{$a->[1] cmp $b->[1]
                 or  $a->[2] <=> $b->[2]
                 }@results;
-    for (@results){
-        print join("\t", @$_)."\n";
-    }
+    print join("\t", @$_)."\n" for @results;
 }
 
 sub are_bin_markers{
