@@ -1764,6 +1764,9 @@ sub mareymap{
                           -X 500 -a',
         }
     );
+    
+    my $species = 'Pyrus bretschneideri';
+    
 
     $args = load_map_data $args;
     my @blastn_files = get_option_array $args, 'blastn';
@@ -1781,9 +1784,12 @@ sub mareymap{
     my %markers_in_map = get_marker_indexed_map_data $args;
     for my $info (@results){
         my ($marker, $scaffold, $start, $end) = @$info;
-        #my ($map_id, $LG, $genetic_pos) = dispatch_marker_indexed_map_data
-        #    \%markers_in_map, $marker;        
-        print join("\t", $marker, $scaffold, $start, $end)."\n";
+        my @info = values %{$markers_in_map{$marker}};
+        die if @info > 1;
+        my ($map_id, $LG, $genetic_pos) = @{$info[0]};
+        print join("\t", qq/"$species"/, qq/"$scaffold"/, qq/"$marker"/, 
+                  int(($start + $end)/2), $genetic_pos, "TRUE"
+              )."\n";
     }
 }
 
