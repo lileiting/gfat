@@ -56,6 +56,10 @@ Draw genetic map figure
 Draw Circos figure
     karyotype        | Prepare karyotype for circos figures
 
+Draw dotplot
+    mareymap         | Creating input data for MareyMap to draw draw dotplot 
+                       for genetic map and physical map using MareyMap. 
+
 Create bin markers:
     binmarkers       | Find bin markers, very complicated method, deprecated
 
@@ -1735,6 +1739,76 @@ sub remove_redundant{
                 }
             }
         }
+    }
+}
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# This subroutine is used to prepare data for MareyMap 
+# MareyMap is a R package to draw relationship between 
+# genetic map and physical map
+# Typical MareyMap input data format is: 
+#   "set" "map" "mkr" "phys" "gen" "vld"
+#   "Arabidopsis thaliana" "Chromosome 1" "SGCSNP131" 184351 0 TRUE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+sub options{
+    my $option = shift;
+    return $::args->{options}->{$option};
+}
+
+sub hashing_two_columns{
+    my $file = shift;
+    my %hash;
+    open my $fh, $file or die;
+    while(<$fh>){
+        chomp;
+        @_ = split /\t/;
+        $hash{$_[0]} = $_[1];
+    }
+    close $fh;
+    return %hash;
+}
+
+sub mareymap{
+    our $args = new_action(
+        -desc => 'Creating input data for MareyMap to draw draw dotplot 
+                  for genetic map and physical map using MareyMap. ',
+        -options => {
+            "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
+                          -perc_identity 95 -outfmt "6 std qlen slen qcovs 
+                          qcovhsp"',
+            "bwotie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+                          -X 500 -a',
+#            "prefix|p=s"  => 'Prefix for output files',
+#            "chr_size|c=s" => 'Chromosome size file'
+        }
+    );
+
+    $args = load_map_data $args;
+    my @blastn_files = get_option_array $args, 'blastn';
+    my @bowtie_files = get_option_array $args, 'bowtie';
+#    my $prefix   = options 'prefix';
+#    my $chr_size = options 'chr_size';
+    
+    die "blastn or bowtie files was unassigned" 
+        unless @blastn_files or @bowtie_files;
+#    die "prefix was undefined" unless defined $prefix;
+#    die "chr_size was undefined" unless defined $chr_size;
+    
+    my @results;
+    push @results, read_blastn_files $args, @blastn_files;
+    push @results, read_bowtie_files $args, @bowtie_files;
+#    my %chr_size = hashing_two_columns $chr_size;
+    @results = sort{$a->[1] cmp $b->[1] or
+                    $a->[2] <=> $b->[2]
+               }@results;
+    my %markers_in_map = get_marker_indexed_map_data $args;
+    for my $info (@results){
+        my ($marker, $scaffold, $start, $end) = @$info;
+        #my ($map_id, $LG, $genetic_pos) = dispatch_marker_indexed_map_data
+        #    \%markers_in_map, $marker;        
+        print join("\t", $marker, $scaffold, $start, $end)."\n";
     }
 }
 
