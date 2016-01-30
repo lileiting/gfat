@@ -1752,24 +1752,6 @@ sub remove_redundant{
 #   "Arabidopsis thaliana" "Chromosome 1" "SGCSNP131" 184351 0 TRUE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-sub options{
-    my $option = shift;
-    return $::args->{options}->{$option};
-}
-
-sub hashing_two_columns{
-    my $file = shift;
-    my %hash;
-    open my $fh, $file or die;
-    while(<$fh>){
-        chomp;
-        @_ = split /\t/;
-        $hash{$_[0]} = $_[1];
-    }
-    close $fh;
-    return %hash;
-}
-
 sub mareymap{
     our $args = new_action(
         -desc => 'Creating input data for MareyMap to draw draw dotplot 
@@ -1780,26 +1762,19 @@ sub mareymap{
                           qcovhsp"',
             "bwotie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
                           -X 500 -a',
-#            "prefix|p=s"  => 'Prefix for output files',
-#            "chr_size|c=s" => 'Chromosome size file'
         }
     );
 
     $args = load_map_data $args;
     my @blastn_files = get_option_array $args, 'blastn';
     my @bowtie_files = get_option_array $args, 'bowtie';
-#    my $prefix   = options 'prefix';
-#    my $chr_size = options 'chr_size';
     
     die "blastn or bowtie files was unassigned" 
         unless @blastn_files or @bowtie_files;
-#    die "prefix was undefined" unless defined $prefix;
-#    die "chr_size was undefined" unless defined $chr_size;
     
     my @results;
     push @results, read_blastn_files $args, @blastn_files;
     push @results, read_bowtie_files $args, @bowtie_files;
-#    my %chr_size = hashing_two_columns $chr_size;
     @results = sort{$a->[1] cmp $b->[1] or
                     $a->[2] <=> $b->[2]
                }@results;
