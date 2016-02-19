@@ -90,6 +90,16 @@ sub main{
 main() unless caller;
 
 ############################################################
+# Predefined scalars
+############################################################
+
+my $blastn_file_info = 'blastn data, parameter for BLASTN: -evalue 1e-20 
+                        -perc_identity 95 -outfmt "6 std qlen slen qcovs 
+                        qcovhsp"';
+my $bowtie_file_info = 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+                        -X 500 -a';
+
+############################################################
 # Definition of the 4-column map data structure            
 # 1. map ID
 # 2. LG
@@ -1757,11 +1767,8 @@ sub mareymap{
         -desc => 'Creating input data for MareyMap to draw draw dotplot 
                   for genetic map and physical map using MareyMap. ',
         -options => {
-            "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
-                          -perc_identity 95 -outfmt "6 std qlen slen qcovs 
-                          qcovhsp"',
-            "bwotie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
-                          -X 500 -a',
+            "blastn|n=s@" => $blastn_file_info,
+            "bwotie|e=s@" => $bowtie_file_info,
         }
     );
     
