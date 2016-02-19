@@ -1782,12 +1782,13 @@ sub mareymap{
                     $a->[2] <=> $b->[2]
                }@results;
     my %markers_in_map = get_marker_indexed_map_data $args;
+    print qq/"set" "map" "mkr" "phys" "gen" "vld"\n/;
     for my $info (@results){
         my ($marker, $scaffold, $start, $end) = @$info;
         my @info = values %{$markers_in_map{$marker}};
         die if @info > 1;
         my ($map_id, $LG, $genetic_pos) = @{$info[0]};
-        print join("\t", qq/"$species"/, qq/"$scaffold"/, qq/"$marker"/, 
+        print join(" ", qq/"$species"/, qq/"$scaffold"/, qq/"$marker"/, 
                   int(($start + $end)/2), $genetic_pos, "TRUE"
               )."\n";
     }
