@@ -93,11 +93,13 @@ main() unless caller;
 # Predefined scalars
 ############################################################
 
-my $blastn_file_info = 'blastn data, parameter for BLASTN: -evalue 1e-20 
+use constant {
+    BLASTN_FILE => 'blastn data, parameter for BLASTN: -evalue 1e-20 
                         -perc_identity 95 -outfmt "6 std qlen slen qcovs 
-                        qcovhsp"';
-my $bowtie_file_info = 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
-                        -X 500 -a';
+                        qcovhsp"',
+    BOWTIE_FILE => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+                        -X 500 -a',
+};
 
 ############################################################
 # Definition of the 4-column map data structure            
@@ -228,6 +230,10 @@ sub get_LG_indexed_map_data{
 }
 
 sub get_marker_indexed_map_data{
+    # %marker_indexed_map_data = ($marker => {
+    #       $map_id => [$map_id, $LG, $genetic_pos], ...
+    #    }, ...
+    # )
     my $args = shift;
     my %marker_indexed_map_data;
     my @map_ids = get_map_ids $args;
@@ -632,9 +638,10 @@ sub binmarkers{
 }
 
 
-#
-# Create ALLMAPS file
-#
+############################################################
+# Convert input data to the format ALLMAPS required
+#     Scaffold ID,scaffold position,LG,genetic position
+############################################################
 
 sub write_allmaps_file{
     my ($map_data_ref, $physical_data_ref) = @_;
@@ -660,9 +667,44 @@ sub write_allmaps_file{
     return 1;
 }
 
-#
-# Convert input data to the format ALLMAPS required
-#
+sub allmaps{
+    # ALLMAPS data format: Scaffold ID,scaffold position,LG,genetic position
+    my $args = new_action(
+        -desc => 'Prepare data for ALLMAPS, require map data and blastn/bowtie
+                  data',
+        -options => {
+            "blastn|n=s@" => BLASTN_FILE,
+            "bowtie|e=s@" => BOWTIE_FILE
+        }
+    );
+    my @blastn_files = get_option_array $args, 'blastn';
+    my @bowtie_files = get_option_array $args, 'bowtie';
+    die "CAUTION: blastn/bowtie files are missing!" 
+        unless @blastn_files + @bowtie_files > 0;
+    $args = load_map_data $args;
+    
+    # @results = ([$marker, $scaffold, $start, $end], ...)
+    my @results =  (read_blastn_files($args, @blastn_files), 
+                    read_bowtie_files($args, @bowtie_files)  );
+
+    # %marker_indexed_map_data = ($marker => {
+    #       $map_id => [$map_id, $LG, $genetic_pos], ...
+    #    }, ...
+    # )
+    my %marker_indexed_map_data = get_marker_indexed_map_data $args;
+
+    print "Scaffold ID,scaffold position,LG,genetic position\n";
+    for my $result (@results) {
+        my ($marker, $scaffold, $start, $end) = @$result;
+        my @marker_info = values %{$marker_indexed_map_data{$marker}};
+        die "CAUTION: There are two map ID in map data: @marker_info!!!" 
+            if @marker_info > 1;
+        my ($map_id, $LG, $genetic_pos) = @{$marker_info[0]};
+        print join(",", $scaffold, int($start + $end)/2, 
+                        $LG, $genetic_pos)."\n";
+    }   
+}
+
 
 sub blastn2allmaps{
     my $args = new_action(
@@ -1763,12 +1805,12 @@ sub remove_redundant{
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 sub mareymap{
-    our $args = new_action(
+    my $args = new_action(
         -desc => 'Creating input data for MareyMap to draw draw dotplot 
                   for genetic map and physical map using MareyMap. ',
         -options => {
-            "blastn|n=s@" => $blastn_file_info,
-            "bwotie|e=s@" => $bowtie_file_info,
+            "blastn|n=s@" => BLASTN_FILE,
+            "bwotie|e=s@" => BOWTIE_FILE,
         }
     );
     

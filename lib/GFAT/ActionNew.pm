@@ -30,15 +30,15 @@ sub resolve_options_usage{
             unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
         my ($long, $short, $type0, $type, $multi) =
             ($1, $2, $3, $4, $5);
-        my $desc = $args{-options}->{$option};
-        $desc =~ s/[\s\r\n]+/ /g;
-        $desc = wrap(' ' x ($max_opt_len + 9),
-                     ' ' x ($max_opt_len + 9) ,$desc);
-        $desc =~ s/^\s+//;
+        my $opt_desc = $args{-options}->{$option};
+        $opt_desc =~ s/[\s\r\n]+/ /g;
+        $opt_desc = wrap(' ' x ($max_opt_len + 9),
+                     ' ' x ($max_opt_len + 9) ,$opt_desc);
+        $opt_desc =~ s/^\s+//;
         my $string = sprintf "    %-${max_opt_len}s %s %s\n",
             "-$short,--$long",
             $type0 ? $type{$type} : '   ',
-            $desc;
+            $opt_desc;
         $options_usage .= $string;
     }
     $options_usage =~ s/^\s+//;
