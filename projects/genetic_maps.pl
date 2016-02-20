@@ -701,7 +701,7 @@ sub allmaps{
             if @marker_info > 1;
         my ($map_id, $LG, $genetic_pos) = @{$marker_info[0]};
         print join(",", $scaffold, int($start + $end)/2, 
-                        $LG, $genetic_pos)."\n";
+                        $LG, sprintf "%.1f", $genetic_pos)."\n";
     }   
 }
 
