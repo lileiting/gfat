@@ -30,8 +30,7 @@ Description
 Availabe actions
 
 Run ALLMAPS
-    blastn2allmaps   | Prepare input data for allmaps
-    bowtie2allmaps   | Prepare input data for allmaps
+    allmaps          | Prepare input data for allmaps
 
 Run MergeMap
     mergemap         | Prepare input data for mergemap
@@ -267,63 +266,6 @@ sub get_common_marker_num{
         }
     }
     return $common_markers;
-}
-
-#
-# Blast data
-#
-
-sub load_blast_data{
-    my $args = shift;
-    my $blast_file = $args->{options}->{blast};
-    die "# CAUTION: BLAST file is required!" unless $blast_file;
-
-    my %blast_data;
-    open my $blast_fh, $blast_file or die $!;
-    while(<$blast_fh>){ 
-        next if /^\s*$/ or /^\s*#/;
-        @_ = split /\t/;
-        next unless $_[3] =~ /^-?\d+(\.\d+)?$/;
-        my $marker_name = $_[0];
-        my $scf = $_[1];
-        my ($start, $end) = @_[8,9];
-        my $scf_pos = int( ($start + $end) / 2 );
-        push @{$blast_data{$marker_name}}, [$scf, $scf_pos];
-    }
-    close $blast_fh;
-    die "ERROR: No blast data was loaded!" 
-        unless (keys %blast_data) > 0;
-    return %blast_data;
-}
-
-#
-# Bowtie data
-# 
-
-sub load_bowtie_data{
-    my $args = shift;
-    my $bowtie_file = $args->{options}->{bowtie};
-    die "# CAUTION: Bowtie file is required!" unless $bowtie_file;
-
-    my %bowtie_data;
-    open my $bowtie_fh, $bowtie_file or die $!;
-    while(<$bowtie_fh>){
-        next if /^\s*$/ or /^\s*#/;
-        chomp;
-        my ($marker_name1, undef, $scf1, $scf_pos1) = split /\t/;
-        $marker_name1 =~ s/\/\d$//;
-        $_ = <$bowtie_fh>;
-        chomp;
-        my ($marker_name2, undef, $scf2, $scf_pos2) = split /\t/;
-        $marker_name2 =~ s/\/\d$//;
-        die unless $marker_name1 eq $marker_name2;
-        die unless $scf1 eq $scf2;
-        die unless abs($scf_pos1 - $scf_pos2) < 1000;
-        my $middle = int(($scf_pos1 + $scf_pos2) / 2);
-        push @{$bowtie_data{$marker_name1}}, [$scf1, $middle];
-    }
-    close $bowtie_fh;
-    return %bowtie_data;
 }
 
 #
@@ -643,30 +585,6 @@ sub binmarkers{
 #     Scaffold ID,scaffold position,LG,genetic position
 ############################################################
 
-sub write_allmaps_file{
-    my ($map_data_ref, $physical_data_ref) = @_;
-    my %map_data = %$map_data_ref;
-    my %physical_data = %$physical_data_ref;
-
-    for my $map_id (keys %map_data){
-        my $outfile = "allmaps-input-$map_id.csv";
-        open my $fh, ">", $outfile or die $!;
-        print $fh "Scaffold ID,scaffold position,LG,genetic position\n";
-        for my $marker_name (keys %{$map_data{$map_id}}){
-             next unless $physical_data{$marker_name};
-             for my $pos_ref (@{$physical_data{$marker_name}}){
-                 my ($scf, $scf_pos) = @$pos_ref;
-                 my ($LG, $genetic_pos) = @{$map_data{$map_id}->{$marker_name}};
-                 #$genetic_pos = sprintf "%.1f", $genetic_pos;
-                 print $fh "$scf,$scf_pos,$LG,$genetic_pos\n";
-             }
-        }
-        close $fh;
-        warn "Done! Output data in file: $outfile\n";
-    }
-    return 1;
-}
-
 sub allmaps{
     # ALLMAPS data format: Scaffold ID,scaffold position,LG,genetic position
     my $args = new_action(
@@ -703,36 +621,6 @@ sub allmaps{
         print join(",", $scaffold, int($start + $end)/2, 
                         $LG, sprintf "%.1f", $genetic_pos)."\n";
     }   
-}
-
-
-sub blastn2allmaps{
-    my $args = new_action(
-        -desc => 'Prepare input data for allmaps',
-        -options => {
-            "blast|b=s" => 'BLAST file: SNP flanking sequence against 
-                            genome (blastn -outfmt 6 -perc_identity 95)'
-        }
-    );
-
-    my %map_data   = load_map_data($args);
-    my %blast_data = load_blast_data($args);
-
-    write_allmaps_file(\%map_data, \%blast_data);
-}
-
-sub bowtie2allmaps{
-    my $args = new_action(
-        -desc => 'Prepare input data for allmaps',
-        -options => {
-            "bowtie|b=s" => 'Bowtie file: SSR primers 
-             (bowtie -f -v 2 -I 30 -X 600)'
-        }
-    );
-    my %map_data = load_map_data($args);
-    my %bowtie_data = load_bowtie_data($args);
-
-    write_allmaps_file(\%map_data, \%bowtie_data);
 }
 
 # 
