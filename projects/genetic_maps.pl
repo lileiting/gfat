@@ -618,7 +618,7 @@ sub allmaps{
         die "CAUTION: There are two map ID in map data: @marker_info!!!" 
             if @marker_info > 1;
         my ($map_id, $LG, $genetic_pos) = @{$marker_info[0]};
-        print join(",", $scaffold, int($start + $end)/2, 
+        print join(",", $scaffold, int(($start + $end)/2), 
                         $LG, sprintf "%.1f", $genetic_pos)."\n";
     }   
 }
