@@ -15,8 +15,10 @@ use GFAT::CodonTable;
 sub usage{
     print <<EOF;
 
-fopcal.pl [OPTIONS]
+USAGE
+  fopcal.pl [OPTIONS]
 
+OPTIONS
   -s,--sequence <GENOME.CDS.FASTA>
     sequence file
 
@@ -75,11 +77,11 @@ sub read_commands{
         $para{out_fh} = $fh;
     }
  
-    if($para{infile}){
+    if(exists $para{infile}){
         unless(-e $para{infile}){
             print STDERR "\nCAUTION: File $para{infile} not exist!\n";
             usage;
-        }   
+        }
     }elsif($para{codon_matrix} or
            $para{print_enc} or 
            $para{print_codon_number} or 
@@ -343,9 +345,9 @@ sub main{
     print_codon_number($para->{infile}) if $para->{print_codon_number};
     print_optimal_codons($para->{infile}) if $para->{print_optimal_codons};
 
-    my $optimal_codon = load_optimal_codon_table($para->{optimal_codon_table});
-    print_hash_ref($optimal_codon);
-    calculate_fop($para->{infile}, $optimal_codon, $para->{out_fh});
+    #my $optimal_codon = load_optimal_codon_table($para->{optimal_codon_table});
+    #print_hash_ref($optimal_codon);
+    #calculate_fop($para->{infile}, $optimal_codon, $para->{out_fh});
 }
 
 main;
