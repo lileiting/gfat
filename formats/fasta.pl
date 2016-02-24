@@ -103,6 +103,15 @@ sub fromtab{
     }
 }
 
+sub _first_gene_id{
+    my ($checksum, $data_ref) = @_;
+    if($data_ref->{$checksum}->[0]){
+        return $data_ref->{$checksum}->[0][0];
+    }else{
+        return 'undef';
+    }
+}
+
 sub identical{
     my $args = new_seqaction(
         -desc => 'Find identical records from multipls files,

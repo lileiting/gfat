@@ -194,15 +194,6 @@ sub getseq2{
     }
 }
 
-sub _first_gene_id{
-    my ($checksum, $data_ref) = @_;
-    if($data_ref->{$checksum}->[0]){
-        return $data_ref->{$checksum}->[0][0];
-    }else{
-        return 'undef';
-    }
-}
-
 sub ids{
     my $action = new_seqaction(
         -description => 'Print a list of sequence IDs',
