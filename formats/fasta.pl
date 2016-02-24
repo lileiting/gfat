@@ -132,8 +132,7 @@ sub identical{
                                 file',
             "no_seqlen|L"   => 'Do not print sequence length (default: 
                                 print sequence length as second column)',
-            "diff|D"        => 'Print different sequences between input files
-                                only',
+            "uniq|u"        => 'Print unique sequences only',
 #            "output_uniq|U=s"=> 'Output uniq sequneces. Conflict 
 #                                sequence IDs will combined as new 
 #                                sequence ID'
@@ -148,7 +147,7 @@ sub identical{
     my $print_checksum = $args->{options}->{pchecksum};
     my $output_uniq = $args->{options}->{output_uniq};
     my $no_seqlen = $args->{options}->{no_seqlen};
-    my $print_diff = $args->{options}->{diff};
+    my $print_uniq = $args->{options}->{uniq};
 
     my %data;
     my %seq_length;
@@ -189,15 +188,15 @@ sub identical{
         $row .= "t$count";
         $row .= "\t$checksum" if $print_checksum;
         $row .= "\t".$seq_length{$checksum} unless $no_seqlen;
-        my $no_diff = 1;
+        my $not_uniq = 1;
         for my $i (0..$index){
             my $gene_ids = join(",", @{ $data{$checksum}->[$i] 
                                      // ['na'] });
-            $no_diff = 0 if $gene_ids eq 'na';
+            $not_uniq = 0 if $gene_ids eq 'na';
             $row .= "\t$gene_ids";
         }
         $row .= "\n";
-        next if $print_diff and $no_diff;
+        next if $print_uniq and $not_uniq;
         print $row;
     }
 }
