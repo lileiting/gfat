@@ -130,6 +130,10 @@ sub identical{
             "pchecksum|P"   => 'Print checksum (hexadecimal form) 
                                 string as the second column in result 
                                 file',
+            "no_seqlen|L"   => 'Do not print sequence length (default: 
+                                print sequence length as second column)',
+            "diff|D"        => 'Print different sequences between input files
+                                only',
 #            "output_uniq|U=s"=> 'Output uniq sequneces. Conflict 
 #                                sequence IDs will combined as new 
 #                                sequence ID'
@@ -143,8 +147,11 @@ sub identical{
     my $checksum_method = $args->{options}->{checksum} // 'MD5';
     my $print_checksum = $args->{options}->{pchecksum};
     my $output_uniq = $args->{options}->{output_uniq};
+    my $no_seqlen = $args->{options}->{no_seqlen};
+    my $print_diff = $args->{options}->{diff};
 
     my %data;
+    my %seq_length;
     my $index = -1;
     for my $in_io (@{$args->{in_ios}}){
         $index++;
@@ -157,7 +164,15 @@ sub identical{
             my $ctx = Digest->new($checksum_method);
             $ctx->add($seqstr);
             my $checksum = $ctx->hexdigest;
-            push @{$data{$checksum}->[$index]}, $seq->display_id; 
+            push @{$data{$checksum}->[$index]}, $seq->display_id;
+            unless(exists $seq_length{$checksum}){
+                $seq_length{$checksum} = length($seqstr);
+            }
+            else{
+                die "ERROR: SAME CHECKSUM, DIFFERENT SEQUENCE LENGTH!!!\n". 
+                    "  $checksum: ". $seq->display_id . "\n"
+                    unless length($seqstr) == $seq_length{$checksum};
+            }
         }
     }
 #    my $uniq_fh;
@@ -165,19 +180,25 @@ sub identical{
 #        open $uniq_fh, ">", $output_uniq or die "$!";
 #    }
 
-    print "\t",join("\t", @{$args->{infiles}}),"\n";
+    print "\t",join("\t", "SeqLength", @{$args->{infiles}}),"\n";
     my $count = -1;
     for my $checksum ( sort {_first_gene_id($a, \%data) cmp 
                              _first_gene_id($b, \%data) }keys %data){
+        my $row;
         $count++;
-        print "t$count";
-        print "\t$checksum" if $print_checksum;
+        $row .= "t$count";
+        $row .= "\t$checksum" if $print_checksum;
+        $row .= "\t".$seq_length{$checksum} unless $no_seqlen;
+        my $no_diff = 1;
         for my $i (0..$index){
             my $gene_ids = join(",", @{ $data{$checksum}->[$i] 
                                      // ['na'] });
-            print "\t$gene_ids";
+            $no_diff = 0 if $gene_ids eq 'na';
+            $row .= "\t$gene_ids";
         }
-        print "\n";
+        $row .= "\n";
+        next if $print_diff and $no_diff;
+        print $row;
     }
 }
 
