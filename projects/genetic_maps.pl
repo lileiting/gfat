@@ -1454,7 +1454,7 @@ sub read_bowtie_files{
             my ($id2, $strand2, $scf2, $pos2, $seq2) = split /\t/, $aln2;
             $id1 =~ s|/[12]$||;
             $id2 =~ s|/[12]$||;
-            die "ERROR in:\n  $aln1  $aln2"unless $id1 eq $id2
+            die "bowtie file ERROR in:\n  $aln1  $aln2" unless $id1 eq $id2
                                             and $scf1 eq $scf2
                                             and $strand1 eq '+'
                                             and $strand2 eq '-';
