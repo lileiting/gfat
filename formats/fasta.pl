@@ -3,16 +3,18 @@
 use warnings;
 use strict;
 use FindBin;
+use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use GFAT::SeqActionNew;
 use GFAT::SeqAction;
 
 sub main_usage{
+    my $category = basename $FindBin::RealBin;
     print <<"usage";
 
 USAGE
-    $FindBin::Script ACTION [OPTIONS]
+    gfat.pl $category $FindBin::Script ACTION [OPTIONS]
 
 ACTIONS
     acclist  | Print a list of accession numbers

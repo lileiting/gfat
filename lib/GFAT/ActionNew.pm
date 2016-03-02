@@ -3,6 +3,7 @@ package GFAT::ActionNew;
 use warnings;
 use strict;
 use FindBin;
+use File::Basename;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
 use Text::Wrap;
@@ -52,10 +53,11 @@ sub action_usage{
     $args{-description} =~ s/^\s+//;
     my $options_usage = resolve_options_usage(@_);
     my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
+    my $category = basename $FindBin::RealBin;
     my $usage = "
 USAGE
-    $FindBin::Script $args{-name} $file_info [OPTIONS]
-    $FindBin::Script $args{-name} [OPTIONS] $file_info
+    gfat.pl $category $FindBin::Script $args{-name} $file_info [OPTIONS]
+    gfat.pl $category $FindBin::Script $args{-name} [OPTIONS] $file_info
 
 DESCRIPTION
     $args{-description}
@@ -97,7 +99,6 @@ sub new_action{
     GetOptions(\%options, keys %{$args{-options}});
     print_version if $options{version};
     &{$usage} if $options{help} or (@ARGV == 0 and -t STDIN);
-
 
     if(@ARGV){
         for my $infile (@ARGV){
