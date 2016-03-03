@@ -10,14 +10,16 @@ use FindBin;
 use List::Util qw(sum max min);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+use GFAT::Config;
 
 #~~~~~~~~~~~~~~~~~~~~~~~~ Main usage ~~~~~~~~~~~~~~~~~~~~~~#
 
 sub main_usage{
+    my $cmd = get_cmd;
     print <<"usage";
 
 Usage
-    $FindBin::Script ACTION [OPTIONS]
+    $cmd ACTION [OPTIONS]
 
 Description
     Manipulate genetic map data
@@ -34,7 +36,7 @@ Run ALLMAPS
 
 Run MergeMap
     mergemap         | Prepare input data for mergemap
-    mergemapLG       | one file per LG 
+    mergemapLG       | one file per LG
 
 Analyse map-data (4-column)
     commonstats      | Count common markers
@@ -46,7 +48,7 @@ Analyse map-data (4-column)
 Analyse MapChart-style data
     linear_map_chart | read linear_map_chart files
     report           | Report merged genetic map
-    consensus2allmaps| Convert consensus map data as ALLMAPS input format 
+    consensus2allmaps| Convert consensus map data as ALLMAPS input format
 
 Draw genetic map figure
     input4R          | Get input data for R codes
@@ -56,8 +58,8 @@ Draw Circos figure
     karyotype        | Prepare karyotype for circos figures
 
 Draw dotplot
-    mareymap         | Creating input data for MareyMap to draw draw dotplot 
-                       for genetic map and physical map using MareyMap. 
+    mareymap         | Creating input data for MareyMap to draw draw dotplot
+                       for genetic map and physical map using MareyMap.
 
 Create bin markers:
     binmarkers       | Find bin markers, very complicated method, deprecated
@@ -79,7 +81,7 @@ sub main{
     our $format = 'fasta';
     my $action = shift @ARGV;
     if(defined &{\&{$action}}){
-        &{\&{$action}}; 
+        &{\&{$action}};
     }
     else{
         die "CAUTION: action $action was not defined!\n";
@@ -93,15 +95,15 @@ main() unless caller;
 ############################################################
 
 use constant {
-    BLASTN_FILE => 'blastn data, parameter for BLASTN: -evalue 1e-20 
-                        -perc_identity 95 -outfmt "6 std qlen slen qcovs 
+    BLASTN_FILE => 'blastn data, parameter for BLASTN: -evalue 1e-20
+                        -perc_identity 95 -outfmt "6 std qlen slen qcovs
                         qcovhsp"',
-    BOWTIE_FILE => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+    BOWTIE_FILE => 'bowtie data, parameter for bowtie: -f -v 0 -I 0
                         -X 500 -a',
 };
 
 ############################################################
-# Definition of the 4-column map data structure            
+# Definition of the 4-column map data structure
 # 1. map ID
 # 2. LG
 # 3. marker name
@@ -133,12 +135,12 @@ sub load_map_data{
             }
             my ($map_id, $LG, $marker_name, $genetic_pos)
                 = ($1, $2, $3, $4);
-            die "Duplicated marker: $marker_name!!!\n" 
+            die "Duplicated marker: $marker_name!!!\n"
                 if exists $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
             $args->{map_data}->{$map_id}->{$LG}->{$marker_name} = $genetic_pos;
         }
     }
-    die "[load_map_data] ERROR: No map data was loaded from input files!\n" 
+    die "[load_map_data] ERROR: No map data was loaded from input files!\n"
         unless (keys %{$args->{map_data}}) > 0;
     return $args;
 }
@@ -191,8 +193,8 @@ sub get_LG_ids{
     else{
         @LGs = sort{$a cmp $b}@LGs;
     }
-    
-    return @LGs;    
+
+    return @LGs;
 }
 
 sub get_markers_hash{
@@ -211,7 +213,7 @@ sub get_marker_names{
 
 sub get_genetic_pos{
     my ($args, $map_id, $LG, $marker_name) = @_;
-    return $args->{map_data}->{$map_id}->{$LG}->{$marker_name};   
+    return $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
 }
 
 sub get_LG_indexed_map_data{
@@ -221,7 +223,7 @@ sub get_LG_indexed_map_data{
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG(@LGs){
-            $LG_indexed_map_data{$LG}->{$map_id} = 
+            $LG_indexed_map_data{$LG}->{$map_id} =
                 $args->{map_data}->{$map_id}->{$LG};
         }
     }
@@ -244,7 +246,7 @@ sub get_marker_indexed_map_data{
                 my $genetic_pos = $hash{$marker};
                 die "Error for marker $marker!!!"
                     if exists $marker_indexed_map_data{$marker}->{$map_id};
-                $marker_indexed_map_data{$marker}->{$map_id} = 
+                $marker_indexed_map_data{$marker}->{$map_id} =
                     [$map_id, $LG, $genetic_pos];
             }
         }
@@ -256,12 +258,12 @@ sub get_common_marker_num{
     my ($args, $map_id1, $map_id2, @LGs) = @_;
     my $common_markers = 0;
     for my $LG (@LGs){
-        unless(exists $args->{map_data}->{$map_id1}->{$LG} and 
+        unless(exists $args->{map_data}->{$map_id1}->{$LG} and
            exists $args->{map_data}->{$map_id2}->{$LG}){
-            next;       
+            next;
         }
         for my $marker (keys %{$args->{map_data}->{$map_id1}->{$LG}}){
-            $common_markers++ if 
+            $common_markers++ if
                 exists $args->{map_data}->{$map_id2}->{$LG}->{$marker};
         }
     }
@@ -358,7 +360,7 @@ sub determine_bin_number{
             if($bin_number){
                 unless($bin_number == $args->{binmarker}->{$marker}){
                     $args->{conflicts_count}++;
-                    warn "### Conflict ", $args->{conflicts_count}, 
+                    warn "### Conflict ", $args->{conflicts_count},
                         ": ", $args->{status}->{scaffold}, " @markers\n";
                     #print_conflicts($args, @markers);
                     return $args;
@@ -400,7 +402,7 @@ sub analyze_blastn_scaffold_data{
             else{
                 my @markers = get_uniq_markers(@window);
                 if(@markers > 2){
-                    $window_count++; 
+                    $window_count++;
                     #warn "Process window $window_count ...\n";
                     $args = determine_bin_number($args, @window);
                 }
@@ -415,7 +417,7 @@ sub analyze_blastn_scaffold_data{
 sub load_blastn_scaffold_data{
     # Blastn data structure
     # $args->{blastn_data}->{$scaffold} = ([$start, $end, $marker], ...)
-    
+
     my $args = shift;
     return $args unless $args->{options}->{blastn};
     my @blastn_files =  split(/,/,join(',', @{$args->{options}->{blastn}}));
@@ -429,7 +431,7 @@ sub load_blastn_scaffold_data{
         }
         close $fh;
     }
-    
+
     $args = analyze_blastn_scaffold_data($args);
     return $args;
 }
@@ -443,7 +445,7 @@ sub print_bin_markers{
             my @markers = get_marker_names($args, $map_id, $LG);
             for my $marker(@markers){
                 if(exists $args->{binmarker}->{$marker}){
-                    my $genetic_pos = 
+                    my $genetic_pos =
                         $args->{map_data}->{$map_id}->{$LG}->{$marker};
                     my $binmarker = sprintf "Bin%06d",
                         $args->{binmarker}->{$marker};
@@ -458,7 +460,7 @@ sub print_bin_markers{
 sub _remove_conflict_bin_markers_LG{
     my ($args, $map_id, $LG) = @_;
     my %LG = %{$args->{map_data}->{$map_id}->{$LG}};
-    
+
     my %seen;
     my %conflicts;
     for my $marker(keys %LG){
@@ -471,7 +473,7 @@ sub _remove_conflict_bin_markers_LG{
             }
         }
     }
-    
+
     for my $marker (keys $args->{binmarker}){
         if($conflicts{$args->{binmarker}->{$marker}}){
             delete $args->{binmarker}->{$marker};
@@ -507,20 +509,20 @@ sub remove_solo_bin_markers{
             }
         }
     }
-    
+
     for my $map_id (@map_ids){
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
             my %LG = get_markers_hash $args, $map_id, $LG;
             for my $marker (keys %LG){
                 if(exists $args->{binmarker}->{$marker}){
-                    delete $args->{binmarker}->{$marker} if 
+                    delete $args->{binmarker}->{$marker} if
                         $count{$args->{binmarker}->{$marker}} == 1;
                 }
             }
         }
     }
-    
+
     return $args;
 }
 
@@ -532,13 +534,13 @@ sub print_merged_marker_set{
         for my $LG (@LGs){
             my @markers = get_marker_names($args, $map_id, $LG);
             for my $marker (@markers){
-                my $genetic_pos = 
+                my $genetic_pos =
                     $args->{map_data}->{$map_id}->{$LG}->{$marker};
                 print join("\t", $map_id, $LG, $marker, $genetic_pos)."\n";
                 if(exists $args->{binmarker}->{$marker}){
                         my $binmarker = sprintf "Bin%06d",
                             $args->{binmarker}->{$marker};
-                        print join("\t", $map_id, $LG, 
+                        print join("\t", $map_id, $LG,
                             $binmarker, $genetic_pos)."\n";
                 }
             }
@@ -550,18 +552,18 @@ sub binmarkers{
     my $args = new_action(
         -desc => 'Create bin markers for SNPs',
         -options => {
-            "blastn|b=s@" => 'Blastn file of SNP flanking sequence 
+            "blastn|b=s@" => 'Blastn file of SNP flanking sequence
                               against scaffolds [could be multiple]',
-            "self|s=s@" => 'Blastn file of SNP flanking sequence 
+            "self|s=s@" => 'Blastn file of SNP flanking sequence
                             against SNP flanking sequence [could be multiple]',
             "window|w=i" => 'Bin marker window size [default: 10000]',
             "print|p"    => 'Print bin markers only[default: all markers]',
             "remove|r"   => 'Remove conflict bin markers'
         }
     );
-    die "WARNING: blastn files are required!" 
+    die "WARNING: blastn files are required!"
         unless $args->{options}->{blastn} or $args->{options}->{self};
-        
+
     $args = load_map_data($args);
     $args = load_blastn_self_data($args);
     $args = load_blastn_scaffold_data($args);
@@ -597,12 +599,12 @@ sub allmaps{
     );
     my @blastn_files = get_option_array $args, 'blastn';
     my @bowtie_files = get_option_array $args, 'bowtie';
-    die "CAUTION: blastn/bowtie files are missing!" 
+    die "CAUTION: blastn/bowtie files are missing!"
         unless @blastn_files + @bowtie_files > 0;
     $args = load_map_data $args;
-    
+
     # @results = ([$marker, $scaffold, $start, $end], ...)
-    my @results =  (read_blastn_files($args, @blastn_files), 
+    my @results =  (read_blastn_files($args, @blastn_files),
                     read_bowtie_files($args, @bowtie_files)  );
 
     # %marker_indexed_map_data = ($marker => {
@@ -615,15 +617,15 @@ sub allmaps{
     for my $result (@results) {
         my ($marker, $scaffold, $start, $end) = @$result;
         my @marker_info = values %{$marker_indexed_map_data{$marker}};
-        die "CAUTION: There are two map ID in map data: @marker_info!!!" 
+        die "CAUTION: There are two map ID in map data: @marker_info!!!"
             if @marker_info > 1;
         my ($map_id, $LG, $genetic_pos) = @{$marker_info[0]};
-        print join(",", $scaffold, int(($start + $end)/2), 
+        print join(",", $scaffold, int(($start + $end)/2),
                         $LG, sprintf "%.1f", $genetic_pos)."\n";
-    }   
+    }
 }
 
-# 
+#
 # Convert input data to the format MergeMap required
 #
 
@@ -631,11 +633,11 @@ sub mergemap{
     my $args = new_action(
         -desc => 'Prepare input data for mergemap',
         -options => {
-            "number|n=i" => 'Suppress LGs with number of markers less than 
+            "number|n=i" => 'Suppress LGs with number of markers less than
                             NUM (default: disable)',
-            "length|l=i" => 'Supress LGs with length less than 
+            "length|l=i" => 'Supress LGs with length less than
                              the threshold (cM) (default: disable)',
-            "interval|i=f" => 'Supress LGs with average marker intervals 
+            "interval|i=f" => 'Supress LGs with average marker intervals
                                greater than the threshold (default: disable)',
             "commons|c=i" => 'Supress LGs with common markers less than
                               threshold (default: disable)'
@@ -661,27 +663,27 @@ sub mergemap{
             my $max = max(values %markers_hash);
             my $min = min(values %markers_hash);
             my $LG_length = $max - $min;
-            my $average_interval = @marker_ids > 1 ? 
+            my $average_interval = @marker_ids > 1 ?
                                   $LG_length / (@marker_ids - 1) : 0;
             my $common_markers;
             my @common_markers;
             for my $map_id2 (@map_ids){
                 next if $map_id eq $map_id2;
-                push @common_markers, get_common_marker_num 
+                push @common_markers, get_common_marker_num
                     $args, $map_id, $map_id2, $LG;
             }
             $common_markers = sum(@common_markers);
 
-            next if $number > 0 and @marker_ids < $number 
+            next if $number > 0 and @marker_ids < $number
                     or $length > 0 and $LG_length < $length
                     or $interval > 0 and $average_interval > $interval
                     or $commons > 0 and $common_markers < $commons;
 
             printf  "Common markers for %s LG %s: %s ".
-                    "(min: %d, max: %d, sum: %d, valid: %d)\n",         
+                    "(min: %d, max: %d, sum: %d, valid: %d)\n",
                     $map_id, $LG,
                     join(",", @common_markers),
-                    min(@common_markers), max(@common_markers), 
+                    min(@common_markers), max(@common_markers),
                     sum(@common_markers), scalar(grep{$_ > 0}@common_markers);
             printf "Number of markers: %d; Length: %.1f; Interval: %.2f\n",
                 scalar(@marker_ids), $LG_length, $average_interval;
@@ -690,7 +692,7 @@ sub mergemap{
             print $fh "group $LG\n";
             print $fh ";BEGINOFGROUP\n";
             for my $marker_name (@marker_ids){
-                my $genetic_pos = 
+                my $genetic_pos =
                     $args->{map_data}->{$map_id}->{$LG}->{$marker_name};
                 print $fh "$marker_name\t$genetic_pos\n";
             }
@@ -703,7 +705,7 @@ sub mergemap{
 
 #
 # Run MergeMap LG-by-LG
-# 
+#
 
 sub mergemapLG{
     my $args = new_action(
@@ -743,7 +745,7 @@ sub mergemapLG{
     }
 
     open my $shell_fh, ">", "mergemap-commands.sh" or die $!;
-    print $shell_fh 
+    print $shell_fh
 '#!/bin/sh
 set -x
 for i in $(ls mergemap-input-LG_*.maps_config)
@@ -764,8 +766,8 @@ done
     close $shell_fh;
 }
 
-# 
-# Convert data in multiple linear_map_chart.txt files into the 
+#
+# Convert data in multiple linear_map_chart.txt files into the
 # 4-column format
 #
 
@@ -808,7 +810,7 @@ sub list_commons{
     my $args = new_action(
         -desc => 'List common markers'
     );
-    
+
     $args = load_map_data $args;
     my @results;
     my %marker_indexed_map_data = get_marker_indexed_map_data $args;
@@ -819,18 +821,18 @@ sub list_commons{
             for(my $j = $i + 1; $j <= $#array; $j++){
                 my ($map_id1, $LG1, $pos1) = @{$array[$i]};
                 my ($map_id2, $LG2, $pos2) = @{$array[$j]};
-                push @results, [$marker,  $map_id1, $LG1, $pos1, 
+                push @results, [$marker,  $map_id1, $LG1, $pos1,
                                           $map_id2, $LG2, $pos2];
             }
         }
     }
-    @results = sort {$a->[2] <=> $b->[2] or 
+    @results = sort {$a->[2] <=> $b->[2] or
                     $a->[3] <=> $b->[3]
                     }@results;
     for my $result (@results){
         print join ("\t", @$result)."\n";
     }
-    
+
 }
 
 sub commonstats_default{
@@ -838,10 +840,10 @@ sub commonstats_default{
     my $print_map_number = $args->{options}->{number};
     my @map_ids = get_map_ids($args);
     my @LGs = get_LG_ids($args);
-    print join ("\t", "map1", "map2", "LG", "Common_markers",               
+    print join ("\t", "map1", "map2", "LG", "Common_markers",
                        "(Markers_in_map1,Markers_in_map2)"
                     )."\n";
-                    
+
     for(my $i = 0; $i <= $#map_ids - 1; $i ++){
         for (my $j = $i; $j <= $#map_ids; $j++){
             next if $print_map_number and $j != $i;
@@ -850,9 +852,9 @@ sub commonstats_default{
                     my $map2 = $map_ids[$j];
                     my $common_markers = get_common_marker_num(
                               $args, $map1, $map2, $LG);
-                    my $markers_in_map1 = 
+                    my $markers_in_map1 =
                         keys %{$args->{map_data}->{$map1}->{$LG}};
-                    my $markers_in_map2 = 
+                    my $markers_in_map2 =
                         keys %{$args->{map_data}->{$map2}->{$LG}};
                     print join("\t", $map1, $map2, "LG$LG", $common_markers,
                         "($markers_in_map1,$markers_in_map2)")."\n";
@@ -880,14 +882,14 @@ sub commonstats_matrix_mode{
                 )}@LGs;
             print join("\t", $map1, $map2, @common_markers)."\n";
         }
-    } 
+    }
 }
 
 sub commonstats_symm_LG_mode{
     my $args = shift;
     my @map_ids = get_map_ids($args);
     my @LGs = get_LG_ids($args);
-    
+
     for my $LG (@LGs, "all_LGs"){
         # Print title
         print "=" x 60, "\n";
@@ -913,7 +915,7 @@ sub commonstats{
     my $args = new_action(
         -desc => 'Count common markers between different maps',
         -options => {
-            "matrix|m" => 'Matrix mode -- one LG per column. Not compatible 
+            "matrix|m" => 'Matrix mode -- one LG per column. Not compatible
                            with --LG
                           [Default: line mode -- one datum per line]',
             "number|n" => 'Print number of markers for each LG each map, only
@@ -960,28 +962,28 @@ sub summarymap{
     my @map_ids = get_map_ids($args);
     if ($LG_mode){
         # Print title
-        print join("\t", "Map ID", "LG", "Number of markers", 
-                        "Length", "Average marker interval", 
-                        "LG start", "LG end")."\n" 
+        print join("\t", "Map ID", "LG", "Number of markers",
+                        "Length", "Average marker interval",
+                        "LG start", "LG end")."\n"
                 if $print_title;
         for my $map_id (@map_ids){
             my @LGs = get_LG_ids($args, $map_id);
             for my $LG (@LGs){
                 my $num_markers = keys %{$args->{map_data}->{$map_id}->{$LG}};
-                my ($LG_start, $LG_end) = (sort {$a <=> $b} 
+                my ($LG_start, $LG_end) = (sort {$a <=> $b}
                     values %{$args->{map_data}->{$map_id}->{$LG}})[0,-1];
                 my $length = sprintf "%.1f", $LG_end - $LG_start;
-                my $average_intervals = $num_markers > 1 ? 
+                my $average_intervals = $num_markers > 1 ?
                     sprintf "%.2f", $length / ($num_markers - 1) :
                     "NA";
-                print join("\t", $map_id, $LG, $num_markers, 
+                print join("\t", $map_id, $LG, $num_markers,
                     $length, $average_intervals, $LG_start, $LG_end)."\n";
             }
         }
     }
     else{
         # Print title
-        print join("\t", "Map ID", "Number of LGs", 
+        print join("\t", "Map ID", "Number of LGs",
             "Number of markers", "Total length", "Average marker interval").
             "\n" if $print_title;
         for my $map_id (@map_ids){
@@ -992,14 +994,14 @@ sub summarymap{
             for my $LG (@LGs){
                 $num_LG++;
                 $num_markers += keys %{$args->{map_data}->{$map_id}->{$LG}};
-                my @positions = sort {$a <=> $b} 
+                my @positions = sort {$a <=> $b}
                     values %{$args->{map_data}->{$map_id}->{$LG}};
                 $length += $positions[-1] - $positions[0];
             }
             $length = sprintf "%.1f", $length;
-            my $average_interval = sprintf "%.2f", 
+            my $average_interval = sprintf "%.2f",
                 $length / ($num_markers - $num_LG);
-            print join("\t", $map_id, $num_LG."_LGs", 
+            print join("\t", $map_id, $num_LG."_LGs",
                 $num_markers, $length, $average_interval
                 )."\n";
         }
@@ -1025,13 +1027,13 @@ sub input4R{
     my $args = new_action(
         -desc => 'Get input data for R codes',
         -options => {
-            "mode|m=s" => 'color mode, ssr or bin: 
-                         ssr (=red, others = black);  
+            "mode|m=s" => 'color mode, ssr or bin:
+                         ssr (=red, others = black);
                          bin (= red, others = black). Default: ssr'
         }
     );
     my $mode = $args->{options}->{mode} // 'ssr';
-    
+
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
             chomp;
@@ -1060,7 +1062,7 @@ sub consensus2allmaps{
         }
     );
     die "CAUTION: -s is required!" unless $args->{options}->{scaffold};
-    
+
     $args = load_map_data $args;
     my %consensus_map;
     my @map_ids = get_map_ids $args;
@@ -1079,7 +1081,7 @@ sub consensus2allmaps{
     warn "Number of duplicated markers: ".
          (grep {@{$consensus_map{$_}} > 1} keys %consensus_map)."\n";
     warn "Number of uniq markers: ".
-         (grep {@{$consensus_map{$_}} == 1} keys %consensus_map)."\n";   
+         (grep {@{$consensus_map{$_}} == 1} keys %consensus_map)."\n";
 
     my $num_aln = 0;
     my $valid_aln = 0;
@@ -1194,7 +1196,7 @@ sub print_conf_file{
     svg   = yes
 </image>
 <<include etc/colors_fonts_patterns.conf>>
-<<include etc/housekeeping.conf>>    
+<<include etc/housekeeping.conf>>
 
 end_of_conf_file
     close $conf_fh;
@@ -1251,7 +1253,7 @@ sub print_segdup_data{
                         $LG_hash, $LG_range, $map_id2, $marker;
                     my $color = determine_color \@map_ids, $i, $j;
                     printf $segdup_fh "%s %d %d %s %d %d %s\n",
-                        $map_id1, $start1, $end1, 
+                        $map_id1, $start1, $end1,
                         $map_id2, $start2, $end2,
                         "color=$color";
                 }
@@ -1271,8 +1273,8 @@ sub karyotype{
         my $highlights_file = qq/data-highlights-pear-LG$LG.txt/;
         my $segdup_file = qq/data-segdup-pear-LG$LG.txt/;
         my $conf_file = qq/conf-pear-LG$LG.txt/;
-        print_conf_file $conf_file, 
-            $karyotype_file, 
+        print_conf_file $conf_file,
+            $karyotype_file,
             $highlights_file,
             $segdup_file;
         open my $karyotype_fh, ">", $karyotype_file or die $!;
@@ -1290,10 +1292,10 @@ sub karyotype{
             # Karyotype format:
             # chr - ID LABEL START END COLOR
             $LG_range{$map_id} = [$min, $max];
-            print $karyotype_fh 
+            print $karyotype_fh
                 "chr - $map_id $map_id $min $max chr$map_id_count\n";
-            my @sorted_markers_list = 
-                sort {$markers_hash{$a} <=> $markers_hash{$b}} 
+            my @sorted_markers_list =
+                sort {$markers_hash{$a} <=> $markers_hash{$b}}
                 keys %markers_hash;
             for my $marker (@sorted_markers_list){
                 my $LG_pos = $markers_hash{$marker};
@@ -1326,14 +1328,14 @@ sub conflicts{
         for my $LG (@LGs){
             my @marker_names = get_marker_names $args, $map_id, $LG;
             for my $marker_name (@marker_names){
-                my $genetic_pos = 
+                my $genetic_pos =
                     get_genetic_pos $args, $map_id, $LG, $marker_name;
                 push @{$conflicts{$marker_name}}, [$map_id, $LG, $genetic_pos];
             }
-            
+
         }
     }
-    
+
     for my $marker_name (sort {$a cmp $b} keys %conflicts){
         my @info = @{$conflicts{$marker_name}};
         my %hash;
@@ -1346,13 +1348,13 @@ sub conflicts{
         if($is_conflict){
             for my $info (@info){
                 my ($map_id, $LG, $genetic_pos) = @$info;
-                print join ("\t", 
+                print join ("\t",
                     $map_id, $LG, $marker_name, $genetic_pos
                     )."\n";
             }
         }
     }
-    
+
 }
 
 sub report{
@@ -1365,7 +1367,7 @@ sub report{
     );
 
     my $linear_map_chart = $args->{options}->{linear_map_chart};
-    die qq/File "linear_map_chart.txt" is required!\n/ 
+    die qq/File "linear_map_chart.txt" is required!\n/
         unless $linear_map_chart;
     $args = load_map_data $args;
     my @map_ids = get_map_ids $args;
@@ -1383,12 +1385,12 @@ sub report{
             my @markers = split /,/, $marker_info;
             for my $marker (@markers){
                 print join("\t",
-                          $linear_map_chart, 
+                          $linear_map_chart,
                           $group,
                           $marker,
                           $pos,
                           map{
-                              defined $marker_info{$marker}->{$_} ? 
+                              defined $marker_info{$marker}->{$_} ?
                               join("|", @{$marker_info{$marker}->{$_}}) : "NA"
                           }@map_ids
                     )."\n";
@@ -1402,7 +1404,7 @@ sub report{
 }
 
 ############################################################
-# Create bin markers          
+# Create bin markers
 ############################################################
 
 sub add_scf_prefix{
@@ -1424,7 +1426,7 @@ sub read_blastn_files{
         open my $blastn_fh, $blastn_file or die $!;
         while(<$blastn_fh>){
             @_ = split /\t/;
-            die qq/CAUTION: BLASTN parameter -outfmt "6 std qlen slen 
+            die qq/CAUTION: BLASTN parameter -outfmt "6 std qlen slen
                         qcovs qcovhsp"/ unless @_ == 16;
             my $marker = $_[0];
             my $scaffold = $_[1];
@@ -1433,8 +1435,8 @@ sub read_blastn_files{
             my $qcovs = $_[14];
             next unless $qcovs >= 95;
             next unless exists $markers_in_map{$marker};
-            push @results, [$marker, 
-                            add_scf_prefix($scaffold, $blastn_file), 
+            push @results, [$marker,
+                            add_scf_prefix($scaffold, $blastn_file),
                             $start, $end];
         }
         close $blastn_fh;
@@ -1474,10 +1476,10 @@ sub convert_aln{
         -desc => 'Convert blastn or bowtie data into a special data format,
               which consisted of 4 columns, MARKER SCAFFOLD START END',
         -options => {
-            "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20 
-                          -perc_identity 95 -outfmt "6 std qlen slen qcovs 
+            "blastn|n=s@" => 'blastn data, parameter for BLASTN: -evalue 1e-20
+                          -perc_identity 95 -outfmt "6 std qlen slen qcovs
                           qcovhsp"',
-            "bowtie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0 
+            "bowtie|e=s@" => 'bowtie data, parameter for bowtie: -f -v 0 -I 0
                           -X 500 -a'
         }
     );
@@ -1525,11 +1527,11 @@ sub print_bin{
     my $min_pos = min(@positions);
     my $max_pos = max(@positions);
     my ($scaffold) = keys %scaffolds;
-    printf "Bin%04d\t%s\t%d\t%d\t%d\t%s\n", 
+    printf "Bin%04d\t%s\t%d\t%d\t%d\t%s\n",
         $bin_count,
-        $scaffold, 
-        $min_pos, 
-        $max_pos, 
+        $scaffold,
+        $min_pos,
+        $max_pos,
         scalar(@ids),
         join(",", @ids);
     return 1;
@@ -1563,7 +1565,7 @@ sub greedy{
         }
         $bin_count++;
         print_bin(\@data, $i, $j - 1, $bin_count);
-        $i = $j - 1; 
+        $i = $j - 1;
     }
 }
 
@@ -1572,7 +1574,7 @@ sub is_same_map_same_LG{
     my %check;
     for my $marker (@markers){
         for my $map_id (keys %{$markers_data->{$marker}}){
-            my ($map_id, $LG, $genetic_pos) =     
+            my ($map_id, $LG, $genetic_pos) =
                 @{$markers_data->{$marker}->{$map_id}};
             $check{$map_id}->{$LG}++;
         }
@@ -1591,21 +1593,21 @@ sub annotate_binmarkers{
     my $args = new_action(
         -desc => 'annotate binmarkers',
         -options => {
-            "binmarkers|b=s" => 'bin markers data created by action 
+            "binmarkers|b=s" => 'bin markers data created by action
                                 binmarkers2',
-            "threshold|t=f" => 'If markers in a bin have genetic position 
-                                difference larger than the threshold (cM), then 
+            "threshold|t=f" => 'If markers in a bin have genetic position
+                                difference larger than the threshold (cM), then
                                 remove this bin marker [default: 10].
-                                Set as unlimited if threshold less than or 
+                                Set as unlimited if threshold less than or
                                 equal to 0'
         }
     );
-    
+
     $args = load_map_data $args;
     my %markers_data = get_marker_indexed_map_data $args;
     my $bin_markers_file = $args->{options}->{binmarkers};
     my $threshold = $args->{options}->{threshold} // 10;
-    die "CAUTION: bin markers file is required with -b" 
+    die "CAUTION: bin markers file is required with -b"
         unless $bin_markers_file;
     open my $bin_markers_fh, $bin_markers_file or die $!;
     LABEL: while(<$bin_markers_fh>){
@@ -1614,19 +1616,19 @@ sub annotate_binmarkers{
             = split /\t/;
         next if $count == 1;
         my @markers = split /,/, $marker_list;
-        
+
         # If all markers were in the same map, same LG, then omit this
         # bin marker
         next if is_same_map_same_LG \%markers_data, @markers;
 
         # If this bin marker should keep and there were multiple
-        # markers in one LG, then choose average LG position as 
+        # markers in one LG, then choose average LG position as
         # the position of this bin marker.
 
         my %bin_marker_info;
         for my $marker (@markers){
             for my $map_id (keys %{$markers_data{$marker}}){
-                my ($map_id, $LG, $genetic_pos) = 
+                my ($map_id, $LG, $genetic_pos) =
                     @{$markers_data{$marker}->{$map_id}};
                 $bin_marker_info{$map_id}->{$LG}->{$marker} = $genetic_pos;
             }
@@ -1638,10 +1640,10 @@ sub annotate_binmarkers{
                 my @positions = values %hash;
                 my $bin_marker_pos = sprintf "%.1f",
                     sum(@positions) / scalar(@positions);
-                next LABEL if $threshold > 0 and 
+                next LABEL if $threshold > 0 and
                               max(@positions) - min(@positions) > $threshold;
-                print join("\t",  $map_id, $LG, 
-                                $binmarker, $bin_marker_pos, 
+                print join("\t",  $map_id, $LG,
+                                $binmarker, $bin_marker_pos,
                                 join(",", sort {$a cmp $b} keys %hash),
                                 join(",", map {$hash{$_}} sort {$a cmp $b} keys %hash)
                          )."\n";
@@ -1653,7 +1655,7 @@ sub annotate_binmarkers{
 
 sub remove_redundant{
     my $args = new_action(
-        -desc => 'Remove redundant markers that are in the same location in 
+        -desc => 'Remove redundant markers that are in the same location in
                   a map'
     );
     $args = load_map_data $args;
@@ -1684,34 +1686,34 @@ sub remove_redundant{
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# This subroutine is used to prepare data for MareyMap 
-# MareyMap is a R package to draw relationship between 
+# This subroutine is used to prepare data for MareyMap
+# MareyMap is a R package to draw relationship between
 # genetic map and physical map
-# Typical MareyMap input data format is: 
+# Typical MareyMap input data format is:
 #   "set" "map" "mkr" "phys" "gen" "vld"
 #   "Arabidopsis thaliana" "Chromosome 1" "SGCSNP131" 184351 0 TRUE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 sub mareymap{
     my $args = new_action(
-        -desc => 'Creating input data for MareyMap to draw draw dotplot 
+        -desc => 'Creating input data for MareyMap to draw draw dotplot
                   for genetic map and physical map using MareyMap. ',
         -options => {
             "blastn|n=s@" => BLASTN_FILE,
             "bwotie|e=s@" => BOWTIE_FILE,
         }
     );
-    
+
     my $species = 'Pyrus bretschneideri';
-    
+
 
     $args = load_map_data $args;
     my @blastn_files = get_option_array $args, 'blastn';
     my @bowtie_files = get_option_array $args, 'bowtie';
-    
-    die "blastn or bowtie files was unassigned" 
+
+    die "blastn or bowtie files was unassigned"
         unless @blastn_files or @bowtie_files;
-    
+
     my @results;
     push @results, read_blastn_files $args, @blastn_files;
     push @results, read_bowtie_files $args, @bowtie_files;
@@ -1725,7 +1727,7 @@ sub mareymap{
         my @info = values %{$markers_in_map{$marker}};
         die if @info > 1;
         my ($map_id, $LG, $genetic_pos) = @{$info[0]};
-        print join(" ", qq/"$species"/, qq/"$scaffold"/, qq/"$marker"/, 
+        print join(" ", qq/"$species"/, qq/"$scaffold"/, qq/"$marker"/,
                   int(($start + $end)/2), $genetic_pos, "TRUE"
               )."\n";
     }

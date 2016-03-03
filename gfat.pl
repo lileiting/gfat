@@ -40,7 +40,7 @@ sub sub_usage{
     my $dir = shift @ARGV;
     die qq/Directory $dir was not found.\n/
         unless -e qq|$FindBin::RealBin/$dir|
-            and !/^\.|dev|test|lib/;
+            and $dir !~ /^\.|dev|test|lib/;
     print <<"end_of_usage";
 
 NAME
@@ -49,6 +49,7 @@ NAME
 AVAILABE SCRIPTS
 end_of_usage
     find(\&wanted1, "$FindBin::RealBin/$dir");
+    print "\n";
     exit;
 }
 
