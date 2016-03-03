@@ -19,6 +19,7 @@ DESCRIPTION
 
 OPTIONS
     isPcr   | Processing results from isPcr
+    cmp     | Compare isPcr results with its input SSR list
 
 end_of_usage
     exit;
@@ -97,11 +98,15 @@ sub isPcr{
     for my $name (sort {$a cmp $b} keys %data){
         my @array = @{$data{$name}};
         if(@array == 1){
-            print join("\t", "0: ", @{$array[0]}),"\n";
+            print join("\t", @{$array[0]}),"\n";
         }
         else{
             @array = sort {$b->[4] <=> $a->[4]} @array;
             my @scores = map {$_->[4]} @array;
+            my ($first, $second) = @scores;
+            next if $first == $second;
+            print join("\t", @{$array[0]}),"\n";
+            next;
             my $rate = join("/", @scores);
             for my $info (@array){
                 print join("\t", "$rate:", @$info),"\n";

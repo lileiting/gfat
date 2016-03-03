@@ -32,7 +32,8 @@ Description
 Availabe actions
 
 Run ALLMAPS
-    allmaps          | Prepare input data for allmaps
+    allmaps          | Prepare input data for ALLMAPS, using blastn and bowtie
+    allmaps2         | Prepare input data for ALLMAPS, using isPcr and blat
 
 Run MergeMap
     mergemap         | Prepare input data for mergemap
@@ -622,6 +623,54 @@ sub allmaps{
         my ($map_id, $LG, $genetic_pos) = @{$marker_info[0]};
         print join(",", $scaffold, int(($start + $end)/2),
                         $LG, sprintf "%.1f", $genetic_pos)."\n";
+    }
+}
+
+sub allmaps2{
+    my $args = new_action(
+        -desc => 'Prepare data for ALLMAPS, using isPcr to map SSR
+                  primer sequences onto scaffolds, and using blat to
+                  map SNP flanking sequences onto scaffolds',
+        -options => {
+            "isPcr|i=s" => 'isPcr results, bed format',
+            "blat|b=s"  => 'blat results, blast8 format'
+        }
+    );
+    my $isPcr = $args->{options}->{isPcr};
+    my $blat  = $args->{options}->{blat};
+    $args = load_map_data $args;
+    my %physical;
+    open my $isPcr_fh, $isPcr or die $!;
+    while(<$isPcr_fh>){
+        chomp;
+        my ($scf, $start, $end, $name, $score, $strand) = split /\t/;
+        $physical{$name} = [$scf, int(($start + $end) / 2)];
+    }
+    close $isPcr_fh;
+    open my $blat_fh, $blat or die $!;
+    while(<$blat_fh>){
+        chomp;
+        my ($marker, $scf, $start, $end) = (split /\t/)[0,1,8,9];
+        $physical{$marker} = [$scf, int(($start + $end) / 2)];
+    }
+    close $blat_fh;
+    my @map_ids = get_map_ids $args;
+    for my $map_id (@map_ids){
+        my $out = "allmaps-input-$map_id.csv";
+        warn "Print results to file $out ...\n";
+        open my $out_fh, ">$out" or die $!;
+        print $out_fh "Scaffold ID,scaffold position,LG,genetic position\n";
+        my @LGs = get_LG_ids $args, $map_id;
+        for my $LG (@LGs){
+            my %hash = get_markers_hash $args, $map_id, $LG;
+            for my $marker (keys %hash){
+                my $genetic_pos = $hash{$marker};
+                next unless exists $physical{$marker};
+                print $out_fh join(",",
+                    @{$physical{$marker}}, $LG, $genetic_pos)."\n";
+            }
+        }
+        close $out_fh
     }
 }
 
