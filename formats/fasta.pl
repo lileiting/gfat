@@ -6,7 +6,6 @@ use FindBin;
 use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
-use GFAT::SeqActionNew;
 use List::Util qw(sum max min);
 use Digest;
 use Data::Dumper;
@@ -66,6 +65,23 @@ main() unless caller;
 ############################################################
 # Defination of Actions                                    #
 ############################################################
+
+sub new_seqaction{
+    my %args = @_;
+    my $action = new_action(%args);
+    $args{-informat} //= $::format;
+    $args{-outformat} //= $::format;
+    for my $fh(@{$action->{in_fhs}}){
+        my $in = Bio::SeqIO->new(-fh => $fh,
+                                 -format => $args{-informat});
+        push @{$action->{in_ios}}, $in;
+    }
+    my $out = Bio::SeqIO->new(-fh => $action->{out_fh},
+                           -format => $args{-outformat});
+    $action->{out_io} = $out;
+    return $action;
+}
+
 
 sub fromtab{
     my $args = new_action(
