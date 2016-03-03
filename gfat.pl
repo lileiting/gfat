@@ -19,7 +19,7 @@ NAME
 AVAILABLE CATEGORIES
 end_of_usage
 
-    find(\&wanted0, $FindBin::RealBin);
+    finddepth(\&wanted0, $FindBin::RealBin);
     print "\n";
     exit;
 }
@@ -33,13 +33,13 @@ sub wanted0{
 }
 
 ############################################################
-#                        SUB-USAGE                         #                   
+#                        SUB-USAGE                         #
 ############################################################
 
 sub sub_usage{
     my $dir = shift @ARGV;
     die qq/Directory $dir was not found.\n/
-        unless -e qq|$FindBin::RealBin/$dir| 
+        unless -e qq|$FindBin::RealBin/$dir|
             and !/^\.|dev|test|lib/;
     print <<"end_of_usage";
 
