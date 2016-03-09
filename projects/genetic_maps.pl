@@ -700,8 +700,8 @@ sub mergemap{
     $args = load_map_data($args);
     my @map_ids = get_map_ids $args;
     open my $config_fh, ">", "mergemap.maps_config" or die $!;
-    open my $accepted_fh, ">","accepted_LGs.log" or die $!;
-    open my $rejected_fh, ">","rejected_LGs.log" or die $!;
+    open my $accepted_fh, ">","mergemap.accepted_LGs.log" or die $!;
+    open my $rejected_fh, ">","mergemap.rejected_LGs.log" or die $!;
     for my $map_id (@map_ids){
         my $map_file = "mergemap-input-$map_id.map";
         open my $fh, ">", $map_file or die $!;
