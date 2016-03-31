@@ -730,7 +730,7 @@ sub mergemap{
                     or $commons > 0 and max(@common_markers) < $commons){
                 $bad_LG = 1;
             }
-            
+
             my $out_fh = $bad_LG ? $rejected_fh : $accepted_fh;
             printf $out_fh "Common markers for %s LG %s: %s ".
                     "(min: %d, max: %d, sum: %d, valid: %d)\n",
@@ -994,6 +994,38 @@ sub commonstats{
     else{
         # map1 map2 LG common_number ...
         commonstats_default($args)
+    }
+}
+
+sub commonmarkers{
+    my $args = new_action(
+        -desc => 'Count common markers between different maps',
+        -options => {
+
+        }
+    );
+    $args = load_map_data $args;
+    my @map_ids = get_map_ids($args);
+    my @LGs = get_LG_ids($args);
+    print join ("\t", "map1", "map2", "LG", "Common_markers",
+                          "(Markers_in_map1,Markers_in_map2)"
+                    )."\n";
+
+    for(my $i = 0; $i <= $#map_ids - 1; $i ++){
+        for (my $j = $i; $j <= $#map_ids; $j++){
+            for my $LG (@LGs){
+                    my $map1 = $map_ids[$i];
+                    my $map2 = $map_ids[$j];
+                    my $common_markers = get_common_marker_num(
+                              $args, $map1, $map2, $LG);
+                    my $markers_in_map1 =
+                        keys %{$args->{map_data}->{$map1}->{$LG}};
+                    my $markers_in_map2 =
+                        keys %{$args->{map_data}->{$map2}->{$LG}};
+                    print join("\t", $map1, $map2, "LG$LG", $common_markers,
+                        "($markers_in_map1,$markers_in_map2)")."\n";
+            }
+        }
     }
 }
 

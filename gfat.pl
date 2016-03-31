@@ -74,7 +74,7 @@ sub main{
         $name .= ".pl" if $name !~ /\.pl$/;
         die qq/Script "$FindBin::Script $dir $name" was not found.\n/
             unless -e "$FindBin::RealBin/$dir/$name";
-        system("$FindBin::RealBin/$dir/$name @ARGV");
+        system("perl $FindBin::RealBin/$dir/$name @ARGV");
     }
 }
 
