@@ -18,7 +18,7 @@ sub resolve_options_usage{
 
     my $options_usage = '';
     my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
-    my $max_opt_len = max( map{ my $a = $_; 
+    my $max_opt_len = max( map{ my $a = $_;
                                 $a =~ s/(=.+)$//;
                                 length($a)-1+4
                               } (@opt_keys) );
@@ -104,7 +104,7 @@ sub new_action{
         for my $infile (@ARGV){
             my $in_fh;
             if($infile ne '-'){
-                open $in_fh, "<", $infile or die "$!";
+                open $in_fh, "<", $infile or die "$!: $infile";
             }
             else{
                 $in_fh = \*STDIN;

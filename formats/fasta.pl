@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use FindBin;
 use File::Basename;
+use Bio::SeqIO;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use List::Util qw(sum max min);
