@@ -633,11 +633,13 @@ sub allmaps2{
                   map SNP flanking sequences onto scaffolds',
         -options => {
             "isPcr|i=s" => 'isPcr results, bed format',
-            "blat|b=s"  => 'blat results, blast8 format'
+            "blat|b=s"  => 'blat results, blast8 format',
+            "with_marker|w" => 'Let output results include marker names'
         }
     );
     my $isPcr = $args->{options}->{isPcr};
     my $blat  = $args->{options}->{blat};
+    my $with_marker = $args->{options}->{with_marker};
     $args = load_map_data $args;
     my %physical;
     open my $isPcr_fh, $isPcr or die $!;
@@ -659,6 +661,7 @@ sub allmaps2{
         my $out = "allmaps-input-$map_id.csv";
         warn "Print results to file $out ...\n";
         open my $out_fh, ">$out" or die $!;
+        print $out_fh "Marker," if $with_marker;
         print $out_fh "Scaffold ID,scaffold position,LG,genetic position\n";
         my @LGs = get_LG_ids $args, $map_id;
         for my $LG (@LGs){
@@ -666,6 +669,7 @@ sub allmaps2{
             for my $marker (keys %hash){
                 my $genetic_pos = $hash{$marker};
                 next unless exists $physical{$marker};
+                print $out_fh "$marker," if $with_marker;
                 print $out_fh join(",",
                     @{$physical{$marker}}, $LG, $genetic_pos)."\n";
             }
