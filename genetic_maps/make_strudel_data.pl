@@ -51,18 +51,18 @@ sub convert_map_data_to_strudel_data{
         my ($map_id, $LG, $marker, $pos) = split /\t/;
         $individual{$marker}->{$map_id}++;
         print {$out_fh{$LG}} join("\t", 'feature', 'Individual_map', $map_id,
-                                  $marker,'marker', $pos)."\n";
+                                  "$marker|$map_id",'marker', $pos)."\n";
     }
     close $individual_map_fh;
 
     for my $marker1 (sort {$a cmp $b} keys %consensus){
         for my $marker2 (sort {$a cmp $b} keys %individual){
             if($marker1 eq $marker2){
-                #for my $map_id (sort {$a cmp $b}keys %{$individual{$marker2}}){
+                for my $map_id (sort {$a cmp $b}keys %{$individual{$marker2}}){
                     print {$out_fh{$consensus{$marker1}}} join("\t", 'homolog',
                         'Consensus_map', $marker1, 'Individual_map',
-                        $marker2, 0)."\n";
-                #}
+                        "$marker2|$map_id", 0)."\n";
+                }
                 last;
             }
         }
