@@ -56,15 +56,13 @@ sub convert_map_data_to_strudel_data{
     close $individual_map_fh;
 
     for my $marker1 (sort {$a cmp $b} keys %consensus){
-        for my $marker2 (sort {$a cmp $b} keys %individual){
-            if($marker1 eq $marker2){
-                for my $map_id (sort {$a cmp $b}keys %{$individual{$marker2}}){
-                    print {$out_fh{$consensus{$marker1}}} join("\t", 'homolog',
-                        'Consensus_map', $marker1, 'Individual_map',
-                        "$marker2|$map_id", 0)."\n";
-                }
-                last;
-            }
+        my @map_ids = sort {$a cmp $b}keys %{$individual{$marker1}};
+        # pick color from http://colorbrewer2.org
+        my $color = @map_ids > 1 ? "\t#8856A7" : "\t#A9A9A9";
+        for my $map_id (@map_ids){
+            print {$out_fh{$consensus{$marker1}}} join("\t", 'homolog',
+                'Consensus_map', $marker1, 'Individual_map',
+                "$marker1|$map_id", 0, $color)."\n";
         }
     }
 }
