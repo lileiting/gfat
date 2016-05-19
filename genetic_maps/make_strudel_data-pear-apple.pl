@@ -69,6 +69,7 @@ sub convert_map_data_to_strudel_data{
     for my $marker1 (sort {$a cmp $b} keys %map1){
         for my $marker2 (sort {$a cmp $b} keys %map2){
             if(is_homolog($marker1, $marker2)){
+            #if($marker1 eq $marker2){
                 for my $map_id (sort {$a cmp $b}keys %{$map2{$marker2}}){
                     print join("\t", 'homolog',
                         $map1_map_id, $marker1, $map_id,
