@@ -57,3 +57,4 @@ Min, max, sum, mean of a list of number using List::Util and [datamash](http://w
     seq 1 100 | perl -MList::Util=min,max,sum -lne 'push @s, $_;END{print join qq/\t/, min(@s),max(@s),sum(@s)}'
     seq 1 100 | datamash --header-out min 1 max 1 sum 1 mean 1
 
+
