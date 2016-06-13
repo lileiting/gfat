@@ -16,33 +16,33 @@ comparative genomics.
 
 Print the ID for a FASTA sequence file in.fasta
 
-    ./formats/fasta.pl idlist in.fasta
-    cat in.fasta | ./formats/fasta.pl idlist
-    ./formats/fasta.pl idlist -i in.fasta
-    ./formats/fasta.pl idlist --input in.fasta
+    gfat.pl formats fasta idlist in.fasta
+    cat in.fasta | gfat.pl formats fasta idlist
+    gfat.pl formats fasta idlist -i in.fasta
+    gfat.pl formats fasta idlist --input in.fasta
 
     # With description
-    ./formats/fasta.pl idlist in.fasta -d
+    gfat.pl formats fasta idlist in.fasta -d
     # Write results to a file
-    ./formats/fasta.pl idlist in.fasta -o idlist.txt
+    gfat.pl formats fasta idlist in.fasta -o idlist.txt
 
 Print sequence length
 
-    ./formats/fasta.pl length in.fasta
+    gfat.pl formats fasta length in.fasta
 
 Fetch sequences match a pattern
 
     # Find WRKY genes
-    ./formats/fasta.pl motif in.fasta -p 'WRKYG[QK]K'
+    gfat.pl formats fasta motif in.fasta -p 'WRKYG[QK]K'
     # Find sequences contain SSRs
-    ./formats/fasta.pl motif in.fasta -p '(([ATGC]{2,6}?)\2{3,})'
+    gfat.pl formats fasta motif in.fasta -p '(([ATGC]{2,6}?)\2{3,})'
 
 Get sequences based on sequence name
 
-    fasta.pl getseq in.fasta -s gene1
-    fasta.pl getseq in.fasta -s gene1 -s gene2
-    fasta.pl getseq in.fasta -s gene1,gene2
-    fasta.pl getseq in.fasta -p 'gene\d'
-    fasta.pl getseq in.fasta -l list.txt
-    fasta.pl getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt
+    gfat.pl formats fasta getseq in.fasta -s gene1
+    gfat.pl formats fasta getseq in.fasta -s gene1 -s gene2
+    gfat.pl formats fasta getseq in.fasta -s gene1,gene2
+    gfat.pl formats fasta getseq in.fasta -p 'gene\d'
+    gfat.pl formats fasta getseq in.fasta -l list.txt
+    gfat.pl formats fasta getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt
 
