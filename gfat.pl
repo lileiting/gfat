@@ -19,17 +19,15 @@ NAME
 AVAILABLE CATEGORIES
 end_of_usage
 
-    finddepth(\&wanted0, $FindBin::RealBin);
+    for my $dir (glob "$FindBin::RealBin/*"){
+        next unless -d $dir;
+        $dir = basename $dir;
+        next if $dir =~ /^\.|dev|test|lib/i;
+        print "    $dir\n";
+    }
+
     print "\n";
     exit;
-}
-
-sub wanted0{
-    if($File::Find::dir eq $FindBin::RealBin
-            and -d $File::Find::name
-            and !/^\.|dev|test|lib/i){
-        print "    ".join(" ", $FindBin::Script, $_)."\n";
-    }
 }
 
 ############################################################
