@@ -12,11 +12,9 @@ use File::Basename;
 
 sub main_usage{
     print <<"end_of_usage";
-
-NAME
+\nNAME
     $FindBin::Script - Gene Family Analysis Tools
-
-AVAILABLE CATEGORIES
+\nAVAILABLE CATEGORIES
 end_of_usage
 
     for my $dir (glob "$FindBin::RealBin/*"){
@@ -36,15 +34,13 @@ end_of_usage
 
 sub sub_usage{
     my $dir = shift @ARGV;
-    die qq/Directory $dir was not found.\n/
-        unless -e qq|$FindBin::RealBin/$dir|
-            and $dir !~ /^\.|dev|test|lib/;
+    die "Directory $dir was not found.\n"
+        unless -d "$FindBin::RealBin/$dir";
+    exit if $dir =~ /^\.|dev|test|lib/;
     print <<"end_of_usage";
-
-NAME
+\nNAME
     $FindBin::Script $dir
-
-AVAILABE SCRIPTS
+\nAVAILABE SCRIPTS
 end_of_usage
     find(\&wanted1, "$FindBin::RealBin/$dir");
     print "\n";
@@ -54,8 +50,11 @@ end_of_usage
 sub wanted1{
     if(/\.pl$/){
         my $dir = basename $File::Find::dir;
-        my $name = substr $_, 0, -3;
-        print "    ".join(" ", $FindBin::Script, $dir, $name)."\n";
+        my $action_name = substr $_, 0, -3;
+        print "    ".join(" ", 
+            $FindBin::Script, 
+            $dir, 
+            $action_name)."\n";
     }
 }
 
