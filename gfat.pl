@@ -69,7 +69,7 @@ sub main{
         my $dir = shift @ARGV;
         my $name = shift @ARGV;
         $name .= ".pl" if $name !~ /\.pl$/;
-        die qq/Script "$FindBin::Script $dir $name" was not found.\n/
+        die "Script $FindBin::RealBin/$dir/$name was not found.\n"
             unless -e "$FindBin::RealBin/$dir/$name";
         system("perl $FindBin::RealBin/$dir/$name @ARGV");
     }

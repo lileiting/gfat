@@ -14,11 +14,11 @@ use GFAT::LoadFile;
 
 
 sub main_usage{
-    my $category = basename $FindBin::RealBin;
-    print <<"usage";
+    my $dir = basename $FindBin::RealBin;
+    print <<"end_of_usage";
 
 USAGE
-    gfat.pl $category $FindBin::Script ACTION [OPTIONS]
+    gfat.pl $dir $FindBin::Script ACTION [OPTIONS]
 
 ACTIONS
     acclist  | Print a list of accession numbers
@@ -45,7 +45,7 @@ ACTIONS
     totab    | Convert FASTA format sequence to 2-column format
     translate| Translate CDS to protein sequences
 
-usage
+end_of_usage
     exit;
 }
 
