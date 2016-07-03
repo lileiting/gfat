@@ -15,6 +15,7 @@ Options
     -bed <bed file from isPcr>
     -blast8 <blast8 file from blat>
     -gff <gff>   
+    -window NUM  [default: 100000]
 
 end_of_usage
     exit;
