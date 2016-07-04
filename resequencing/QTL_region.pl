@@ -22,8 +22,6 @@ end_of_usage
 }
 
 sub main{
-    usage unless @ARGV;
-
     my %options;
     GetOptions(
         \%options,
@@ -32,6 +30,8 @@ sub main{
         "gff=s",
         "window=i"
     );
+    usage unless @ARGV;
+
     $options{window} //= 100_000;
 
     my %markers;
@@ -57,7 +57,7 @@ sub main{
         close $fh;
     }
 
-    die "Hey!  Markers info empty!" unless keys %markers;
+    die "WARNING! Bed file and blast8 files are both missing!" unless keys %markers;
 
     my %gff;
     if($options{gff}){
@@ -74,7 +74,7 @@ sub main{
         close $fh;
     }
 
-    die "Hey! GFF info empty!" unless keys %gff;
+    die "WARNING! GFF file is missing!" unless keys %gff;
 
     for my $file (@ARGV){
         warn "Process gene list file $file ...\n";
@@ -82,13 +82,13 @@ sub main{
         while(<$fh>){
             next if /^\s*$/ or /^\s*#/;
             chomp;
-            my ($geneid, $genename, $genetype) = split /\t/;
+            my ($geneid) = split /\t/;
             die "Hey! Gene ID $geneid was not found in the GFF file"
                 unless exists $gff{$geneid};
             my ($chr, $start, $end) = @{$gff{$geneid}};
             my $markers = find_markers(
                 \%markers, $options{window}, $chr, $start, $end);
-            print join("\t", $file, $geneid, $genename, $genetype, $chr, $start, $end, $markers)."\n";
+            print join("\t", $file, $_, $chr, $start, $end, $markers)."\n";
         }
         close $fh;
     }
