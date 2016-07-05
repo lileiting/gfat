@@ -22,6 +22,7 @@ USAGE
 
 ACTIONS
     acclist  | Print a list of accession numbers
+    comp     | Sequence composition, #A, #T, #C, #G, etc
     clean    | Clean irregular characters
     filter   | Filter sequences by size and Number of Ns or Xs
     format   | Read in and write out sequences
@@ -36,7 +37,7 @@ ACTIONS
     rename   | Rename sequence IDs
     revcom   | Reverse complementary
     rmdesc   | Remove sequence descriptions
-    seqlen   | Print a list of sequence length
+    seqlen   | Print a list of sequence length, N50, etc
     seqsort  | Sort sequences by name/size
     ssr      | Find simple sequence repeats (SSR)
     subseq   | Get subsequence
@@ -301,6 +302,33 @@ sub clean{
                 Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                      -description => $seq->desc,
                                      -seq => $cleaned_seq));
+        }
+    }
+}
+
+sub comp{
+    my $args = new_seqaction(
+        -desc => 'Print sequence composition'
+    );
+    print join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', 'GC(%)')."\n";
+    for my $in (@{$args->{in_ios}}){
+        while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
+            my $seqlen = $seq->length;
+            my $seqstr = $seq->seq;
+            my %nt;
+            map{$nt{"\u$_"}++} split //, $seqstr;
+            my $A = $nt{A} // 0;
+            my $T = $nt{T} // 0;
+            my $C = $nt{C} // 0;
+            my $G = $nt{G} // 0;
+            print join("\t", 
+                $seqid, 
+                $seqlen,
+                $A, $T, $C, $G,
+                sprintf "%.1f", ($G + $C) / ($A + $T + $C + $G) * 100
+            )."\n";
+            
         }
     }
 }
