@@ -483,18 +483,6 @@ sub ids{
     }
 }
 
-sub _calculate_N50{
-    my @num = sort{$b <=> $a}@_;
-    my $total = sum(@num);
-    my $sum = 0;
-    my $n = 0;
-    for my $len (@num){
-        $n++;
-        $sum += $len;
-        return ($n, $len) if $sum >= $total / 2;
-    }
-}
-
 sub oneline{
     my $action = new_seqaction(
         -description => 'Print one sequence in one line'
@@ -560,28 +548,38 @@ sub rmdesc{
 sub seqlen {
     my $action = new_seqaction(
         -description => 'Print a list of sequence length',
-        -options     => {
-            "summary|s" => 'Print summary of sequence length'
-        }
     );
     my @lengths;
     for my $in (@{$action->{in_ios}}){
         while( my $seq = $in->next_seq ){
             print $seq->display_id, "\t", $seq->length, "\n";
-            push @lengths, $seq->length if $action->{options}->{summary};
+            push @lengths, $seq->length;
         }
     }
-    if($action->{options}->{summary}){
-        die "CAUTION: No sequences!" unless @lengths;
-        warn "Number of sequences: ", scalar(@lengths), "\n";
-        warn "Total length: ", sum(@lengths), "\n";
-        warn "Maximum length: ", max(@lengths), "\n";
-        warn "Minimum length: ", min(@lengths), "\n";
-        warn "Average length: ", sum(@lengths) / scalar(@lengths), "\n";
-        my ($N50, $L50) = _calculate_N50(@lengths);
-        warn "N50: $N50\n";
-        warn "L50: $L50\n";
+    @lengths = sort {$b <=> $a} @lengths;
+    my $num_of_seq = scalar @lengths;
+    my $total_length = sum @lengths;
+    my $max_length = max @lengths;
+    my $min_length = min @lengths;
+    my $avg_length = sprintf "%.1f", $total_length / $num_of_seq;
+    my $sum = 0;
+    my $N50 = 0;
+    my $L50 = 0;
+    foreach my $len (@lengths){
+        $N50++;
+        $sum += $len;
+        $L50 = $len;
+        last if $sum >= $total_length / 2;
     }
+    die if $L50 eq 'L50';
+    die "CAUTION: No sequences!" unless @lengths;
+    warn "Number of sequences: ", scalar(@lengths), "\n";
+    warn "Total length: $total_length\n";
+    warn "Maximum length: $max_length\n";
+    warn "Minimum length: $min_length\n";
+    warn "Average length: $avg_length\n";
+    warn "N50: $N50\n";
+    warn "L50: $L50\n";
 }
 
 sub seqsort{
