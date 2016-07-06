@@ -9,9 +9,6 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use List::Util qw(sum max min);
 use Digest;
-use Data::Dumper;
-use GFAT::LoadFile;
-
 
 sub main_usage{
     my $dir = basename $FindBin::RealBin;
@@ -287,8 +284,16 @@ sub getseq{
     my $invert_match = $options->{invert_match};
     die "ERROR: Pattern was not defined!\n"
         unless $pattern or @seqnames or $listfile;
-    my $list_ref;
-    $list_ref = load_listfile($listfile) if $listfile;
+    my $list_ref = {};
+    if($listfile){
+        open my $fh, $listfile or die $!;
+        while(<$fh>){
+            next if /^\s*$/ or /^\s*#/;
+            chomp;
+            $list_ref->{$_}++;
+        }
+        close $fh;
+    }
     map{$list_ref->{$_}++}@seqnames if @seqnames;
     for my $in (@{$action->{bioseq_io}}){
         while(my $seq = $in->next_seq){
@@ -374,7 +379,6 @@ sub identical{
 #                                sequence ID'
                     }
     );
-    #die Dumper($args);
 
     my $ignore_case = $args->{options}->{ignore_case};
     my $ignore_N    = $args->{options}->{ignore_N};
