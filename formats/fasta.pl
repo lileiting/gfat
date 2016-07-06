@@ -50,12 +50,12 @@ end_of_usage
 sub main{
     main_usage unless @ARGV;
     our $format = 'fasta';
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
+    my $args = shift @ARGV;
+    if(defined &{\&{$args}}){
+        &{\&{$args}};
     }
     else{
-        die "CAUTION: action $action was not defined!\n";
+        die "CAUTION: action $args was not defined!\n";
     }
 }
 
@@ -95,14 +95,14 @@ sub acclist{
 }
 
 sub clean{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
        -description => 'Clean irregular characters'
     );
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while( my $seq = $in->next_seq){
             my $cleaned_seq = join('',
                 grep{/[A-Za-z*]/}split(//, $seq->seq));
-            $action->{out_io}->write_seq(
+            $args->{out_io}->write_seq(
                 Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                      -description => $seq->desc,
                                      -seq => $cleaned_seq));
@@ -177,12 +177,12 @@ sub filter{
 }
 
 sub format{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Read in and write out sequences'
     );
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
-            $action->{out_io}->write_seq($seq);
+            $args->{out_io}->write_seq($seq);
         }
     }
 }
@@ -238,14 +238,14 @@ sub _count_gc{
 }
 
 sub gc{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'GC content'
     );
-    my $options = $action->{options};
+    my $options = $args->{options};
     my $total_len = 0;
     my $gc = 0;
     my $at = 0;
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             $total_len += $seq->length;
             my ($seq_gc, $seq_at) = _count_gc($seq->seq);
@@ -261,7 +261,7 @@ sub gc{
 }
 
 sub getseq{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Get a subset of sequences from input files based
                          on given IDs. The output sequence order will follow
                          the sequence order in input files, rather than
@@ -275,8 +275,8 @@ sub getseq{
             'invert_match|v' => 'Invert match'
         }
     );
-    my $options = $action->{options};
-    my $out = $action->{out_io};
+    my $options = $args->{options};
+    my $out = $args->{out_io};
     my $pattern = $options->{pattern};
     my @seqnames = $options->{seqname} ?
         split(/,/,join(',',@{$options->{seqname}})) : ();
@@ -295,7 +295,7 @@ sub getseq{
         close $fh;
     }
     map{$list_ref->{$_}++}@seqnames if @seqnames;
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $seqid = $seq->display_id;
             if(($pattern and $seqid =~ /$pattern/) or
@@ -442,18 +442,18 @@ sub identical{
 }
 
 sub ids{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Print a list of sequence IDs',
         -options     => {
             "description|d" => 'Print a second column for descriptions',
             "until|u=s"     => 'Truncate the name and description at words'
         }
     );
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while( my $seq = $in->next_seq ){
             my $info = $seq->display_id .
-                ($action->{options}->{description} ? "\t".$seq->desc : '');
-            my $re = $action->{options}->{until};
+                ($args->{options}->{description} ? "\t".$seq->desc : '');
+            my $re = $args->{options}->{until};
             $info =~ s/$re.*$// if defined $re;
             print "$info\n";
         }
@@ -496,12 +496,12 @@ sub motif{
 }
 
 sub oneline{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Print one sequence in one line'
     );
-    my $options = $action->{options};
+    my $options = $args->{options};
 
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $id = $seq->display_id;
             my $desc = " ".$seq->desc;
@@ -512,21 +512,21 @@ sub oneline{
 }
 
 sub rename{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => "Rename sequence IDs",
         -options => {
             "from|f=s" => 'From which string',
             "to|t=s"   => 'To which string'
         }
     );
-    my ($from, $to) = @{$action->{options}}{qw/from to/};
+    my ($from, $to) = @{$args->{options}}{qw/from to/};
     die "CAUTION: FROM or TO was not defined!"
         unless defined $from and defined $to;
-    for my $in(@{$action->{bioseq_io}}){
+    for my $in(@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $id = $seq->display_id;
             $id =~ s/$from/$to/;
-            $action->{out_io}->write_seq(
+            $args->{out_io}->write_seq(
                 Bio::PrimarySeq->new(-display_id => $id,
                                      -seq => $seq->seq));
         }
@@ -534,23 +534,23 @@ sub rename{
 }
 
 sub revcom{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Reverse complementary'
     );
-    for my $in(@{$action->{bioseq_io}}){
+    for my $in(@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
-            $action->{out_io}->write_seq(Bio::Perl::revcom($seq));
+            $args->{out_io}->write_seq(Bio::Perl::revcom($seq));
         }
     }
 }
 
 sub rmdesc{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Remove sequence descriptions'
     );
-    for my $in(@{$action->{bioseq_io}}){
+    for my $in(@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
-            $action->{out_io}->write_seq(
+            $args->{out_io}->write_seq(
                 Bio::PrimarySeq->new(-display_id => $seq->display_id,
                                      -seq => $seq->seq));
         }
@@ -558,11 +558,11 @@ sub rmdesc{
 }
 
 sub seqlen {
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Print a list of sequence length',
     );
     my @lengths;
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while( my $seq = $in->next_seq ){
             print $seq->display_id, "\t", $seq->length, "\n";
             push @lengths, $seq->length;
@@ -595,29 +595,29 @@ sub seqlen {
 }
 
 sub seqsort{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Sort sequences by name/size',
         -options => {
             "sizes|s" => 'Sort by sizes (default by ID name)'
         }
     );
     my @seqobjs;
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             push @seqobjs, $seq;
         }
     }
-    map{$action->{out_io}->write_seq($_)}( sort{ $action->{options}->{sizes} ?
+    map{$args->{out_io}->write_seq($_)}( sort{ $args->{options}->{sizes} ?
             $b->length <=> $a->length :
             $a->display_id cmp $b->display_id
         }@seqobjs);
 }
 
 sub ssr{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Find simple sequence repeats (SSR)'
     );
-    my $options = $action->{options};
+    my $options = $args->{options};
     # Defination of SSR:
     # Repeat unit 2bp to 6bp, length not less than 18bp
     my ($id, $flank_seq_length) = (0, 100);
@@ -627,7 +627,7 @@ sub ssr{
            Repeat_Unit Repeat_Unit_Length Repeatitions
            Sequence/
         )."\n";
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
             while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
@@ -656,7 +656,7 @@ sub ssr{
 }
 
 sub subseq{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Get subsequences',
         -options => {
             "file|f=s"    => 'A file containing gene IDs with positions
@@ -667,8 +667,8 @@ sub subseq{
             "end|e=i"     => 'End position(>=1)'
         }
     );
-    my $options = $action->{options};
-    my $out = $action->{out_io};
+    my $options = $args->{options};
+    my $out = $args->{out_io};
     my $infile = $options->{file};
     my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
     die "ERROR in sequence name, start position and end position\n"
@@ -691,7 +691,7 @@ sub subseq{
         close $fh;
     }
 
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $id = $seq->display_id;
             if($seqpos{$id}){
@@ -775,13 +775,13 @@ sub totab{
 }
 
 sub translate{
-    my $action = new_seqaction(
+    my $args = new_seqaction(
         -description => 'Translate CDS to protein sequences'
     );
-    for my $in (@{$action->{bioseq_io}}){
+    for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             #my $pep = translate($seq);
-            $action->{out_io}->write_seq(Bio::Perl::translate($seq));
+            $args->{out_io}->write_seq(Bio::Perl::translate($seq));
         }
     }
 }
