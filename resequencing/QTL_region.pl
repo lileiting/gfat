@@ -9,13 +9,36 @@ sub usage{
     print <<"end_of_usage";
 
 USAGE
-    $FindBin::Script [Options] genelist1 [genelist2 ...]
+    $FindBin::Script
+        {-bed <bed>|-blast8 <blast8>} -gff <gff>
+        [-window NUM] genelist1 [genelist2 ...]
 
-Options
-    -bed <bed file from isPcr>
-    -blast8 <blast8 file from blat>
-    -gff <gff>   
-    -window NUM  [default: 100000]
+DESCRIPTION
+    This script is used to find out whether a list of genes
+    was close to given QTL regions. QTL regions were
+    defined by the mapped positions of SSR/SNP markers on
+    chromosome/scaffold sequences. Chromosome/scaffold
+    location of given genes were defined by a given GFF
+    format file.
+
+OPTIONS
+    -bed <bed>
+        Use isPcr program to map SSR markers to reference
+        genome, and then use "gfat.pl formats bed isPcr"
+        command to get the best isPcr hit per query
+
+    -blast8 <blast8>
+        Use blat program to map SNP flanking sequences to
+        reference genome, and then use
+        "python -m jcvi.formats.blast best" command to get
+        the best BLAST hit per query
+
+    -gff <gff>
+        This script expects gene ID in 'mRNA' type line
+        with identifier "ID="
+
+    -window NUM
+        Unit: bp [default: 100000]
 
 end_of_usage
     exit;
@@ -67,8 +90,11 @@ sub main{
             next if /^\s*$/ or /^\s*#/;
             my ($chr, $type, $start, $end, $ann) = (split /\t/)[0,2,3,4,8];
             next unless $type eq 'mRNA';
-            die "Hey! Which is gene ID? $ann" unless $ann =~ /ID=([\w\.]+)/;
-            my $geneid = $1;
+            my @array = split /;/, $ann;
+            my %hash;
+            map {my ($key, $value) = split /=/; $hash{$key} = $value} @array;
+            die "WARNING! 'ID=' is expected in $ann" unless $hash{ID};
+            my $geneid = $hash{ID};
             $gff{$geneid} = [$chr, $start, $end];
         }
         close $fh;
