@@ -26,7 +26,6 @@ ACTIONS
     fromtab  | Convert 2-column sequence to FASTA format
     gc       | GC content
     getseq   | Get sequences by IDs
-    getseq2  | Output sequences by the order of input IDs
     identical| Find identical records from multiple files
     ids      | Print a list of sequence IDs
     motif    | Find sequences with given sequence pattern
@@ -263,84 +262,69 @@ sub gc{
 sub getseq{
     my $args = new_seqaction(
         -description => 'Get a subset of sequences from input files based
-                         on given IDs. The output sequence order will follow
-                         the sequence order in input files, rather than
-                         given IDs. Because "getseq" will read sequences
-                         from input files, and test one by one if it was
-                         the sequence you want.',
+                         on given sequence IDs or a name pattern',
         -options => {
-            'pattern|p=s' => 'Pattern for sequence IDs',
-            'seqname|s=s@' => 'sequence name (could be multiple)',
-            'listfile|l=s' => 'A file contains a list of sequence IDs',
-            'invert_match|v' => 'Invert match'
+            'pattern|p=s'    => 'Pattern for sequence IDs',
+            'seqname|s=s@'   => 'sequence name (could be multiple)',
+            'listfile|l=s'   => 'A file contains a list of sequence IDs',
+            'invert_match|v' => 'Invert match',
+            'order|O=i'      => 'Output sequence order: 
+                                 0 (default, order in input sequence file);
+                                 1 (order in listfile/seqname/pattern)'
         }
     );
-    my $options = $args->{options};
     my $out = $args->{out_io};
-    my $pattern = $options->{pattern};
-    my @seqnames = $options->{seqname} ?
-        split(/,/,join(',',@{$options->{seqname}})) : ();
-    my $listfile = $options->{listfile};
-    my $invert_match = $options->{invert_match};
-    die "ERROR: Pattern was not defined!\n"
+    my $pattern      = $args->{options}->{pattern};
+    my @seqnames     = $args->{options}->{seqname} ?
+        split(/,/,join(',',@{$args->{options}->{seqname}})) : ();
+    my $listfile     = $args->{options}->{listfile};
+    my $invert_match = $args->{options}->{invert_match};
+    my $order        = $args->{options}->{order} // 0;
+    die "WARNING: Pattern was not defined!\n"
         unless $pattern or @seqnames or $listfile;
-    my $list_ref = {};
+    die "WARNING: '-O' should be 0 or 1\n" unless $order == 0 or $order == 1;
+    die "WARNING: not logical for '-v -O 1'\n" if $invert_match and $order == 1;
+
+    my %seqname;
+    map{$seqname{$_}++}@seqnames;
+
+    my @genelist;
+    my %genelist;
     if($listfile){
         open my $fh, $listfile or die $!;
         while(<$fh>){
             next if /^\s*$/ or /^\s*#/;
             chomp;
-            $list_ref->{$_}++;
+            @_ = split /\t/;
+            push @genelist, $_[0];
+            $genelist{$_[0]}++;
         }
         close $fh;
     }
-    map{$list_ref->{$_}++}@seqnames if @seqnames;
+
+    my %matched_seq; # seq object as value
+    my @pattern_matched;
     for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $seqid = $seq->display_id;
-            if(($pattern and $seqid =~ /$pattern/) or
-                ((@seqnames or $listfile) and $list_ref->{$seqid})){
-                $out->write_seq($seq) if not $invert_match;
-                exit if not $listfile and not $pattern and @seqnames == 1;
-            }else{
-                $out->write_seq($seq) if $invert_match;
+            my $s = 0b000; # matched status
+            $s = $s | 0b001 if $pattern and $seqid =~ /$pattern/;
+            $s = $s | 0b010 if @seqnames and $seqname{$seqid};
+            $s = $s | 0b100 if $listfile and $genelist{$seqid};
+            $s = not $s if $invert_match;
+            next if $s == 0b000;
+            if($order == 0){
+                $out->write_seq($seq);
+            }
+            else{
+                $matched_seq{$seqid}  = $seq;
+                push @pattern_matched, $seqid if $s == 0b001;
             }
         }
     }
-}
-
-sub getseq2{
-    my $args = new_seqaction(
-        -desc => '"getseq2" is similar with another "getseq", with a little
-                  differnt. The purpose of "getseq2" is to get sequences
-                  based on given IDs and output sequences based on the order
-                  of input IDs. "getseq2" will first load all input sequences
-                  from input files into memory. So do not use this "getseq2"
-                  on files larger than your computer memory.',
-        -options => {
-            "file|f=s" => 'A list of Sequence IDs, one per line',
-            "seqname|s=s@" => 'Sequence ID (could be multiple)'
-                    }
-    );
-    my $options = $args->{options};
-    my $listfile = $options->{file};
-    my @seqnames = $options->{seqname} ?
-        split(/,/,join(',',@{$options->{seqname}})) : ();
-    die "ERROR: Sequence ID was not defined!\n"
-        unless @seqnames or $listfile;
-    my %id_map;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $seqid = $seq->display_id;
-            $id_map{$seqid} = $seq;
-        }
-    }
-    my @file_IDs;
-    open my $fh, "$listfile" or die "$!";
-    chomp(@file_IDs = <$fh>);
-    close $fh;
-    for (@seqnames, @file_IDs){
-        $args->{out_io}->write_seq($id_map{$_});
+    return 1 if $order == 0;
+    for my $seqid (@genelist, @seqnames, @pattern_matched){
+        $out->write_seq($matched_seq{$seqid});
     }
 }
 
