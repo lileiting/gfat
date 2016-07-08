@@ -24,7 +24,6 @@ ACTIONS
     filter   | Filter sequences by size and Number of Ns or Xs
     format   | Read in and write out sequences
     fromtab  | Convert 2-column sequence to FASTA format
-    gc       | GC content
     getseq   | Get sequences by IDs
     identical| Find identical records from multiple files
     ids      | Print a list of sequence IDs
@@ -113,27 +112,29 @@ sub comp{
     my $args = new_seqaction(
         -desc => 'Print sequence composition'
     );
-    print join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', 'GC(%)')."\n";
+    my %allseqs;
+    warn join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', 'GC(%)')."\n";
+    warn '-' x 60, "\n";
     for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my $seqid = $seq->display_id;
             my $seqlen = $seq->length;
+            $allseqs{seqlen} += $seqlen;
             my $seqstr = $seq->seq;
             my %nt;
             map{$nt{"\u$_"}++} split //, $seqstr;
-            my $A = $nt{A} // 0;
-            my $T = $nt{T} // 0;
-            my $C = $nt{C} // 0;
-            my $G = $nt{G} // 0;
-            print join("\t", 
-                $seqid, 
-                $seqlen,
-                $A, $T, $C, $G,
-                sprintf "%.1f", ($G + $C) / ($A + $T + $C + $G) * 100
+            map{$nt{$_} //= 0}qw/A T C G/;
+            map{$allseqs{$_} += $nt{$_}}qw/A T C G/;
+            print join("\t", $seqid, $seqlen, @nt{qw/A T C G/},
+                sprintf("%.1f", sum(@nt{qw/G C/}) / sum(@nt{qw/A T C G/}) * 100)
             )."\n";
-            
         }
     }
+    warn '-' x 60, "\n";
+    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G/}, 
+        sprintf("%.1f", 
+            sum(@allseqs{qw/G C/}) / sum(@allseqs{qw/A T C G/}) * 100
+        ))."\n";
 }
 
 sub filter{
@@ -224,39 +225,6 @@ sub fromtab{
             print ">$id\n$seq\n";
         }
     }
-}
-
-sub _count_gc{
-    my $str = shift;
-    my @char = split //, $str;
-    my %char;
-    map{$char{$_}++}@char;
-    my $gc = ($char{G} // 0) + ($char{C} // 0);
-    my $at = ($char{A} // 0) + ($char{T} // 0);
-    return ($gc, $at);
-}
-
-sub gc{
-    my $args = new_seqaction(
-        -description => 'GC content'
-    );
-    my $options = $args->{options};
-    my $total_len = 0;
-    my $gc = 0;
-    my $at = 0;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            $total_len += $seq->length;
-            my ($seq_gc, $seq_at) = _count_gc($seq->seq);
-            $gc += $seq_gc;
-            $at += $seq_at;
-        }
-    }
-    printf "GC content: %.2f %%\n", $gc / ($gc+$at) * 100;
-    my $non_atgc = $total_len - ($gc + $at);
-    printf "Non-ATGC characters: %d of %d (%.2f %%)\n",
-               $non_atgc, $total_len, $non_atgc / $total_len * 100
-           if $non_atgc;
 }
 
 sub getseq{
