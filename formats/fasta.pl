@@ -47,7 +47,6 @@ end_of_usage
 
 sub main{
     main_usage unless @ARGV;
-    our $format = 'fasta';
     my $args = shift @ARGV;
     if(defined &{\&{$args}}){
         &{\&{$args}};
@@ -65,16 +64,15 @@ main() unless caller;
 
 sub new_seqaction{
     my %args = @_;
+    my $format = 'fasta';
     my $args = new_action(%args);
-    $args{-informat} //= $::format;
-    $args{-outformat} //= $::format;
     for my $fh (@{$args->{in_fhs}}){
         my $in = Bio::SeqIO->new(-fh => $fh,
-                                 -format => $args{-informat});
+                                 -format => $format);
         push @{$args->{bioseq_io}}, $in;
     }
     my $out = Bio::SeqIO->new(-fh => $args->{out_fh},
-                           -format => $args{-outformat});
+                           -format => $format);
     $args->{out_io} = $out;
     return $args;
 }
