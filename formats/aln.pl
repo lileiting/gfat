@@ -2,66 +2,46 @@
 
 use warnings;
 use strict;
-use File::Basename;
-use Bio::AlignIO;
-use Getopt::Long qw(:config gnu_getopt);
 use FindBin;
-use Text::Abbrev;
 use lib "$FindBin::RealBin/../lib";
-use GFAT::Config;
+use GFAT::ActionNew;
+use Bio::AlignIO;
+use Text::Abbrev;
 
-sub usage{
-    print <<"usage";
-
-NAME
-    $FindBin::Script
+sub main_usage{
+    print <<"end_of_usage";
 
 USAGE
-    $FindBin::Script [-t] [-f format] <ALIGNMENT> [<ALIGNMENT> ...]
+    $FindBin::Script Action [Options]
 
-OPTIONS
-    -t,--title         print title
-    -f,--format FORMAT [Default: fasta]
-           Specify the format of the file.  Supported formats include:
+AVAILABLE ACTIONS
+    rgaps    | Remove gaps in alignment
+    stats    | Print statistics of alignments
 
-              bl2seq      Bl2seq Blast output
-              clustalw    clustalw (.aln) format
-              emboss      EMBOSS water and needle format
-              fasta       FASTA format
-              maf         Multiple Alignment Format
-              mase        mase (seaview) format
-              mega        MEGA format
-              meme        MEME format
-              msf         msf (GCG) format
-              nexus       Swofford et al NEXUS format
-              pfam        Pfam sequence alignment format
-              phylip      Felsenstein PHYLIP format
-              prodom      prodom (protein domain) format
-              psi         PSI-BLAST format
-              selex       selex (hmmer) format
-              stockholm   stockholm format
-
-    -V,--version    Print version number
-    -h,--help       Print help
-
-NOTICE
-    Note that abbreviations of formats are supported, so typing the first 
-    letter or first few letters of a format are sufficient
-
-usage
+end_of_usage
     exit;
 }
 
-sub get_options{
-    usage unless @ARGV;
-    my ($title, $format) = (undef, 'fasta');
-    GetOptions("t|title"    => \$title,
-               "f|format=s" => \$format,
-               "V|version"  => \my $version,
-               "h|help"     => \my $help
-              );
-    print_version if $version;
-    usage if $help;
+sub main{
+    main_usage unless @ARGV;
+    my $args = shift @ARGV;
+    if(defined &{\&{$args}}){
+        &{\&{$args}};
+    }
+    else{
+        die "CAUTION: action $args was not defined!\n";
+    }
+}
+
+main() unless caller;
+
+############################################################
+# Defination of Actions                                    #
+############################################################
+
+sub get_aln_format{
+    my $format = shift;
+    return 'fasta' unless $format;
     my @formats = qw/bl2seq clustalw emboss fasta maf
         mase mega meme msf nexus pfam phylip prodom psi
         selex stockholm/;
@@ -69,15 +49,74 @@ sub get_options{
     if($formats{$format}){
         $format = $formats{$format};
     }else{
-        print "ERROR: Unsupported alignment file format: $format!\n";
-        usage;
+        warn <<"end_of_format";
+
+ERROR: Unsupported alignment file format: $format!
+Supported formats include:
+
+    bl2seq      Bl2seq Blast output
+    clustalw    clustalw (.aln) format
+    emboss      EMBOSS water and needle format
+    fasta       FASTA format
+    maf         Multiple Alignment Format
+    mase        mase (seaview) format
+    mega        MEGA format
+    meme        MEME format
+    msf         msf (GCG) format
+    nexus       Swofford et al NEXUS format
+    pfam        Pfam sequence alignment format
+    phylip      Felsenstein PHYLIP format
+    prodom      prodom (protein domain) format
+    psi         PSI-BLAST format
+    selex       selex (hmmer) format
+    stockholm   stockholm format
+
+end_of_format
+        exit;
     }
-    return ($title, $format);
+    return $format;
 }
 
-sub main{
-    my ($title, $format) = get_options;
-    my $c;
+############################################################
+sub rgaps{
+    my $args = new_action(
+        -desc => 'Remove gaps in alignment file',
+        -options => {
+            "format|f=s" => 'alignment format: bl2seq, clustalw, emboss, 
+                             fasta, maf, mase, mega, meme, msf, nexus, pfam,
+                             phylip, prodom, psi, selex, stockholm 
+                             [default: fasta]'
+        }
+    );
+    my $format = get_aln_format($args->{options}->{format});
+    
+    for my $fh (@{$args->{in_fhs}}){
+        my $aln_in = Bio::AlignIO->new(-format => $format, 
+                                        -fh => $fh);
+        my $aln = $aln_in->next_aln;
+	    $aln_in->close;
+	    my $aln_out = Bio::AlignIO->new(-format=>'fasta', 
+                                    -fh=> \*STDOUT);
+	    $aln_out->write_aln($aln->remove_gaps('-',1));
+	    $aln_out->close;
+    }
+
+}
+
+sub stats{
+    my $args = new_action(
+        -desc => 'Print statistics of alignments',
+        -options => {
+            "format|f=s" => 'alignment format: bl2seq, clustalw, emboss, 
+                            fasta, maf, mase, mega, meme, msf, nexus, pfam,
+                            phylip, prodom, psi, selex, stockholm 
+                            [default: fasta]',
+            "title|t"    => 'Print title [default: no]'
+        }
+    );
+    my $format = get_aln_format($args->{options}->{format});
+    my $title = $args->{options}->{title};
+    my $n;
 
     print join("\t", "#",          "File",       "Num_seq",    "SeqID1",     "SeqID2", 
                      "#_Ident",    "#_Mismatch", "#_Gap\t",    "#_Gap_open", 
@@ -85,11 +124,14 @@ sub main{
                      "I+M",        "I/(I+M)%",   "M/(I+M)%"
                )."\n" if $title;
 
-    for my $file (@ARGV){
+    for my $i (0..$#{$args->{in_fhs}}){
+        my $file = $args->{infiles}->[$i];
+        my $fh = $args->{in_fhs}->[$i];
+    
         my $alignio = Bio::AlignIO->new(-format => $format,
-                                        -file => $file);
+                                        -fh => $fh);
         while(my $aln = $alignio->next_aln){
-            $c++;
+            $n++;
             my @seqs = $aln->each_seq;
 
             my $seqid1 = $seqs[0]->display_id;
@@ -147,7 +189,7 @@ sub main{
                            "%d",   "%.2f", "%.2f", "%.2f", 
                            "%d",   "%.2f", "%.2f"              
                     )."\n",
-            $c,
+            $n,
             $file,
             $num_seq,
             $seqid1,
@@ -171,4 +213,4 @@ sub main{
     }
 }
 
-main unless caller;
+__END__
