@@ -21,6 +21,7 @@ ACTIONS
     acclist  | Print a list of accession numbers
     comp     | Sequence composition, #A, #T, #C, #G, etc
     clean    | Clean irregular characters
+    fa2phy   | Convert fasta format to phylip format, noninterleaved
     filter   | Filter sequences by size and Number of Ns or Xs
     format   | Read in and write out sequences
     fromtab  | Convert 2-column sequence to FASTA format
@@ -29,6 +30,7 @@ ACTIONS
     ids      | Print a list of sequence IDs
     motif    | Find sequences with given sequence pattern
     oneline  | Print one sequence in one line
+    phy2fa   | Convert phylip format (noninterleaved) to fasta format
     rename   | Rename sequence IDs
     revcom   | Reverse complementary
     rmdesc   | Remove sequence descriptions
@@ -135,6 +137,38 @@ sub comp{
         ))."\n";
 }
 
+sub fa2phy{
+    my $args = new_seqaction(
+        -desc => 'Convert fasta format to phylip format (non-interleaved)'
+    );
+    
+    my $num_of_seq;
+    my $seqlen;
+    my $seqid_max_len = 0;
+    my @seqdata;
+    for my $in (@{$args->{bioseq_io}}){
+        while(my $seq = $in->next_seq){
+            my $seqid = $seq->display_id;
+            my $seqstr = $seq->seq;
+            $num_of_seq++;
+            unless($seqlen){
+                $seqlen = length($seqstr);
+            }
+            else{
+                die "WARNING: sequence length ERROR!\n" 
+                    unless $seqlen == length($seqstr);
+            }
+            $seqid_max_len = length($seqid) if length($seqid) > $seqid_max_len;
+            push @seqdata, [$seqid, $seqstr];
+        }
+    }
+    print "    $num_of_seq $seqlen\n";
+    for (@seqdata){
+        my ($seqid, $seqstr) = @$_;
+        printf "%-${seqid_max_len}s %s\n", $seqid, $seqstr;
+    }
+}
+
 sub filter{
     my $args = new_seqaction(
         -desc => "Filter the sequence file to contain records with
@@ -215,6 +249,7 @@ sub fromtab{
             next if /^\s*$/ or /^\s*#/;
             chomp;
             my ($id, $seq) = split /$sep/;
+            die "ERROR in: $_" unless $seq;
             $id =~ s/ /$replace/g if $replace;
             if($length){
                 $seq =~ s/(.{$length})/$1\n/g;
@@ -461,6 +496,27 @@ sub oneline{
     }
 }
 
+sub phy2fa{
+    my $args = new_action(
+        -desc => 'Convert phylip format (noninterleaved) to fasta format'
+    );
+    for my $fh (@{$args->{in_fhs}}){
+        my $first_line = <$fh>;
+        die unless $first_line =~ /^\s*(\d+)\s+(\d+)\s*$/;
+        my ($num_of_seq, $seqlen) = ($1, $2);
+        my $n;
+        while(<$fh>){
+            $n++;
+            die unless /^(\S+)\s+(\S+)$/;
+            my ($seqid, $seqstr) = ($1, $2);
+            print ">$seqid\n$seqstr\n";
+            die "WARNING: Sequence length ERROR!\n" 
+                unless $seqlen == length($seqstr);
+        }
+        die "WARNING: Sequence number ERROR!\n" unless $n == $num_of_seq;
+    }
+}
+
 sub rename{
     my $args = new_seqaction(
         -description => "Rename sequence IDs",
@@ -469,7 +525,8 @@ sub rename{
             "to|t=s"   => 'To which string'
         }
     );
-    my ($from, $to) = @{$args->{options}}{qw/from to/};
+    my $from = $args->{options}->{from};
+    my $to = $args->{options}->{to} // '';
     die "CAUTION: FROM or TO was not defined!"
         unless defined $from and defined $to;
     for my $in(@{$args->{bioseq_io}}){
@@ -535,13 +592,13 @@ sub seqlen {
     }
     die if $L50 eq 'L50';
     die "CAUTION: No sequences!" unless @lengths;
-    warn "Number of sequences: ", scalar(@lengths), "\n";
-    warn "Total length: $total_length\n";
-    warn "Maximum length: $max_length\n";
-    warn "Minimum length: $min_length\n";
-    warn "Average length: $avg_length\n";
-    warn "N50: $N50\n";
-    warn "L50: $L50\n";
+    warn "# Number of sequences: ", scalar(@lengths), "\n";
+    warn "# Total length: $total_length\n";
+    warn "# Maximum length: $max_length\n";
+    warn "# Minimum length: $min_length\n";
+    warn "# Average length: $avg_length\n";
+    warn "# N50: $N50\n";
+    warn "# L50: $L50\n";
 }
 
 sub seqsort{
