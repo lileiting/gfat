@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use File::Find;
 use File::Basename;
+use Text::Abbrev;
 
 ############################################################
 #                       MAIN USAGE                         #
@@ -12,9 +13,11 @@ use File::Basename;
 
 sub main_usage{
     print <<"end_of_usage";
-\nNAME
+
+NAME
     $FindBin::Script - Gene Family Analysis Tools
-\nAVAILABLE CATEGORIES
+
+AVAILABLE CATEGORIES
 end_of_usage
 
     for my $dir (glob "$FindBin::RealBin/*"){
@@ -34,13 +37,15 @@ end_of_usage
 
 sub sub_usage{
     my $dir = shift @ARGV;
-    die "Directory $dir was not found.\n"
-        unless -d "$FindBin::RealBin/$dir";
-    exit if $dir =~ /^\.|dev|test|lib/;
+    
+    $dir = get_full_dir_name($dir);
+    
     print <<"end_of_usage";
-\nNAME
+
+NAME
     $FindBin::Script $dir
-\nAVAILABE SCRIPTS
+
+AVAILABE SCRIPTS
 end_of_usage
     find(\&wanted1, "$FindBin::RealBin/$dir");
     print "\n";
@@ -66,13 +71,35 @@ sub main{
     if(@ARGV == 0){ main_usage }
     if(@ARGV == 1){ sub_usage  }
     elsif(@ARGV > 1){
-        my $dir = shift @ARGV;
-        my $name = shift @ARGV;
-        $name .= ".pl" if $name !~ /\.pl$/;
-        die "Script $FindBin::RealBin/$dir/$name was not found.\n"
-            unless -e "$FindBin::RealBin/$dir/$name";
-        system("perl $FindBin::RealBin/$dir/$name @ARGV");
+        my $dir  = get_full_dir_name(shift @ARGV);
+        my $script = get_full_script_name($dir, shift @ARGV);
+#        $name .= ".pl" if $name !~ /\.pl$/;
+#        die "Script $FindBin::RealBin/$dir/$script was not found.\n"
+#            unless -e "$FindBin::RealBin/$dir/$script";
+        system("perl $FindBin::RealBin/$dir/$script @ARGV");
     }
 }
 
 main unless caller;
+
+############################################################
+
+sub get_full_dir_name{
+    my $dir = shift;
+    my @dir = map {basename $_} grep {-d $_ and !/^\.|dev|test|lib/} 
+        glob "$FindBin::RealBin/*";
+    my %dir = abbrev @dir;
+    $dir = $dir{$dir} // die "Directory $dir was not found.\n";
+    return $dir;
+}
+
+sub get_full_script_name{
+    my ($dir, $script) = @_;
+    my @scripts = map {basename $_} glob "$FindBin::RealBin/$dir/*.pl";
+    my %scripts = abbrev @scripts;
+    $script = $scripts{$script} // 
+        die "Script $FindBin::RealBin/$dir/$script was not found.\n";
+    return $script;
+}
+
+__END__

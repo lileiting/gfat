@@ -9,6 +9,7 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use List::Util qw(sum max min);
 use Digest;
+use Text::Abbrev;
 
 sub main_usage{
     my $dir = basename $FindBin::RealBin;
@@ -49,12 +50,18 @@ end_of_usage
 
 sub main{
     main_usage unless @ARGV;
-    my $args = shift @ARGV;
-    if(defined &{\&{$args}}){
-        &{\&{$args}};
+    my $action = shift @ARGV;
+    my @actions = qw/acclist comp clean fa2phy filter format fromtab
+        getseq identical ids motif oneline phy2fa rename revcom rmdesc 
+        seqlen seqsort ssr subseq subseq2 totab translate/;
+    my %actions = abbrev @actions;
+    $action = $actions{$action} 
+        // die "CAUTION: action $action was not defined!\n";
+    if(defined &{\&{$action}}){
+        &{\&{$action}};
     }
     else{
-        die "CAUTION: action $args was not defined!\n";
+        die "CAUTION: action $action was not defined!\n";
     }
 }
 
