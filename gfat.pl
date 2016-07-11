@@ -15,7 +15,7 @@ sub main_usage{
     print <<"end_of_usage";
 
 NAME
-    $FindBin::Script - Gene Family Analysis Tools
+    $FindBin::RealScript - Gene Family Analysis Tools
 
 AVAILABLE CATEGORIES
 end_of_usage
@@ -43,7 +43,7 @@ sub sub_usage{
     print <<"end_of_usage";
 
 NAME
-    $FindBin::Script $dir
+    $FindBin::RealScript $dir
 
 AVAILABE SCRIPTS
 end_of_usage
@@ -57,7 +57,7 @@ sub wanted1{
         my $dir = basename $File::Find::dir;
         my $action_name = substr $_, 0, -3;
         print "    ".join(" ", 
-            $FindBin::Script, 
+            $FindBin::RealScript, 
             $dir, 
             $action_name)."\n";
     }
@@ -73,9 +73,6 @@ sub main{
     elsif(@ARGV > 1){
         my $dir  = get_full_dir_name(shift @ARGV);
         my $script = get_full_script_name($dir, shift @ARGV);
-#        $name .= ".pl" if $name !~ /\.pl$/;
-#        die "Script $FindBin::RealBin/$dir/$script was not found.\n"
-#            unless -e "$FindBin::RealBin/$dir/$script";
         system("perl $FindBin::RealBin/$dir/$script @ARGV");
     }
 }
@@ -103,3 +100,4 @@ sub get_full_script_name{
 }
 
 __END__
+

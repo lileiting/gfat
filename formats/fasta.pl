@@ -16,7 +16,7 @@ sub main_usage{
     print <<"end_of_usage";
 
 USAGE
-    gfat.pl $dir $FindBin::Script ACTION [OPTIONS]
+    gfat.pl $dir $FindBin::RealScript ACTION [OPTIONS]
 
 ACTIONS
     acclist  | Print a list of accession numbers
