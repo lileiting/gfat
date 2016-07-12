@@ -4,13 +4,21 @@
 * Email: lileiting@gmail.com
 * Licence: [BSD](http://opensource.org/licenses/BSD-2-Clause)
 
-This is a collection of tools about gene family analysis and 
-comparative genomics.
+This is a collection of tools for gene family and comparative 
+genomics analyses.
 
 ## Intallation
     git clone https://github.com/lileiting/gfat.git
 
 ## How to use
+
+Shortcut was supported for some of these scripts. For instance
+
+    gfat.pl f fas g
+
+is equivalent with
+
+    gfat.pl formats fasta getseq
 
 ### FASTA sequences
 
