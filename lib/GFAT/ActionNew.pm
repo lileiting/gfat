@@ -7,10 +7,11 @@ use File::Basename;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
 use Text::Wrap;
+use Text::Abbrev;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action get_in_fhs get_option_array);
+@EXPORT = qw(new_action get_in_fhs get_option_array check_action_name);
 @EXPORT_OK = @EXPORT;
 
 sub resolve_options_usage{
@@ -142,6 +143,26 @@ sub get_option_array{
     @array = split_join $args->{options}->{$option}
         if exists $args->{options}->{$option};
     return @array;
+}
+
+sub check_action_name{
+    my $action = shift @_;
+    die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
+    my (undef, $script) = caller;
+    
+    my @actions;
+    open my $fh, $script or die $!;
+    while(<$fh>){
+        next unless /^sub\s+(\w+)/;
+        my $subroutine = $1;
+        next if $subroutine =~ /^main|^new|^_/;
+        push @actions, $subroutine;
+    }
+    close $fh;
+    my %actions = abbrev @actions;
+    $action = $actions{$action} 
+        // die "CAUTION: action '$action' was not defined!\n";
+    return $action;
 }
 
 1;

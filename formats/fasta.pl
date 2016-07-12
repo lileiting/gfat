@@ -50,19 +50,8 @@ end_of_usage
 
 sub main{
     main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    my @actions = qw/acclist comp clean fa2phy filter format fromtab
-        getseq identical ids motif oneline phy2fa rename revcom rmdesc 
-        seqlen seqsort ssr subseq subseq2 totab translate/;
-    my %actions = abbrev @actions;
-    $action = $actions{$action} 
-        // die "CAUTION: action $action was not defined!\n";
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }
-    else{
-        die "CAUTION: action $action was not defined!\n";
-    }
+    my $action = check_action_name(shift @ARGV);
+    &{\&{$action}};
 }
 
 main() unless caller;
