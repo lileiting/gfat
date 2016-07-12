@@ -64,7 +64,7 @@ sub cmp{
         $input_ssr{$_[0]} = [@_[1,2]];
     }
     close $ssr_table_fh;
-    my @in_fhs = get_in_fhs $args;
+    my @in_fhs = @{$args->{in_fhs}};
     for my $fh (@in_fhs){
         while (<$fh>) {
             chomp;
@@ -87,7 +87,7 @@ sub isPcr{
         -desc => 'Processing results from isPcr',
     );
     my %data;
-    my @in_fhs = get_in_fhs $args;
+    my @in_fhs = @{$args->{in_fhs}};
     for my $fh (@in_fhs){
         while(<$fh>){
             chomp;
