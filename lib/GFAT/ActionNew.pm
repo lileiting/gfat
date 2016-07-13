@@ -127,15 +127,6 @@ sub new_action{
     return \%action;
 }
 
-sub get_option_array{
-    my ($args, $option) = @_;
-    my @array = ();
-    
-    @array = split(",", join(",", @{$args->{options}->{$option}}))
-        if exists $args->{options}->{$option};
-    return @array;
-}
-
 sub check_action_name{
     my $action = shift @_;
     die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
