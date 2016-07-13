@@ -12,11 +12,11 @@ genomics analyses.
 
 ## How to use
 
-Shortcut was supported for some of these scripts. For instance
+Shortcuts were supported for some of these scripts. For instance,
 
-    gfat.pl f fas g
+    gfat.pl f f g
 
-is equivalent with
+is equivalent to
 
     gfat.pl formats fasta getseq
 

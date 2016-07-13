@@ -127,15 +127,11 @@ sub new_action{
     return \%action;
 }
 
-sub split_join{
-    my $str = shift;
-    return split(",", join(",", @$str));
-}
-
 sub get_option_array{
     my ($args, $option) = @_;
     my @array = ();
-    @array = split_join $args->{options}->{$option}
+    
+    @array = split(",", join(",", @{$args->{options}->{$option}}))
         if exists $args->{options}->{$option};
     return @array;
 }
