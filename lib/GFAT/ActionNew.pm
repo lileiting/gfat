@@ -11,22 +11,20 @@ use Text::Abbrev;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action get_option_array check_action_name);
+@EXPORT = qw(new_action check_action_name);
 @EXPORT_OK = @EXPORT;
 
-sub resolve_options_usage{
+sub _resolve_options_usage{
     my %args = @_;
 
     my $options_usage = '';
     my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
-    my $max_opt_len = max( map{ my $a = $_;
-                                $a =~ s/(=.+)$//;
-                                length($a)-1+4
-                              } (@opt_keys) );
+    my $max_opt_len = max(map{my $a = $_; $a =~ s/(=.+)$//; length($a) - 1 + 4
+        }(@opt_keys)); #Prevent original strings be changed
     my %type = (i => 'INT',
                 s => 'STR',
-                f => 'FLT',
-                o => 'EXT');
+                f => 'FLT',  # Real number, eg. 3.14, -6.23E24
+                o => 'EXT'); # Extended integer, Perl style
     for my $option (@opt_keys){
         die "ERROR in option: $option"
             unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
@@ -35,7 +33,7 @@ sub resolve_options_usage{
         my $opt_desc = $args{-options}->{$option};
         $opt_desc =~ s/[\s\r\n]+/ /g;
         $opt_desc = wrap(' ' x ($max_opt_len + 9),
-                     ' ' x ($max_opt_len + 9) ,$opt_desc);
+                         ' ' x ($max_opt_len + 9), $opt_desc);
         $opt_desc =~ s/^\s+//;
         my $string = sprintf "    %-${max_opt_len}s %s %s\n",
             "-$short,--$long",
@@ -47,12 +45,12 @@ sub resolve_options_usage{
     return $options_usage;
 }
 
-sub action_usage{
+sub _action_usage{
     my %args = @_;
     $args{-description} =~ s/[\s\r\n]+/ /g;
     $args{-description} = wrap("    ", "    ", $args{-description});
     $args{-description} =~ s/^\s+//;
-    my $options_usage = resolve_options_usage(@_);
+    my $options_usage = _resolve_options_usage(@_);
     my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
     my $category = basename $FindBin::RealBin;
     my $usage = "
@@ -69,7 +67,7 @@ OPTIONS
     return sub {print $usage; exit}
 }
 
-sub get_action_name{
+sub _get_action_name{
     for my $level (1..3){
         my $subroutine = (caller($level))[3];
         if($subroutine =~ /new_action|new_seqaction/){
@@ -89,13 +87,13 @@ sub new_action{
     die "Action description were not given!"
         unless $args{-description} or $args{-desc};
     $args{-description} = $args{-desc} unless $args{-description};
-    $args{-name} //= get_action_name;
+    $args{-name} //= _get_action_name;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
     $args{-filenumber} //= 1;
 
-    my $usage = action_usage(%args);
+    my $usage = _action_usage(%args);
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
     print_version if $options{version};
@@ -104,11 +102,11 @@ sub new_action{
     if(@ARGV){
         for my $infile (@ARGV){
             my $in_fh;
-            if($infile ne '-'){
-                open $in_fh, "<", $infile or die "$!: $infile";
+            if($infile eq '-'){
+                $in_fh = \*STDIN;
             }
             else{
-                $in_fh = \*STDIN;
+                open $in_fh, "<", $infile or die "$!: $infile";
             }
             push @{$action{in_fhs}}, $in_fh;
             push @{$action{infiles}}, $infile;
