@@ -11,45 +11,35 @@ use List::Util qw(sum max min);
 use Digest;
 use Text::Abbrev;
 
-sub main_usage{
-    my $dir = basename $FindBin::RealBin;
-    print <<"end_of_usage";
-
-USAGE
-    gfat.pl $dir $FindBin::RealScript ACTION [OPTIONS]
-
-ACTIONS
-    acclist  | Print a list of accession numbers
-    comp     | Sequence composition, #A, #T, #C, #G, etc
-    clean    | Clean irregular characters
-    fa2phy   | Convert fasta format to phylip format, noninterleaved
-    filter   | Filter sequences by size and Number of Ns or Xs
-    format   | Read in and write out sequences
-    fromtab  | Convert 2-column sequence to FASTA format
-    getseq   | Get sequences by IDs
-    identical| Find identical records from multiple files
-    ids      | Print a list of sequence IDs
-    motif    | Find sequences with given sequence pattern
-    oneline  | Print one sequence in one line
-    phy2fa   | Convert phylip format (noninterleaved) to fasta format
-    rename   | Rename sequence IDs
-    revcom   | Reverse complementary
-    rmdesc   | Remove sequence descriptions
-    seqlen   | Print a list of sequence length, N50, etc
-    seqsort  | Sort sequences by name/size
-    ssr      | Find simple sequence repeats (SSR)
-    subseq   | Get subsequence
-    subseq2  | Get subsequences based on input file (ID, start, end,
-               strand, new ID)
-    totab    | Convert FASTA format sequence to 2-column format
-    translate| Translate CDS to protein sequences
-
-end_of_usage
-    exit;
-}
-
 sub main{
-    main_usage unless @ARGV;
+    my %actions = (
+        acclist  => 'Print a list of accession numbers',
+        comp     => 'Sequence composition, #A, #T, #C, #G, etc',
+        clean    => 'Clean irregular characters',
+        fa2phy   => 'Convert fasta format to phylip format, noninterleaved',
+        filter   => 'Filter sequences by size and Number of Ns or Xs',
+        format   => 'Read in and write out sequences',
+        fromtab  => 'Convert 2-column sequence to FASTA format',
+        getseq   => 'Get sequences by IDs',
+        identical=> 'Find identical records from multiple files',
+        ids      => 'Print a list of sequence IDs',
+        motif    => 'Find sequences with given sequence pattern',
+        oneline  => 'Print one sequence in one line',
+        phy2fa   => 'Convert phylip format (noninterleaved) to fasta format',
+        rename   => 'Rename sequence IDs',
+        revcom   => 'Reverse complementary',
+        rmdesc   => 'Remove sequence descriptions',
+        seqlen   => 'Print a list of sequence length, N50, etc',
+        seqsort  => 'Sort sequences by name/size',
+        ssr      => 'Find simple sequence repeats (SSR)',
+        subseq   => 'Get subsequence',
+        subseq2  => 'Get subsequences based on input file (ID, start, end,
+                     strand, new ID)',
+        totab    => 'Convert FASTA format sequence to 2-column format',
+        translate=> 'Translate CDS to protein sequences',
+    );
+    #main_usage unless @ARGV;
+    script_usage(%actions) unless @ARGV;
     my $action = check_action_name(shift @ARGV);
     &{\&{$action}};
 }

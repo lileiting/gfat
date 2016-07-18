@@ -11,7 +11,7 @@ use Text::Abbrev;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action check_action_name);
+@EXPORT = qw(new_action check_action_name script_usage);
 @EXPORT_OK = @EXPORT;
 
 sub _resolve_options_usage{
@@ -143,6 +143,31 @@ sub check_action_name{
     $action = $actions{$action} 
         // die "CAUTION: action '$action' was not defined!\n";
     return $action;
+}
+
+sub script_usage{
+    my %actions = @_;
+    my (undef, $script) = caller;
+    my ($basename, $path) = fileparse($script);
+    my $dir = basename($path);    
+    print <<"end_of_usage";
+
+USAGE
+    gfat.pl $dir $basename ACTION [OPTIONS]
+    
+ACTIONS    
+end_of_usage
+    my $max_action_len = max(map{length}keys %actions);
+    for my $action ( sort {$a cmp $b} keys %actions){
+        my $action_desc = $actions{$action};
+        $action_desc =~ s/[\s\r\n]+/ /g;
+        $action_desc = wrap(' ' x ($max_action_len + 7),
+                            ' ' x ($max_action_len + 7), $action_desc);
+        $action_desc =~ s/^\s+//;
+        printf "    %${max_action_len}s | %s\n", $action, $action_desc;
+    }
+    print "\n";
+    exit;
 }
 
 1;
