@@ -38,7 +38,6 @@ sub main{
         totab    => 'Convert FASTA format sequence to 2-column format',
         translate=> 'Translate CDS to protein sequences',
     );
-    #main_usage unless @ARGV;
     script_usage(%actions) unless @ARGV;
     my $action = check_action_name(shift @ARGV);
     &{\&{$action}};

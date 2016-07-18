@@ -54,3 +54,13 @@ Get sequences based on sequence name
     gfat.pl formats fasta getseq in.fasta -l list.txt
     gfat.pl formats fasta getseq in.fasta -s gene1 -s gene2 -s gene3,gene4 -p 'name\d' -l list.txt
 
+## Acknowledgements
+
+The scripts, functions and usage styles are largely inspired 
+by Haibao Tang's [JCVI](https://github.com/tanghaibao/jcvi)
+utility libraries (Python based). 
+
+The scripts were also inspired by the 
+[p5-bpwrapper](https://github.com/bioperl/p5-bpwrapper) 
+and other Perl based modules or scripts.
+

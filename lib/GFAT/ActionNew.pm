@@ -153,7 +153,7 @@ sub script_usage{
     print <<"end_of_usage";
 
 USAGE
-    gfat.pl $dir $basename ACTION [OPTIONS]
+    gfat.pl $dir $basename ACTION
     
 ACTIONS    
 end_of_usage
