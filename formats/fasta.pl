@@ -39,7 +39,7 @@ sub main{
         translate=> 'Translate CDS to protein sequences',
     );
     script_usage(%actions) unless @ARGV;
-    my $action = check_action_name(shift @ARGV);
+    my $action = get_action_name;
     &{\&{$action}};
 }
 
@@ -116,8 +116,8 @@ sub comp{
         }
     }
     warn '-' x 60, "\n";
-    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G/}, 
-        sprintf("%.1f", 
+    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G/},
+        sprintf("%.1f",
             sum(@allseqs{qw/G C/}) / sum(@allseqs{qw/A T C G/}) * 100
         ))."\n";
 }
@@ -126,7 +126,7 @@ sub fa2phy{
     my $args = new_seqaction(
         -desc => 'Convert fasta format to phylip format (non-interleaved)'
     );
-    
+
     my $num_of_seq;
     my $seqlen;
     my $seqid_max_len = 0;
@@ -140,7 +140,7 @@ sub fa2phy{
                 $seqlen = length($seqstr);
             }
             else{
-                die "WARNING: sequence length ERROR!\n" 
+                die "WARNING: sequence length ERROR!\n"
                     unless $seqlen == length($seqstr);
             }
             $seqid_max_len = length($seqid) if length($seqid) > $seqid_max_len;
@@ -254,7 +254,7 @@ sub getseq{
             'seqname|s=s@'   => 'sequence name (could be multiple)',
             'listfile|l=s'   => 'A file contains a list of sequence IDs',
             'invert_match|v' => 'Invert match',
-            'order|O=i'      => 'Output sequence order: 
+            'order|O=i'      => 'Output sequence order:
                                  0 (default, order in input sequence file);
                                  1 (order in listfile/seqname/pattern)'
         }
@@ -495,7 +495,7 @@ sub phy2fa{
             die unless /^(\S+)\s+(\S+)$/;
             my ($seqid, $seqstr) = ($1, $2);
             print ">$seqid\n$seqstr\n";
-            die "WARNING: Sequence length ERROR!\n" 
+            die "WARNING: Sequence length ERROR!\n"
                 unless $seqlen == length($seqstr);
         }
         die "WARNING: Sequence number ERROR!\n" unless $n == $num_of_seq;

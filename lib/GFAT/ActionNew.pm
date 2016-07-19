@@ -11,7 +11,7 @@ use Text::Abbrev;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action check_action_name script_usage);
+@EXPORT = qw(new_action get_action_name script_usage);
 @EXPORT_OK = @EXPORT;
 
 sub _resolve_options_usage{
@@ -70,28 +70,13 @@ OPTIONS
     return sub {print $usage; exit}
 }
 
-sub _get_action_name{
-    for my $level (1..3){
-        my $subroutine = (caller($level))[3];
-        #print "Subroutine: $subroutine\n";
-        if($subroutine =~ /new_action|new_seqaction/){
-            next;
-        }
-        else{
-            $subroutine =~ s/^.+:(.+)$/$1/;
-            return $subroutine;
-        }
-    }
-    die "CAUTION: Could not find action name!";
-}
-
 sub new_action{
     my %args = @_;
     my %action;
     die "Action description were not given!"
         unless $args{-description} or $args{-desc};
     $args{-description} = $args{-desc} unless $args{-description};
-    $args{-name} //= _get_action_name;
+    $args{-name} = shift @main::ARGV;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
@@ -130,8 +115,8 @@ sub new_action{
     return \%action;
 }
 
-sub check_action_name{
-    my $action = shift @_;
+sub get_action_name{
+    my $action = $main::ARGV[0];
     die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
     my $script = $0;
     my @actions;
