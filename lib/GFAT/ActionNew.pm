@@ -73,6 +73,7 @@ OPTIONS
 sub _get_action_name{
     for my $level (1..3){
         my $subroutine = (caller($level))[3];
+        #print "Subroutine: $subroutine\n";
         if($subroutine =~ /new_action|new_seqaction/){
             next;
         }
@@ -114,7 +115,8 @@ sub new_action{
             push @{$action{in_fhs}}, $in_fh if $in_fh;
             push @{$action{infiles}}, $infile if $infile ne '-';
         }
-    }else{
+    }
+    else{
         my $in_fh = \*STDIN;
         push @{$action{in_fhs}}, $in_fh;
     }
@@ -131,10 +133,9 @@ sub new_action{
 sub check_action_name{
     my $action = shift @_;
     die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
-    my $script = $FindBin::RealScript;
-
+    my $script = $0;
     my @actions;
-    open my $fh, $script or die $!;
+    open my $fh, $script or die "$!:$script";
     while(<$fh>){
         next unless /^sub\s+(\w+)/;
         my $subroutine = $1;
