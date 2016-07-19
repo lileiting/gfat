@@ -51,12 +51,15 @@ sub _action_usage{
     $args{-description} = wrap("    ", "    ", $args{-description});
     $args{-description} =~ s/^\s+//;
     my $options_usage = _resolve_options_usage(@_);
-    my $file_info = $args{-filenumber} == 1 ? 'infile(s)' : 'file1 file2';
-    my $category = basename $FindBin::RealBin;
+    #my $file_info = $args{-filenumber} == 1 ?
+    #    '<infile|term>' :
+    #    '<infile|term> [<infile|term> ...]';
+    my $dir = basename $FindBin::RealBin;
+    my $script = $FindBin::Script;
+    my $action = $args{-name};
     my $usage = "
 USAGE
-    gfat.pl $category $FindBin::Script $args{-name} $file_info [OPTIONS]
-    gfat.pl $category $FindBin::Script $args{-name} [OPTIONS] $file_info
+    gfat.pl $dir $script $action [OPTIONS] <infile|term> [<infile|term> ...]
 
 DESCRIPTION
     $args{-description}
@@ -105,11 +108,11 @@ sub new_action{
             if($infile eq '-'){
                 $in_fh = \*STDIN;
             }
-            else{
+            elsif(-e $infile){
                 open $in_fh, "<", $infile or die "$!: $infile";
             }
-            push @{$action{in_fhs}}, $in_fh;
-            push @{$action{infiles}}, $infile;
+            push @{$action{in_fhs}}, $in_fh if $in_fh;
+            push @{$action{infiles}}, $infile if $infile ne '-';
         }
     }else{
         my $in_fh = \*STDIN;
@@ -128,8 +131,8 @@ sub new_action{
 sub check_action_name{
     my $action = shift @_;
     die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
-    my (undef, $script) = caller;
-    
+    my $script = $FindBin::RealScript;
+
     my @actions;
     open my $fh, $script or die $!;
     while(<$fh>){
@@ -140,22 +143,21 @@ sub check_action_name{
     }
     close $fh;
     my %actions = abbrev @actions;
-    $action = $actions{$action} 
+    $action = $actions{$action}
         // die "CAUTION: action '$action' was not defined!\n";
     return $action;
 }
 
 sub script_usage{
     my %actions = @_;
-    my (undef, $script) = caller;
-    my ($basename, $path) = fileparse($script);
-    my $dir = basename($path);    
+    my $dir = basename $FindBin::RealBin;
+    my $script = $FindBin::RealScript;
     print <<"end_of_usage";
 
 USAGE
-    gfat.pl $dir $basename ACTION
-    
-ACTIONS    
+    gfat.pl $dir $script ACTION
+
+ACTIONS
 end_of_usage
     my $max_action_len = max(map{length}keys %actions);
     for my $action ( sort {$a cmp $b} keys %actions){
