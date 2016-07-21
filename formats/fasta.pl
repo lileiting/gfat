@@ -39,8 +39,7 @@ sub main{
         translate=> 'Translate CDS to protein sequences',
     );
     script_usage(%actions) unless @ARGV;
-    my $action = get_action_name;
-    &{\&{$action}};
+    &{\&{&get_action_name}};
 }
 
 main() unless caller;
