@@ -16,8 +16,8 @@ use vars qw(@EXPORT @EXPORT_OK);
 
 sub _action_usage{
     my %args = @_;
-    $args{-description} =~ s/[\s\r\n]+/ /g;
-    $args{-description} = wrap("    ", "    ", $args{-description});
+    $args{-desc} =~ s/[\s\r\n]+/ /g;
+    $args{-desc} = wrap("    ", "    ", $args{-desc});
     #my $file_info = $args{-filenumber} == 1 ?
     #    '<infile|term>' :
     #    '<infile|term> [<infile|term> ...]';
@@ -30,7 +30,7 @@ USAGE
     gfat.pl $dir $script $action [OPTIONS] <infile|term> [<infile|term> ...]
 
 DESCRIPTION
-$args{-description}
+$args{-desc}
 
 OPTIONS
 end_of_usage
@@ -64,9 +64,8 @@ end_of_usage
 sub new_action{
     my %args = @_;
     my %action;
-    die "Action description were not given!"
-        unless $args{-description} or $args{-desc};
-    $args{-description} = $args{-desc} unless $args{-description};
+    $args{-desc} = $args{-description} if exists $args{-description};
+    die "Action descriptions were not given!" unless exists $args{-desc};
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
