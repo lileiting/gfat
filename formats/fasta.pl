@@ -771,6 +771,7 @@ sub main{
     &{\&{&get_action_name}};
 }
 
+our $in_desc = '<in.fasta> [<in.fasta> ...]';
 main() unless caller;
 
 __END__

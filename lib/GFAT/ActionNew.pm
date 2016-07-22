@@ -24,10 +24,12 @@ sub _action_usage{
     my $dir = basename $FindBin::RealBin;
     my $script = $FindBin::Script;
     my $action = $GFAT::ActionNew::action;
+    my $in_desc = $args{-in_desc} // $main::in_desc //
+       '<infile|term> [<infile|term> ...]';
     print <<"end_of_usage";
 
 USAGE
-    gfat.pl $dir $script $action [OPTIONS] <infile|term> [<infile|term> ...]
+    gfat.pl $dir $script $action [OPTIONS] $in_desc
 
 DESCRIPTION
 $args{-desc}
@@ -69,7 +71,6 @@ sub new_action{
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
-    $args{-filenumber} //= 1;
 
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
