@@ -76,7 +76,7 @@ sub new_action{
     die "Action description were not given!"
         unless $args{-description} or $args{-desc};
     $args{-description} = $args{-desc} unless $args{-description};
-    $args{-name} = shift @main::ARGV;
+    $args{-name} = $GFAT::ActionNew::action;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
@@ -116,7 +116,7 @@ sub new_action{
 }
 
 sub get_action_name{
-    my $action = $main::ARGV[0];
+    our $action = shift @main::ARGV;
     die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
     my $script = $0;
     my @actions;
