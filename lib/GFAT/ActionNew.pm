@@ -14,10 +14,27 @@ use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_action get_action_name script_usage);
 @EXPORT_OK = @EXPORT;
 
-sub _resolve_options_usage{
+sub _action_usage{
     my %args = @_;
+    $args{-description} =~ s/[\s\r\n]+/ /g;
+    $args{-description} = wrap("    ", "    ", $args{-description});
+    #my $file_info = $args{-filenumber} == 1 ?
+    #    '<infile|term>' :
+    #    '<infile|term> [<infile|term> ...]';
+    my $dir = basename $FindBin::RealBin;
+    my $script = $FindBin::Script;
+    my $action = $GFAT::ActionNew::action;
+    print <<"end_of_usage";
 
-    my $options_usage = '';
+USAGE
+    gfat.pl $dir $script $action [OPTIONS] <infile|term> [<infile|term> ...]
+
+DESCRIPTION
+$args{-description}
+
+OPTIONS
+end_of_usage
+
     my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
     my $max_opt_len = max(map{my $a = $_; $a =~ s/(=.+)$//; length($a) - 1 + 4
         }(@opt_keys)); #Prevent original strings be changed
@@ -35,39 +52,13 @@ sub _resolve_options_usage{
         $opt_desc = wrap(' ' x ($max_opt_len + 9),
                          ' ' x ($max_opt_len + 9), $opt_desc);
         $opt_desc =~ s/^\s+//;
-        my $string = sprintf "    %-${max_opt_len}s %s %s\n",
+        printf "    %-${max_opt_len}s %s %s\n",
             "-$short,--$long",
             $type0 ? $type{$type} : '   ',
             $opt_desc;
-        $options_usage .= $string;
     }
-    $options_usage =~ s/^\s+//;
-    return $options_usage;
-}
-
-sub _action_usage{
-    my %args = @_;
-    $args{-description} =~ s/[\s\r\n]+/ /g;
-    $args{-description} = wrap("    ", "    ", $args{-description});
-    $args{-description} =~ s/^\s+//;
-    my $options_usage = _resolve_options_usage(@_);
-    #my $file_info = $args{-filenumber} == 1 ?
-    #    '<infile|term>' :
-    #    '<infile|term> [<infile|term> ...]';
-    my $dir = basename $FindBin::RealBin;
-    my $script = $FindBin::Script;
-    my $action = $args{-name};
-    my $usage = "
-USAGE
-    gfat.pl $dir $script $action [OPTIONS] <infile|term> [<infile|term> ...]
-
-DESCRIPTION
-    $args{-description}
-
-OPTIONS
-    $options_usage
-";
-    return sub {print $usage; exit}
+    print "\n";
+    exit;
 }
 
 sub new_action{
@@ -76,17 +67,15 @@ sub new_action{
     die "Action description were not given!"
         unless $args{-description} or $args{-desc};
     $args{-description} = $args{-desc} unless $args{-description};
-    $args{-name} = $GFAT::ActionNew::action;
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
     $args{-options}->{"version|V"} //= 'Print version number and exit';
     $args{-filenumber} //= 1;
 
-    my $usage = _action_usage(%args);
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
     print_version if $options{version};
-    &{$usage} if $options{help} or (@ARGV == 0 and -t STDIN);
+    _action_usage(%args) if $options{help} or (@ARGV == 0 and -t STDIN);
 
     if(@ARGV){
         for my $infile (@ARGV){
