@@ -21,7 +21,7 @@ Description
 
 Available Actions
     tissue_specific | find tissue specific expressed genes
-    unexpressed     | list unexpressed genes (value equals to -2 for 
+    unexpressed     | list unexpressed genes (value equals to -2 for
                       all samples)
     matrix2list     | convert a matrix to a 2-column list
 
@@ -33,7 +33,7 @@ sub main{
     main_usage unless @ARGV;
     my $action = shift @ARGV;
     if(defined &{\&{$action}}){
-        &{\&{$action}}; 
+        &{\&{$action}};
     }
     else{
         die "CAUTION: action $action was not defined!\n";
@@ -67,7 +67,7 @@ sub tissue_specific{
     );
     my $diff = $args->{options}->{diff} // 0.01;
     my $min  = $args->{options}->{min} // 0;
-    
+
     my $fh = $args->{in_fhs}->[0];
     my $matrix = load_matrix $fh;
     my @tissues = @{$matrix->[0]};
@@ -80,22 +80,22 @@ sub tissue_specific{
         my $second_nfpkm = $array[$index[1]];
         next unless $best_nfpkm - $second_nfpkm > $diff;
         next unless $best_nfpkm > $min;
-        print join("\t", $gene_id, 
-                         $best_tissue, 
-                         $best_nfpkm, 
+        print join("\t", $gene_id,
+                         $best_tissue,
+                         $best_nfpkm,
                          $second_nfpkm)."\n";
     }
-    
+
 }
 
 sub unexpressed{
     my $args = new_action(
         -desc => 'List unexpressed genes'
     );
-    
+
     my @infiles = @{$args->{infiles}};
     my @in_fhs = @{$args->{in_fhs}};
-    
+
     for(my $i = 0; $i < scalar(@infiles); $i++){
         my $infile = $infiles[$i];
         my $in_fh = $in_fhs[$i];
@@ -122,10 +122,10 @@ sub matrix2list{
     my $args = new_action(
         -desc => 'convert a matrix to a 2-column list'
     );
-    
+
     my @infiles = @{$args->{infiles}};
     my @in_fhs = @{$args->{in_fhs}};
-    
+
     for (my $i = 0; $i < scalar(@infiles); $i++){
         my $infile = $infiles[$i];
         my $in_fh = $in_fhs[$i];
@@ -141,8 +141,7 @@ sub matrix2list{
             }
         }
     }
-    
+
 }
 
 __END__
-

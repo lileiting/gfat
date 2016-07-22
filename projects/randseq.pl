@@ -14,18 +14,18 @@ sub usage{
 
 perl randseq.pl [OPTIONS]
 
-  -n,--num NUM    
+  -n,--num NUM
      Number of sequences [default: 1]
 
-  -m,--mode MODE  
-    Mode: nt|aa|cds, nucleotide sequences, amino acid sequences 
+  -m,--mode MODE
+    Mode: nt|aa|cds, nucleotide sequences, amino acid sequences
                      or CDS [default nucleotide sequences]
 
-  -p,--prefix STR 
+  -p,--prefix STR
     Prefix of sequence names [default: RandSeq]
 
-  -I,--min NUM 
-  -X,--max NUM 
+  -I,--min NUM
+  -X,--max NUM
     Minimum and maximum length of sequence [both default:100]
 
   -V,--version
@@ -74,10 +74,10 @@ sub nucleotide{
 }
 
 sub amino_acid{
-    return qw/aa 
-        A R N D C 
-        Q E G H I 
-        L K M F P 
+    return qw/aa
+        A R N D C
+        Q E G H I
+        L K M F P
         S T W Y V/;
 }
 

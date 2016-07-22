@@ -16,7 +16,7 @@ USAGE
 
 OPTIONS
     -help|?     Print usage
-    -p          Two files are required, and only compare 
+    -p          Two files are required, and only compare
                 sequences between two files
 
 usage
@@ -88,6 +88,6 @@ sub cal_identity{
     unlink $tmp_file,"$tmp_pre.aln","$tmp_pre.dnd";
     my $aln = $alignio->next_aln;
     print $seq1->display_id,"\t",
-        $seq2->display_id, "\t", 
+        $seq2->display_id, "\t",
         sprintf("%.1f",$aln->percentage_identity),"\n";
 }

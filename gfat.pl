@@ -37,9 +37,9 @@ end_of_usage
 
 sub sub_usage{
     my $dir = shift @ARGV;
-    
+
     $dir = get_full_dir_name($dir);
-    
+
     print <<"end_of_usage";
 
 NAME
@@ -56,9 +56,9 @@ sub wanted1{
     if(/\.pl$/){
         my $dir = basename $File::Find::dir;
         my $action_name = substr $_, 0, -3;
-        print "    ".join(" ", 
-            $FindBin::RealScript, 
-            $dir, 
+        print "    ".join(" ",
+            $FindBin::RealScript,
+            $dir,
             $action_name)."\n";
     }
 }
@@ -83,7 +83,7 @@ main unless caller;
 
 sub get_full_dir_name{
     my $dir = shift;
-    my @dir = map {basename $_} grep {-d $_ and !/^\.|dev|test|lib/} 
+    my @dir = map {basename $_} grep {-d $_ and !/^\.|dev|test|lib/}
         glob "$FindBin::RealBin/*";
     my %dir = abbrev @dir;
     $dir = $dir{$dir} // die "Directory $dir was not found.\n";
@@ -94,10 +94,9 @@ sub get_full_script_name{
     my ($dir, $script) = @_;
     my @scripts = map {basename $_} glob "$FindBin::RealBin/$dir/*.pl";
     my %scripts = abbrev @scripts;
-    $script = $scripts{$script} // 
+    $script = $scripts{$script} //
         die "Script $FindBin::RealBin/$dir/$script was not found.\n";
     return $script;
 }
 
 __END__
-

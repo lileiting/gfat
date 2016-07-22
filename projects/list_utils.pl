@@ -50,7 +50,7 @@ sub is_number{
 }
 
 sub smart_sort{
-    return is_number(@_) ? 
+    return is_number(@_) ?
        sort{$a <=> $b}@_ : sort{$a cmp $b}@_;
 }
 
@@ -67,7 +67,7 @@ sub list2matrix{
             "seperator|s=s" => 'Filed separator (default: tab)',
         }
     );
-    
+
     my $symm = $args->{options}->{symm};
     my $field_separator = $args->{options}->{seperator} // "\t";
     my %data;
@@ -97,7 +97,7 @@ sub list2matrix{
         for my $row (@names){
             my $str = $row;
             for my $col (@names){
-                $str .= $field_separator . ($data{$row}->{$col} // 
+                $str .= $field_separator . ($data{$row}->{$col} //
                         $data{$col}->{$row} // '-');
             }
             print "$str\n";

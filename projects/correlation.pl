@@ -24,11 +24,11 @@ Description
 
 Available Actions
     pcor   | calculate pairwise correlation
-    filter | Filter the results from pcor 
+    filter | Filter the results from pcor
 
     p1     | A shortcut for running both pcor and filter
-    
-    sifinfo| Print information for sif format files (number 
+
+    sifinfo| Print information for sif format files (number
              of nodes and edges)
     cor2sif| Convert *.cor format to *.sif format
 
@@ -40,7 +40,7 @@ sub main{
     main_usage unless @ARGV;
     my $action = shift @ARGV;
     if(defined &{\&{$action}}){
-        &{\&{$action}}; 
+        &{\&{$action}};
     }
     else{
         die "CAUTION: action $action was not defined!\n";
@@ -67,7 +67,7 @@ sub remove_missing_data{
     my ($data1, $data2) = @_;
     my $n1 = scalar(@$data1);
     my $n2 = scalar(@$data2);
-    die "number of elements in two vectors are not same: $n1, $n2" 
+    die "number of elements in two vectors are not same: $n1, $n2"
         unless $n1 == $n2;
     my @valid_index;
     for (my $i = 0; $i < $n1; $i++){
@@ -119,14 +119,14 @@ sub filter{
     my $args = new_action(
         -desc => 'Filter results from pcor',
         -options => {
-            "rate|r=f@" => 'Pearson correlation coefficient 
-                           threshold [default: 0.7, 0.8, 0.9, 
+            "rate|r=f@" => 'Pearson correlation coefficient
+                           threshold [default: 0.7, 0.8, 0.9,
                            0.95, 0.99]'
         }
     );
     my $sig_level = 0.01;
     my @rates;
-    if($args->{options}->{rate}){ 
+    if($args->{options}->{rate}){
         @rates = split(/,/, join(",", @{$args->{options}->{rate}}));
     }
     else{
@@ -152,7 +152,7 @@ sub filter{
             }
         }
     }
-    
+
     for my $rate(keys %fhs){
         close $fhs{$rate}->{cor};
         close $fhs{$rate}->{sif};

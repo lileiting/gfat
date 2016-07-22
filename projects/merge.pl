@@ -12,7 +12,7 @@ sub usage{
   $FindBin::Script - Merge multiple tables into one single table
 
   Merge multiple tables into one single table based
-  on the first column. Assume title first line is 
+  on the first column. Assume title first line is
   title.
 
   $FindBin::Script FILE [FILE ...]

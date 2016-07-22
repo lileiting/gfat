@@ -23,7 +23,7 @@ OPTIONS
     sequence file
 
   -p,--optimal_codon_table <optimal_codon_table.txt>
-    optimal codon table, two columns, 
+    optimal codon table, two columns,
     first column is the 3-letter amino acid,
     second column is the optimal codon
 
@@ -44,7 +44,7 @@ OPTIONS
 
   -o,--optimal_codons
     print optimal codons and exit
-    
+
   -h,--help
     print this usage
 
@@ -71,20 +71,20 @@ sub read_commands{
         "n|num_of_codons" => \$para{print_codon_number},
 #        "o|optimal_codons" => \$para{print_optimal_codons}
     );
-   
+
     if($para{outfile}){
         open my $fh, ">", $para{outfile} or die $!;
         $para{out_fh} = $fh;
     }
- 
+
     if(exists $para{infile}){
         unless(-e $para{infile}){
             print STDERR "\nCAUTION: File $para{infile} not exist!\n";
             usage;
         }
     }elsif($para{codon_matrix} or
-           $para{print_enc} or 
-           $para{print_codon_number} or 
+           $para{print_enc} or
+           $para{print_codon_number} or
            $para{print_optimal_codons}){
             print STDERR "\nCAUTION: A sequence file is required!\n";
             usage;
@@ -110,7 +110,7 @@ sub print_codon_matrix{
     my $infile = shift;
     my %codon_table = get_codon_table;
     my @codon_table = sort{$a cmp $b}(keys %codon_table);
-    
+
     print join(",", "SeqID", @codon_table),"\n";
     my $in_io = Bio::SeqIO->new(-file => $infile, -format=>'fasta');
     while(my $seqobj = $in_io->next_seq){
@@ -121,13 +121,13 @@ sub print_codon_matrix{
         for my $codon (@codons){
             $codon_count{$codon}++;
         }
-        print join(",", $seqid, 
+        print join(",", $seqid,
                          map{
-                             defined $codon_count{$_} ? $codon_count{$_} : 0 
+                             defined $codon_count{$_} ? $codon_count{$_} : 0
                          }@codon_table), "\n";
     }
     $in_io->close;
-    
+
 }
 
 ############################################################
@@ -149,7 +149,7 @@ sub cal_enc{
 
 sub print_enc{
     my $infile = shift;
-    
+
     my %codon_table = get_codon_table;
     my @effective_codons = grep{$codon_table{$_}->[0] ne '_'}
                            (keys %codon_table);
@@ -201,7 +201,7 @@ sub resolve_codon_name{
 sub print_codon_number{
     my $infile = shift;
     my %codon_number = get_codon_number($infile);
-    my @sorted_codons = 
+    my @sorted_codons =
            sort{resolve_codon_name($a) cmp resolve_codon_name($b)}
            (keys %codon_number);
     for my $codon (@sorted_codons){
@@ -229,8 +229,8 @@ sub get_optimal_codons{
 
     for my $aa (keys %inverse_table){
         my @codons = @{$inverse_table{$aa}}[2..$#{$inverse_table{$aa}}];
-        $optimal_codons{$aa} =  
-           (sort{$codon_count{$b} <=> 
+        $optimal_codons{$aa} =
+           (sort{$codon_count{$b} <=>
             $codon_count{$a}}@codons)[0];
     }
 
@@ -265,13 +265,13 @@ sub calculate_fop{
         for my $codon (@codons){
              next unless $optimal_codon->{$codon};
              $num_of_optimal++ if $optimal_codon->{$codon} eq 'optimal';
-             $num_of_non_optimal++ if $optimal_codon->{$codon} eq 'non-optimal'; 
+             $num_of_non_optimal++ if $optimal_codon->{$codon} eq 'non-optimal';
         }
 
         my $fop = $num_of_optimal / ($num_of_optimal + $num_of_non_optimal);
         printf $out_fh "%s\t%d\t%d\t%d\t%f\n",
-            $seqid, 
-            $num_of_codons, 
+            $seqid,
+            $num_of_codons,
             $num_of_optimal,
             $num_of_non_optimal,
             $fop;
@@ -282,7 +282,7 @@ sub calculate_fop{
 
 sub load_optimal_codon_table{
 # Frequency of optimal codons was calculated by
-# Number of optimal codons / sum of optimal and 
+# Number of optimal codons / sum of optimal and
 # non-optimal codons
 
 # The hash %optimal_codon store all 64 codons

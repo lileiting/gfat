@@ -42,7 +42,7 @@ sub main{
     }
 
     my @all_ids = sort {$gff{$a}->[0] cmp $gff{$b}->[0] or
-                        $gff{$a}->[1] <=> $gff{$b}->[1]} keys %gff; 
+                        $gff{$a}->[1] <=> $gff{$b}->[1]} keys %gff;
 
     my %tandem;
     for my $i (1..$#all_ids){
@@ -63,7 +63,7 @@ sub main{
     for my $i (1..$#tandem_ids){
         my $previous_id = $tandem_ids[$i -1];
         my $id = $tandem_ids[$i];
-        if($tandem{$id} - $tandem{$previous_id} == 1 and 
+        if($tandem{$id} - $tandem{$previous_id} == 1 and
            $gff{$id}->[0] eq $gff{$previous_id}->[0]){
             print ",$id";
         }else{

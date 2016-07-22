@@ -20,4 +20,3 @@ while(1){
         print "Sorry, it's not the number, it's greater than $guess!\n";
     }
 }
-

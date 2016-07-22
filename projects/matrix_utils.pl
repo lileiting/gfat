@@ -14,16 +14,16 @@ sub base_usage{
 perl $FindBin::Script CMD [OPTIONS]
 
   Dealing with matrix.
-  Matrix was defined as, 
+  Matrix was defined as,
   1) one row per observation
-  2) one column per sample, 
-  3) frist row is sample names, 
+  2) one column per sample,
+  3) frist row is sample names,
   4) first column is observation names
 
   csv2tab  | Replace any comma to tab
   tab2csv  | Replace any tab to comma
 
-  rowsum   | Print sum for each row of a matrix (first row is title, 
+  rowsum   | Print sum for each row of a matrix (first row is title,
              first column is observation name)
   rowmax   | Print maximum number for each row
   rowmin   | Print minimum number for each row
@@ -38,8 +38,8 @@ perl $FindBin::Script CMD [OPTIONS]
 
   rmissing | Remove rows with missing data("-")
   rm1      | Remove rows with value less than 1
-  groupbest| Get best observation for each group, group name is 
-             inside observation name, i.e. for Gene1|A, "A" is 
+  groupbest| Get best observation for each group, group name is
+             inside observation name, i.e. for Gene1|A, "A" is
              group name
 
   log      | Print log for each number, e as base
@@ -51,7 +51,7 @@ USAGE
 sub actions{
     return {
         rmissing  => [ \&rmissing   , q/Remove rows with missing data("-")/],
-        csv2tab   => [ \&csv2tab    , "Replace any comma to tab" ], 
+        csv2tab   => [ \&csv2tab    , "Replace any comma to tab" ],
         tab2csv   => [ \&tab2csv    , "Replace any tab to comma" ],
         rowsum    => [ \&rowsum     , "Print sum for each row of a matrix (first row is title first column is observation name)"],
         rowmax    => [ \&rowmax     , "Print maximum number for each row"],
@@ -61,7 +61,7 @@ sub actions{
         colmin    => [ \&colmin     , "Print minimum number for each column"],
         sum       => [ \&matrix_sum , "Print sum for the whole matrix" ],
         max       => [ \&matrix_max , "Print maximum for the whole matrix" ],
-        min       => [ \&matrix_min , "Print minimum for the whole matrix" ], 
+        min       => [ \&matrix_min , "Print minimum for the whole matrix" ],
         size      => [ \&matrix_size, "Print matrix size, number of rows, columns" ],
         count     => [ \&matrix_count, "Count number of elements in each row"],
         rm1       => [ \&rm1        , "Remove rows with value less than 1"],
@@ -183,8 +183,8 @@ sub matrix_row_process{
    my ($in_fh, $out_fh) = get_fh(qq/row$cmd/);
    my $matrix = read_table($in_fh);
    for my $row (1 .. $matrix->{num_rows}){
-       print $out_fh $matrix->{name}->{row}->[$row], "\t", 
-             apply($cmd, @{$matrix->{row}->[$row]}), 
+       print $out_fh $matrix->{name}->{row}->[$row], "\t",
+             apply($cmd, @{$matrix->{row}->[$row]}),
              "\n";
    }
 }
@@ -219,7 +219,7 @@ sub matrix_process_all{
         push @array, @F[1..$#F];
     }
     print $out_fh apply($cmd, @array),"\n";
-    
+
 }
 
 sub matrix_sum{&matrix_process_all(q/sum/)}
@@ -267,7 +267,7 @@ sub less_than_1{
 sub rmissing{
     my ($in_fh, $out_fh) = get_fh(q/rmissing/);
     while(<$in_fh>){
-        print and next if $. == 1; 
+        print and next if $. == 1;
         next if present_missing($_);
         print $out_fh $_;
     }
@@ -287,7 +287,7 @@ sub rm1{
 sub get_group{
     my $str = shift;
     die "String: $str" unless $str =~ /^\S+?\|(\S+)$/;
-    return $1; 
+    return $1;
 }
 
 sub by_sum{
@@ -297,7 +297,7 @@ sub by_sum{
 
 sub get_best_obs{
     my ($matrix, @rows) = @_;
-    my @sorted = sort{by_sum($matrix->{row}->[$b]) <=> 
+    my @sorted = sort{by_sum($matrix->{row}->[$b]) <=>
                       by_sum($matrix->{row}->[$a])}@rows;
     my $best = $sorted[0];
     return join("\t",@{$matrix->{row}->[$best]})."\n";
@@ -320,7 +320,7 @@ sub groupbest{
 }
 
 #
-# Operation 
+# Operation
 #
 
 sub math_log{

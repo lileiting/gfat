@@ -68,10 +68,10 @@ sub main{
         "intersection" => \$options{intersection},
         "1|first"      => \$options{first},
         "2|second"     => \$options{second},
-        "help"         => \$options{help}     
+        "help"         => \$options{help}
     );
-    usage if $options{help} or @ARGV != 2 or 
-        (not $options{union} and not $options{intersection} and 
+    usage if $options{help} or @ARGV != 2 or
+        (not $options{union} and not $options{intersection} and
          not $options{first} and not $options{second});
     my ($file1, $file2) = @ARGV;
     my $list1 = load_listfile($file1);

@@ -3,7 +3,7 @@ use warnings;
 use strict;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
-@EXPORT = qw(get_inverse_table get_codon_table 
+@EXPORT = qw(get_inverse_table get_codon_table
              print_inverse_table print_codon_table);
 @EXPORT_OK = @EXPORT;
 
@@ -52,7 +52,7 @@ sub get_codon_table{
 
 sub print_inverse_table{
     my %inverse_table = get_inverse_table;
-    for my $aa (sort {$inverse_table{$a}->[0] cmp $inverse_table{$b}->[0]} 
+    for my $aa (sort {$inverse_table{$a}->[0] cmp $inverse_table{$b}->[0]}
                 keys %inverse_table){
         my @info = @{$inverse_table{$aa}};
         printf "%s\t%s\t%-14s\t%s\n",

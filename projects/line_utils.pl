@@ -12,9 +12,9 @@ sub actions{
     return {
         linesep    => [ \&line_separator_convert, "Line separator convert (win/mac/linux)" ],
         length     => [ \&line_length,            "Print length of each line"              ],
-        maxlen     => [ \&maxlen,                 "Max line length"                        ], 
-        cc         => [ \&char_count,             "Character count"                        ], 
-        vcc        => [ \&visible_char_count,     "Visible character count"                ], 
+        maxlen     => [ \&maxlen,                 "Max line length"                        ],
+        cc         => [ \&char_count,             "Character count"                        ],
+        vcc        => [ \&visible_char_count,     "Visible character count"                ],
         ivcc       => [ \&invisible_char_count,   "Invisable character count"              ]
     };
 }
@@ -30,13 +30,13 @@ base_main(actions) unless caller;
 #
 
 sub line_separator_convert{
-    my $options = get_options(qw/linesep/, 
+    my $options = get_options(qw/linesep/,
                       "from=s" => "win/mac/linux/auto (Default: Auto)",
                       "to=s"   => "win/mac/linux (Default: Linux)"
                   );
     my ($in_fh, $out_fh, $from, $to) = @{$options}{qw/in_fh out_fh from to/};
     die "ERROR: from and to should all be defined\n" unless $from and $to;
-    die "ERROR: $from! It should be win/mac/linux" 
+    die "ERROR: $from! It should be win/mac/linux"
         unless $from =~ /win|mac|linux/i;
     die "ERROR: $to! It should be win/mac/linux"
         unless $to =~ /win|mac|linux/i;
@@ -49,7 +49,7 @@ sub line_separator_convert{
     close_fh($in_fh, $out_fh);
 }
 
-# 
+#
 # Max line length
 #
 
@@ -73,7 +73,7 @@ sub maxlen{
     close_fh($in_fh, $out_fh);
 }
 
-# 
+#
 # Character count
 #
 
@@ -110,4 +110,3 @@ sub char_count_main{
 sub char_count           { char_count_main(q/cc/)   }
 sub visible_char_count   { char_count_main(q/vcc/)  }
 sub invisible_char_count { char_count_main(q/ivcc/) }
-

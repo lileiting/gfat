@@ -17,22 +17,22 @@ DESCRIPTION
     This script will extract chromosome, start position, end
     position and ID information from GFF file, and create a
     hash array to map old IDs in input fasta file to new IDs.
-    The old ID format is like chr:start-end, where 
-    start_in_fasta = start_in_gff - 1, and new ID is the ID 
+    The old ID format is like chr:start-end, where
+    start_in_fasta = start_in_gff - 1, and new ID is the ID
     key in gff file. If there was no ID information in a GFF
     line, that line would be ignored.
 
     Comments start with # and blank lines would be ignored
-    before processing. 
+    before processing.
 
     Output file would be writen to a new file <in.fasta>.out
 
 OPTIONS
 
-    -d,--desc,--description 
-        Print old IDs as description in new sequence 
+    -d,--desc,--description
+        Print old IDs as description in new sequence
         default: no
-                             
+
     -h,--help
         Print this usage
 
@@ -60,7 +60,7 @@ sub main{
             my $old_id = $1;
             die "CAUTION: no corresponding ID for $old_id!!!"
                 unless $id_map{$old_id};
-            print $out_fh ">", $id_map{$old_id}, 
+            print $out_fh ">", $id_map{$old_id},
                              $desc ? " $old_id" : "",
                               "\n";
         }

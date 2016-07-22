@@ -57,7 +57,7 @@ local $Text::Wrap::columns = $GFAT::Config::textwidth + 1;
                                     world => [\&world, "Print world"]};
             base_usage($actions_hash_ref);
 
-  Function: Resolve the information in the actions hash and 
+  Function: Resolve the information in the actions hash and
             print the base usage information. Description is optional.
 
   Returns : Exit the program
@@ -76,14 +76,14 @@ sub _multi_line{
 
 sub _desc_format{
     my $str = shift;
-    return "\nDescription:\n" . 
+    return "\nDescription:\n" .
         wrap(' ' x 4, ' ' x 4, $str)."\n";
 }
 
 sub base_usage{
     my $actions_hash_ref = shift;
     my %actions = %$actions_hash_ref;
-    my $description = $actions{"-description"} ? 
+    my $description = $actions{"-description"} ?
         _desc_format($actions{"-description"}) : '';
     delete $actions{"-description"} if $actions{"-description"};
     print <<USAGE;
@@ -143,7 +143,7 @@ sub base_main{
 
   Returns : Just exit the program
 
-  Args    : The command name. 
+  Args    : The command name.
 
 =cut
 
@@ -188,13 +188,13 @@ USAGE
             my $options = get_options(q/cmd/, "header" => "Print header",
                                               "footer" => "Print footer");
 
-  Function: Define options. By default, there are three options 
-            available, input, output, and help. Adding additional 
+  Function: Define options. By default, there are three options
+            available, input, output, and help. Adding additional
             options is permitted.
 
   Returns : An hash reference stored option values
 
-  Args    : The command, with or without one or more options defination 
+  Args    : The command, with or without one or more options defination
             pairs
 
 =cut
@@ -264,9 +264,9 @@ sub get_fh{
 sub close_fh{
     my @fhs = @_;
     for my $fh (@fhs){
-        close $fh unless 
-               $fh eq \*STDIN  or 
-               $fh eq \*STDOUT or 
+        close $fh unless
+               $fh eq \*STDIN  or
+               $fh eq \*STDOUT or
                $fh eq \*STDERR;
     }
 }
@@ -277,7 +277,7 @@ sub close_fh{
   Usage   : my %list = load_listfile($listfile);
             my %list = load_listfile(@listfiles);
 
-  Function: Load names in a list file into a hash. 
+  Function: Load names in a list file into a hash.
             Comments start with # will be ignored.
             Blank lines will be ignored
 

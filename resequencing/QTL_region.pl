@@ -126,16 +126,15 @@ sub find_markers{
     my ($markers, $window, $chr, $start, $end) = @_;
     my @markers;
     for my $marker (keys %{$markers}){
-        my ($marker_chr, $marker_start, $marker_end) = 
+        my ($marker_chr, $marker_start, $marker_end) =
             @{$markers->{$marker}};
         next unless $chr eq $marker_chr;
         my $middle = ($start + $end) / 2;
         my $marker_middle = ($marker_start + $marker_end) / 2;
         push @markers, $marker if abs($middle - $marker_middle) <= $window;
     }
-    
+
     return scalar(@markers)."\t".(@markers ? join(",", @markers) : 'NA');
 }
 
 __END__
-
