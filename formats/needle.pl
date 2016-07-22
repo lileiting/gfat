@@ -11,12 +11,12 @@ USAGE
     $FindBin::Script <input.needle> [<input.needle> ...]
 
 DESCRIPTION
-    This is a simple program to extract some basic 
+    This is a simple program to extract some basic
     information from alignment files with emboss format,
     i.e. results from programs of needle or water with
     default format (pair, or srspair).
 
-    Generally, 1) use bp_sreformat.pl to convert the 
+    Generally, 1) use bp_sreformat.pl to convert the
     format of alignment files; 2) use bioaln to do some
     basic operations.
 
@@ -55,4 +55,3 @@ sub process_file{
     }
     close $fh;
 }
-

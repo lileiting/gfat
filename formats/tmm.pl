@@ -35,7 +35,7 @@ base_main(actions);
 
 sub simplify_topology{
     my $str = shift;
-    die "CAUTION: Topology is empty!" 
+    die "CAUTION: Topology is empty!"
         unless $str =~ /^Topology=([io\-\d]+)$/;
     $str = $1;
     return '-' if $str eq 'o' or $str eq 'o';
@@ -58,4 +58,3 @@ sub simplify{
     }
     close_fh($in_fh, $out_fh);
 }
-

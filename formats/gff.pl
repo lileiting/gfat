@@ -6,48 +6,11 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
-sub main_usage{
-    print <<"end_of_usage";
-
-Usage
-    $FindBin::Script ACTION [OPTIONS]
-
-Availabe ACTIONs:
-    chrlist  | Print chromosome list
-    genelist | Print gene list (exon/intron number might not be 
-               accurate for situations that intron located in UTRs)
-    getintron| Get intron postions
-    getseq   | Get sequences
-    gff2info | Convert gff to a gene information as Gene_ID Chromosome
-               Length_of_gene No_of_exons Avg_exons Avg_introns
-    groups   | Get a subset of GFF based on a two columns files
-               (gene ID and their groups)
-
-end_of_usage
-    exit;
-}
-
-sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }else{
-        die "CAUTION: action $action was not defined!\n";
-    }
-}
-
-main() unless caller;
-
-###########
-# Actions #
-###########
-
 #~~~~~~~~~~~~~gff data structure~~~~~~~~~~~~#
 
 # Data structure
-# HASH => GeneID => Type(gene, mRNA, CDS, exon, etc) 
-#   => [type_entry1, type_entry2, etc] X 
+# HASH => GeneID => Type(gene, mRNA, CDS, exon, etc)
+#   => [type_entry1, type_entry2, etc] X
 #      [Chr, Start, End, Strand]
 # $data{Pbr01.1}->{gene}->[0]->[0] = $chr
 # $data{Pbr01.1}->{mRNA}->[0]->[0] = $chr
@@ -71,7 +34,7 @@ sub _gff_entry{
 
 sub _load_gff_file{
     #my $in_fh = shift;
-    my %data; # %data => Gene ID => 
+    my %data; # %data => Gene ID =>
     print STDERR "Loading GFF file ...\n";
     for my $in_fh (@_){
         while(<$in_fh>){
@@ -147,7 +110,7 @@ sub getintron{
     my $args = new_action(
         -description => 'Read a GFF and output a list of intron entries'
     );
-    my %data; 
+    my %data;
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
             next if /^\s*$/ or /^\s*#/;
@@ -172,8 +135,8 @@ sub getintron{
             my $present_start = $starts[$i];
             if($present_start - $previous_end > 1){
                 $intron_count++;
-                printf "%s\t%d\t%d\t%s\tID=%s_intron_%d;Parent=%s;length=%d\n", $chr, 
-                    $previous_end + 1, $present_start - 1, 
+                printf "%s\t%d\t%d\t%s\tID=%s_intron_%d;Parent=%s;length=%d\n", $chr,
+                    $previous_end + 1, $present_start - 1,
                     $strand, $id, $intron_count,$id,
                     ($present_start - 1) - ($previous_end + 1) + 1;
             }
@@ -197,8 +160,8 @@ sub getseq{
         -desc => 'Get sequences',
         -options => {
             "db|d=s"   => 'Fasta sequence used to get sequences',
-            "type|t=s" => 'Specify which feature type was used to get 
-                           sequences' 
+            "type|t=s" => 'Specify which feature type was used to get
+                           sequences'
                     }
     );
     my $seqdb = $args->{options}->{db};
@@ -208,14 +171,14 @@ sub getseq{
     my $db = Bio::DB::Fasta->new($seqdb);
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
-            my ($chr,$type, $start, $end,$strand,$ann) = 
+            my ($chr,$type, $start, $end,$strand,$ann) =
                 (split /\t/)[0,2,3,4,6,8];
             next unless $type eq $seqtype;
             my $seqid = _get_seqid_from_ann($ann);
-            my $seqstr = $strand eq '+' ? 
+            my $seqstr = $strand eq '+' ?
                 $db->seq($chr, $start, $end) :
                 $db->seq($chr, $end, $start);
-            die "CAUTION: unable to obtain sequence for $seqid from $seqdb\n" 
+            die "CAUTION: unable to obtain sequence for $seqid from $seqdb\n"
                 unless $seqstr;
             $seqstr =~ s/(.{60})/$1\n/g;
             chomp $seqstr;
@@ -257,9 +220,9 @@ sub _create_fhs{
 sub groups{
     my $args = new_action(
         -description => 'Get subset GFF information based on a two-column
-                         file, and created multiple files based on the 
+                         file, and created multiple files based on the
                          second column',
-        -options     => { "listfile|l=s" => 'A two-column list file with 
+        -options     => { "listfile|l=s" => 'A two-column list file with
                                             gene ID and the belonging groups'
                         }
     );
@@ -281,7 +244,7 @@ sub groups{
 
 sub gff2info{
     my $args = new_action(
-        -desc => 'Convert gff to a gene information as 
+        -desc => 'Convert gff to a gene information as
 Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
     );
 
@@ -300,17 +263,17 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
 
             delete $ann{'ID'} if $txt[2] eq 'CDS';
             $gene_list{$ann{'ID'}}++ if $txt[2] eq 'mRNA';
- 
+
             if($ann{'ID'}){ # mRNA
-                $info{$ann{'ID'}}->{'chr'} = $txt[0]; 
+                $info{$ann{'ID'}}->{'chr'} = $txt[0];
                 $info{$ann{'ID'}}->{'typ'} = $txt[2];
                 $info{$ann{'ID'}}->{'sta'} = $txt[3];
                 $info{$ann{'ID'}}->{'end'} = $txt[4];
                 $info{$ann{'ID'}}->{'str'} = $txt[6];
             }elsif($ann{'Parent'}){ # UTR or CDS
                 $info{$ann{'Parent'}}->{'count'}->{$txt[2]}++; # No. of CDSs
-        
-                $info{$ann{'Parent'}}->{$txt[2]}->{ 
+
+                $info{$ann{'Parent'}}->{$txt[2]}->{
                     $info{$ann{'Parent'}}->{'count'}->{$txt[2]}
                     }->{'sta'} = $txt[3]; # CDS -> start
                 $info{$ann{'Parent'}}->{$txt[2]}->{
@@ -348,10 +311,10 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
         for my $element (keys %hash){
             for my $i (@{$hash{$element}}){
 
-                $len_exons += $info{$id}->{$element}->{$i}->{'end'} 
+                $len_exons += $info{$id}->{$element}->{$i}->{'end'}
                         - $info{$id}->{$element}->{$i}->{'sta'} + 1;
-                push @border, 
-                    $info{$id}->{$element}->{$i}->{'end'}, 
+                push @border,
+                    $info{$id}->{$element}->{$i}->{'end'},
                     $info{$id}->{$element}->{$i}->{'sta'};
             }
         }
@@ -360,7 +323,7 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
         my($mRNA_start,$mRNA_end) = (sort {$a <=> $b} @border)[0,-1];
         my $avg_intron;
         if($no_of_exons > 1){
-            $avg_intron = ($mRNA_end - $mRNA_start + 1 - $len_exons) 
+            $avg_intron = ($mRNA_end - $mRNA_start + 1 - $len_exons)
                     / ($no_of_exons - 1) ; # No. of introns
         }else{
             $avg_intron = 0;
@@ -371,9 +334,28 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
             $info{$id}->{'chr'},
             $info{$id}->{'end'} - $info{$id}->{'sta'} + 1,
             $no_of_exons, # No. of CDSs
-            $avg_exon, 
+            $avg_exon,
             $avg_intron;
     }
 }
+
+sub main{
+    my %actions = (
+        chrlist  => 'Print chromosome list',
+        genelist => 'Print gene list (exon/intron number might not be
+                   accurate for situations that intron located in UTRs)',
+        getintron=> 'Get intron postions',
+        getseq   => 'Get sequences',
+        gff2info => 'Convert gff to a gene information as Gene_ID Chromosome
+                    Length_of_gene No_of_exons Avg_exons Avg_introns',
+        groups   => 'Get a subset of GFF based on a two columns files
+                   (gene ID and their groups)',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+
+}
+
+main() unless caller;
 
 __END__

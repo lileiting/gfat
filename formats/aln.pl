@@ -8,21 +8,6 @@ use GFAT::ActionNew;
 use Bio::AlignIO;
 use Text::Abbrev;
 
-sub main{
-    my %actions = (
-        rgaps    => 'Remove gaps in alignment',
-        stats    => 'Print statistics of alignments',
-    );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
-}
-
-main() unless caller;
-
-############################################################
-# Defination of Actions                                    #
-############################################################
-
 sub get_aln_format{
     my $format = shift;
     return 'fasta' unless $format;
@@ -196,5 +181,16 @@ sub stats{
         }
     }
 }
+
+sub main{
+    my %actions = (
+        rgaps    => 'Remove gaps in alignment',
+        stats    => 'Print statistics of alignments',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main() unless caller;
 
 __END__

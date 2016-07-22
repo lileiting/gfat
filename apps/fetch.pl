@@ -7,21 +7,6 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use Bio::Perl;
 
-sub main{
-    my %actions = (
-        genbank => 'Fetch sequences from genbank',
-    );
-    script_usage(%actions) unless @ARGV;
-    my $action = check_action_name(shift @ARGV);
-    &{\&{$action}};
-}
-
-main unless caller;
-
-############################################################
-# Defination of Actions                                    #
-############################################################
-
 sub genbank{
     my $args = new_action(
         -desc => 'Fetch sequences from genbank, eg. NM_022163.3, GI:169658372'
@@ -34,5 +19,15 @@ sub genbank{
     }
 
 }
+
+sub main{
+    my %actions = (
+        genbank => 'Fetch sequences from genbank',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main unless caller;
 
 __END__

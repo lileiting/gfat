@@ -15,7 +15,7 @@ USAGE
 
 DESCRIPTION
   Processing results from WoLFPSORT.
-  To run WoLFPSORT in command line: 
+  To run WoLFPSORT in command line:
     runWolfPsortSummaryOnly.pl plant < Query.fasta
 
 OPTIONS
@@ -81,7 +81,7 @@ sub process_wolfpsort{
 
 sub main{
     my $options = get_options;
-    process_wolfpsort($options);    
+    process_wolfpsort($options);
 }
 
 main() unless caller;

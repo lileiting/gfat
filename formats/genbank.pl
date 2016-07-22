@@ -21,7 +21,7 @@ sub main{
     while(my $seq = $in->next_seq){
         my $seq_id = $seq->display_id;
         my $desc = $seq->desc;
-        print qq/$desc\n/ and next 
+        print qq/$desc\n/ and next
             unless $desc =~ /satellite.+?((Tsu|EMPc|NH|NB|BGT)\w+)/i;
         my $ssr_id = $1;
         my @primer_seqs;

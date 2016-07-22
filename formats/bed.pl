@@ -7,41 +7,6 @@ use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
-sub main_usage{
-    my $category = basename $FindBin::RealBin;
-    print <<"end_of_usage";
-
-USAGE
-    gfat.pl $category $FindBin::Script ACTION [OPTIONS]
-
-DESCRIPTION
-    Manipulating bed files
-
-OPTIONS
-    isPcr   | Processing results from isPcr
-    cmp     | Compare isPcr results with its input SSR list
-
-end_of_usage
-    exit;
-}
-
-sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }
-    else{
-        die "CAUTION: action $action was not defined!\n";
-    }
-}
-
-main() unless caller;
-
-############################################################
-# Defination of Actions                                    #
-############################################################
-
 sub cmp{
     my $args = new_action(
         -desc => 'Compare SSR name in bed file with the input SSR name list',
@@ -114,3 +79,16 @@ sub isPcr{
         }
     }
 }
+
+sub main{
+    my %actions = (
+        isPcr   => 'Processing results from isPcr',
+        cmp     => 'Compare isPcr results with its input SSR list',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main() unless caller;
+
+__END__

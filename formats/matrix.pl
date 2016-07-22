@@ -7,38 +7,6 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
-sub main_usage{
-    my $folder = basename $FindBin::RealBin;
-    print <<"end_of_usage";
-
-USAGE
-    gfat.pl $folder $FindBin::Script ACTION [OPTIONS]
-
-ACTIONS
-    validate | validate if the matrix is correct
-
-end_of_usage
-    exit;
-}
-
-sub main{
-    main_usage unless @ARGV;
-    our $format = 'fasta';
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }
-    else{
-        die "CAUTION: action $action was not defined!\n";
-    }
-}
-
-main unless caller;
-
-############################################################
-# Defination of Actions                                    #
-############################################################
-
 sub validate{
     my $args = new_action(
         -desc => 'validate if the matrix is correct',
@@ -69,4 +37,15 @@ sub validate{
         print "Missing: ", $missing, "\t", $stats{missing}->{$missing}, "\n";
     }
 }
+
+sub main{
+    my %actions = (
+        'validate' => 'validate if the matrix is correct',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main unless caller;
+
 __END__

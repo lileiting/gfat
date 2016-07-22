@@ -11,11 +11,11 @@ use GFAT::ActionBase qw(base_main get_fh);
 sub actions{
     return {
         uniq  => [
-            \&uniq_domains, 
+            \&uniq_domains,
             "Print uniq domains from a domtblout file"
         ],
         conserved => [
-            \&conserved_domains, 
+            \&conserved_domains,
             "Print all possible domains and align by first
             conserved domain(s)"
         ]
@@ -55,7 +55,7 @@ sub load_domtblout_file{
         push @{$data{$gene}},
             {gene     => $gene,
              query    => $query,
-             evalue   => $evalue, 
+             evalue   => $evalue,
              c_evalue => $c_evalue,
              ali_from => $ali_from,
              ali_to   => $ali_to};
@@ -96,7 +96,7 @@ sub get_uniq_domains {
     my $data = shift;
     my @uniq_domains;
     for my $gene (sort {$a cmp $b} keys %$data){
-        my @domains = sort {$a->{ali_from} <=> 
+        my @domains = sort {$a->{ali_from} <=>
                             $b->{ali_from}
                            }@{$data->{$gene}};
         for(my $i = 0; $i <= $#domains; $i++){
@@ -129,8 +129,8 @@ sub print_genes{
 }
 
 sub uniq_domains{
-    my ($in_fh, $out_fh, $options) = get_fh(q/uniq/, 
-        "g|gene"  => 
+    my ($in_fh, $out_fh, $options) = get_fh(q/uniq/,
+        "g|gene"  =>
         "            Print one gene per line [default: one domain per line]",
        );
     my $print_genes = $options->{gene};
@@ -176,7 +176,7 @@ sub print_conserved_domains{
         my @domains = @{$genes{$gene}};
         my $conserved_pos = _get_conserved_pos(\@domains,\%conserved);
         $before = $conserved_pos if $conserved_pos > $before;
-        $after  = scalar(@domains) - $conserved_pos 
+        $after  = scalar(@domains) - $conserved_pos
             if (scalar(@domains) - $conserved_pos) > $after;
     }
 
@@ -196,10 +196,10 @@ sub print_conserved_domains{
 }
 
 sub conserved_domains{
-    my ($in_fh, $out_fh, $options) = get_fh(q/conserved/, 
+    my ($in_fh, $out_fh, $options) = get_fh(q/conserved/,
         "c|conserved=s@" => "STR      conserved domains, could be multiple"
         );
-    die "CAUTION: conserved domains should be specified!" 
+    die "CAUTION: conserved domains should be specified!"
         unless $options->{conserved};
     my @conserved_domains = split(/,/,join(',',@{$options->{conserved}}));
 

@@ -2,47 +2,12 @@
 
 use warnings;
 use strict;
-
 use FindBin;
 use Getopt::Long;
 use Bio::Perl;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::LoadFile qw(load_listfile);
-
-sub main_usage{
-    print <<"usage";
-
-USAGE
-    $FindBin::Script ACTION [OPTIONS]
-
-ACTION
-    accession   | Print a list of the accession numbers
-    annotations  | Print all available annotations
-    fasta        | Convert swiss format to fasta format
-    genename     | Print gene name
-    getseq       | Get some sequences from a big file
-    publications | Print publications for each entry
-
-usage
-    exit;
-}
-
-sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-         &{\&{$action}}
-    }else{
-        print "CAUTION: Action $action was not defined!\n";
-        main_usage;
-    }
-}
-
-main() unless caller;
-
-###########
-# ACTIONS #
-###########
+use GFAT::ActionNew;
 
 sub accession_usage{
     print <<"usage";
@@ -133,14 +98,14 @@ usage
 sub fasta{
      fasta_usage unless @ARGV;
      my %options;
-     GetOptions(\%options, 
+     GetOptions(\%options,
           "infile|i=s",
      );
      fasta_usage unless $options{infile};
 
      my $stream = Bio::SeqIO->new(-file => $options{infile},
                                   -format => 'swiss');
-     my $out    = Bio::SeqIO->new(-fh => \*STDOUT, 
+     my $out    = Bio::SeqIO->new(-fh => \*STDOUT,
                                   -format => 'fasta');
 
      while( my $seq = $stream->next_seq() ){
@@ -273,7 +238,7 @@ sub publications{
     publications_usage unless $options{infile};
     my $stream = Bio::SeqIO->new(-file => $options{infile},
                                  -format => 'swiss');
-    
+
     while( my $seq = $stream->next_seq() ){
         my $acc = $seq->accession;
         my $id = $seq->display_id;
@@ -284,7 +249,7 @@ sub publications{
         my @references = $seq->annotation->get_Annotations('reference');
         for my $reference (@references){
             next unless $reference->display_text;
-            print join("\t", 
+            print join("\t",
                       $acc, $id, $desc,$comments,
                       $reference->location,
                       $reference->display_text
@@ -292,3 +257,20 @@ sub publications{
         }
     }
 }
+
+sub main{
+    my %actions = (
+        accession    => 'Print a list of the accession numbers',
+        annotations  => 'Print all available annotations',
+        fasta        => 'Convert swiss format to fasta format',
+        genename     => 'Print gene name',
+        getseq       => 'Get some sequences from a big file',
+        publications => 'Print publications for each entry',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main unless caller;
+
+__END__

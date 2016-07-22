@@ -6,34 +6,6 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
-sub main_usage{
-    print <<"usage";
-
-USAGE
-    $FindBin::Script ACTION [OPTIONS]
-
-DESCRIPTION
-
-AVAILABLE ACTIONS
-    column | Reformat the *.clstr file into column style
-
-usage
-    exit
-}
-
-sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    main_usage unless $action =~ /^[a-z]/;
-    if(defined &{\&{$action}}){
-        &{\&{$action}}
-    }else{
-        die "CAUTION: Action $action was not defined!";
-    }
-}
-
-main unless caller;
-
 sub column{
     my $args = new_action(
         -desc => 'Reformat the *.clustr file into column style'
@@ -53,5 +25,15 @@ sub column{
         }
     }
 }
+
+sub main{
+    my %actions = (
+        column => 'Reformat the *.clstr file into column style',
+    );
+    script_usage(%actions) unless @ARGV;
+    &{\&{&get_action_name}};
+}
+
+main unless caller;
 
 __END__

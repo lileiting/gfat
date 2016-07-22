@@ -16,7 +16,7 @@ ACTIONS
     uniq       | Print uniq domains from a domtblout file
     conserved  | Print all possible domains and align by first
                  conserved domain(s)
-                 
+
 usage
     exit;
 }
@@ -36,7 +36,7 @@ main() unless caller;
 
 sub new_usage{
     my %args = @_;
-    my $options_usage = '    '.join("\n    ", 
+    my $options_usage = '    '.join("\n    ",
         sort {$a cmp $b}keys %{$args{-options}});
     my $usage = "
 USAGE
@@ -166,17 +166,17 @@ sub uniq{
         -action => 'uniq',
         -description => 'Print uniq domains from a domtblout file',
         -options => {
-            "gene|g" => 'Print one gene per line 
+            "gene|g" => 'Print one gene per line
                         [default: one domain per line]'
         }
     );
-    
+
     my $print_genes = $action->{options}->{gene};
     my $data = load_domtblout_file($action->{in_fh});
     my $uniq_domains = get_uniq_domains($data);
     if($print_genes){print_genes($uniq_domains)}
     else{print_domains($uniq_domains)}
-    
+
 }
 
 sub _get_conserved_pos{
@@ -204,7 +204,7 @@ sub print_conserved_domains{
         my @domains = @{$genes{$gene}};
         my $conserved_pos = _get_conserved_pos(\@domains,\%conserved);
         $before = $conserved_pos if $conserved_pos > $before;
-        $after  = scalar(@domains) - $conserved_pos 
+        $after  = scalar(@domains) - $conserved_pos
             if (scalar(@domains) - $conserved_pos) > $after;
     }
 
@@ -232,10 +232,10 @@ sub conserved{
             "conserved|c=s@" => 'conserved domains, could be multiple'
         }
     );
-    
-    die "CAUTION: conserved domains should be specified!" 
+
+    die "CAUTION: conserved domains should be specified!"
         unless $action->{options}->{conserved};
-    my @conserved_domains = split(/,/, join(',', 
+    my @conserved_domains = split(/,/, join(',',
                             @{$action->{options}->{conserved}}));
 
     my $data = load_domtblout_file($action->{in_fh});
