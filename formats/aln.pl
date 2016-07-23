@@ -187,8 +187,7 @@ sub main{
         rgaps    => 'Remove gaps in alignment',
         stats    => 'Print statistics of alignments',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 main() unless caller;

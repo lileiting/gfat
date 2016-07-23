@@ -27,8 +27,7 @@ sub main{
     my %actions = (
         view  => 'view JSON data',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 main unless caller;

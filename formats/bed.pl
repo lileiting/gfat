@@ -85,8 +85,7 @@ sub main{
         isPcr   => 'Processing results from isPcr',
         cmp     => 'Compare isPcr results with its input SSR list',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 main() unless caller;

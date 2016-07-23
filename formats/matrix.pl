@@ -42,8 +42,7 @@ sub main{
     my %actions = (
         'validate' => 'validate if the matrix is correct',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 main unless caller;

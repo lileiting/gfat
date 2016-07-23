@@ -351,8 +351,7 @@ sub main{
         groups   => 'Get a subset of GFF based on a two columns files
                    (gene ID and their groups)',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 
 }
 

@@ -11,7 +11,7 @@ use Text::Abbrev;
 use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action get_action_name script_usage);
+@EXPORT = qw(new_action run_action);
 @EXPORT_OK = @EXPORT;
 
 sub _action_usage{
@@ -104,47 +104,54 @@ sub new_action{
     return \%action;
 }
 
-sub get_action_name{
-    our $action = shift @main::ARGV;
-    die "WARNING: Invalid action name '$action!'\n" unless $action =~ /^\w+$/;
+sub run_action{
     my $script = $0;
-    my @actions;
+    my %subroutines;
     open my $fh, $script or die "$!:$script";
     while(<$fh>){
         next unless /^sub\s+(\w+)/;
         my $subroutine = $1;
-        next if $subroutine =~ /^main|^new|^_/;
-        push @actions, $subroutine;
+        next if $subroutine =~ /^main|^new|^_|usage$/;
+        $subroutines{$subroutine} = 1;
     }
     close $fh;
-    my %actions = abbrev @actions;
-    $action = $actions{$action}
-        // die "CAUTION: action '$action' was not defined!\n";
-    return $action;
-}
-
-sub script_usage{
-    my %actions = @_;
-    my $dir = basename $FindBin::RealBin;
-    my $script = $FindBin::RealScript;
-    print <<"end_of_usage";
+    if(@main::ARGV){
+        our $action = shift @main::ARGV;
+        die "WARNING: Invalid action name '$action!'\n"
+            unless $action =~ /^\w+$/;
+        my %actions = abbrev keys %subroutines;
+        $action = $actions{$action}
+            // die "CAUTION: action '$action' was not defined!\n";
+        return $action;
+    }
+    else{
+        my %actions = @_;
+        map{die "CAUTION: No subroutine with the name: $_!\n"
+                unless exists $subroutines{$_};
+            $subroutines{$_} = 2} keys %actions;
+        map{die "CAUTION: Description for '$_' was missing!\n"
+                unless $subroutines{$_} == 2} keys %subroutines;
+        my $dir = basename $FindBin::RealBin;
+        my $script = $FindBin::RealScript;
+        print <<"end_of_usage";
 
 USAGE
     gfat.pl $dir $script ACTION
 
 ACTIONS
 end_of_usage
-    my $max_action_len = max(map{length}keys %actions);
-    for my $action ( sort {$a cmp $b} keys %actions){
-        my $action_desc = $actions{$action};
-        $action_desc =~ s/[\s\r\n]+/ /g;
-        $action_desc = wrap(' ' x ($max_action_len + 7),
-                            ' ' x ($max_action_len + 7), $action_desc);
-        $action_desc =~ s/^\s+//;
-        printf "    %${max_action_len}s | %s\n", $action, $action_desc;
+        my $max_action_len = max(map{length}keys %actions);
+        for my $action (sort {$a cmp $b} keys %actions){
+            my $action_desc = $actions{$action};
+            $action_desc =~ s/[\s\r\n]+/ /g;
+            $action_desc = wrap(' ' x ($max_action_len + 7),
+                                ' ' x ($max_action_len + 7), $action_desc);
+            $action_desc =~ s/^\s+//;
+            printf "    %${max_action_len}s | %s\n", $action, $action_desc;
+        }
+        print "\n";
+        exit;
     }
-    print "\n";
-    exit;
 }
 
 1;

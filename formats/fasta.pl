@@ -767,8 +767,7 @@ sub main{
         totab    => 'Convert FASTA format sequence to 2-column format',
         translate=> 'Translate CDS to protein sequences',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 our $in_desc = '<in.fasta> [<in.fasta> ...]';

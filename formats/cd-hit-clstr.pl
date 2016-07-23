@@ -30,8 +30,7 @@ sub main{
     my %actions = (
         column => 'Reformat the *.clstr file into column style',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
 main unless caller;
