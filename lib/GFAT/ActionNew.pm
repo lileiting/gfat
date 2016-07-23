@@ -14,55 +14,6 @@ use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_action run_action);
 @EXPORT_OK = @EXPORT;
 
-sub _action_usage{
-    my %args = @_;
-    $args{-desc} =~ s/[\s\r\n]+/ /g;
-    $args{-desc} = wrap("    ", "    ", $args{-desc});
-    #my $file_info = $args{-filenumber} == 1 ?
-    #    '<infile|term>' :
-    #    '<infile|term> [<infile|term> ...]';
-    my $dir = basename $FindBin::RealBin;
-    my $script = $FindBin::Script;
-    my $action = $GFAT::ActionNew::action;
-    my $in_desc = $args{-in_desc} // $main::in_desc //
-       '<infile|term> [<infile|term> ...]';
-    print <<"end_of_usage";
-
-USAGE
-    gfat.pl $dir $script $action [OPTIONS] $in_desc
-
-DESCRIPTION
-$args{-desc}
-
-OPTIONS
-end_of_usage
-
-    my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
-    my $max_opt_len = max(map{my $a = $_; $a =~ s/(=.+)$//; length($a) - 1 + 4
-        }(@opt_keys)); #Prevent original strings be changed
-    my %type = (i => 'INT',
-                s => 'STR',
-                f => 'FLT',  # Real number, eg. 3.14, -6.23E24
-                o => 'EXT'); # Extended integer, Perl style
-    for my $option (@opt_keys){
-        die "ERROR in option: $option"
-            unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
-        my ($long, $short, $type0, $type, $multi) =
-            ($1, $2, $3, $4, $5);
-        my $opt_desc = $args{-options}->{$option};
-        $opt_desc =~ s/[\s\r\n]+/ /g;
-        $opt_desc = wrap(' ' x ($max_opt_len + 9),
-                         ' ' x ($max_opt_len + 9), $opt_desc);
-        $opt_desc =~ s/^\s+//;
-        printf "    %-${max_opt_len}s %s %s\n",
-            "-$short,--$long",
-            $type0 ? $type{$type} : '   ',
-            $opt_desc;
-    }
-    print "\n";
-    exit;
-}
-
 sub new_action{
     my %args = @_;
     my %action;
@@ -75,7 +26,50 @@ sub new_action{
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
     print_version if $options{version};
-    _action_usage(%args) if $options{help} or (@ARGV == 0 and -t STDIN);
+    if($options{help} or (@ARGV == 0 and -t STDIN)){
+        $args{-desc} =~ s/[\s\r\n]+/ /g;
+        $args{-desc} = wrap("    ", "    ", $args{-desc});
+        my $dir = basename $FindBin::RealBin;
+        my $script = $FindBin::Script;
+        my $action = $GFAT::ActionNew::action;
+        my $in_desc = $args{-in_desc} // $main::in_desc //
+           '<infile|term> [<infile|term> ...]';
+        print <<"end_of_usage";
+
+USAGE
+    gfat.pl $dir $script $action [OPTIONS] $in_desc
+
+DESCRIPTION
+$args{-desc}
+
+OPTIONS
+end_of_usage
+
+        my @opt_keys = sort{$a cmp $b}(keys %{$args{-options}});
+        my $max_opt_len = max(map{my $a = $_; $a =~ s/(=.+)$//; length($a) - 1 + 4
+            }(@opt_keys)); #Prevent original strings be changed
+        my %type = (i => 'INT',
+                    s => 'STR',
+                    f => 'FLT',  # Real number, eg. 3.14, -6.23E24
+                    o => 'EXT'); # Extended integer, Perl style
+        for my $option (@opt_keys){
+            die "ERROR in option: $option"
+                unless $option =~ /(\w+)\|(\w)(=([isfo])([%@]?))?/;
+            my ($long, $short, $type0, $type, $multi) =
+                ($1, $2, $3, $4, $5);
+            my $opt_desc = $args{-options}->{$option};
+            $opt_desc =~ s/[\s\r\n]+/ /g;
+            $opt_desc = wrap(' ' x ($max_opt_len + 9),
+                             ' ' x ($max_opt_len + 9), $opt_desc);
+            $opt_desc =~ s/^\s+//;
+            printf "    %-${max_opt_len}s %s %s\n",
+                "-$short,--$long",
+                $type0 ? $type{$type} : '   ',
+                $opt_desc;
+        }
+        print "\n";
+        exit;
+    }
 
     if(@ARGV){
         for my $infile (@ARGV){
