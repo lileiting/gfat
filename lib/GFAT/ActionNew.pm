@@ -8,11 +8,13 @@ use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
 use Text::Wrap;
 use Text::Abbrev;
-use GFAT::Config;
 use parent qw(Exporter);
 use vars qw(@EXPORT @EXPORT_OK);
 @EXPORT = qw(new_action run_action);
 @EXPORT_OK = @EXPORT;
+our $dir = basename $FindBin::RealBin;
+our $script = $FindBin::RealScript;
+our $action;
 
 sub new_action{
     my %args = @_;
@@ -21,17 +23,12 @@ sub new_action{
     die "Action descriptions were not given!" unless exists $args{-desc};
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name";
-    $args{-options}->{"version|V"} //= 'Print version number and exit';
 
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
-    print_version if $options{version};
     if($options{help} or (@ARGV == 0 and -t STDIN)){
         $args{-desc} =~ s/[\s\r\n]+/ /g;
         $args{-desc} = wrap("    ", "    ", $args{-desc});
-        my $dir = basename $FindBin::RealBin;
-        my $script = $FindBin::Script;
-        my $action = $GFAT::ActionNew::action;
         my $in_desc = $args{-in_desc} // $main::in_desc //
            '<infile|term> [<infile|term> ...]';
         print <<"end_of_usage";
@@ -110,7 +107,7 @@ sub run_action{
     }
     close $fh;
     if(@main::ARGV){
-        our $action = shift @main::ARGV;
+        $action = shift @main::ARGV;
         die "WARNING: Invalid action name '$action!'\n"
             unless $action =~ /^\w+$/;
         my %actions = abbrev keys %subroutines;
@@ -125,8 +122,6 @@ sub run_action{
             $subroutines{$_} = 2} keys %actions;
         map{die "CAUTION: Description for '$_' was missing!\n"
                 unless $subroutines{$_} == 2} keys %subroutines;
-        my $dir = basename $FindBin::RealBin;
-        my $script = $FindBin::RealScript;
         print <<"end_of_usage";
 
 USAGE
