@@ -12,7 +12,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(new_action run_action);
 our @EXPORT_OK = @EXPORT;
 our $dir = basename $FindBin::RealBin;
-our $script = $FindBin::RealScript;
+our $script = basename $FindBin::RealScript, ".pl";
 our $action;
 
 sub new_action{
@@ -96,16 +96,15 @@ end_of_usage
 }
 
 sub run_action{
-    my $script = $0;
     my %subroutines;
-    open my $fh, $script or die "$!:$script";
-    while(<$fh>){
+    open my $script_fh, $0 or die "$!:$0";
+    while(<$script_fh>){
         next unless /^sub\s+(\w+)/;
         my $subroutine = $1;
         next if $subroutine =~ /^main|^new|^_|usage$/;
         $subroutines{$subroutine} = 1;
     }
-    close $fh;
+    close $script_fh;
 
     if(@main::ARGV){
         $action = shift @main::ARGV;
