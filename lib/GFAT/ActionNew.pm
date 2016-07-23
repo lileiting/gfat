@@ -8,10 +8,9 @@ use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
 use Text::Wrap;
 use Text::Abbrev;
-use parent qw(Exporter);
-use vars qw(@EXPORT @EXPORT_OK);
-@EXPORT = qw(new_action run_action);
-@EXPORT_OK = @EXPORT;
+our @ISA = qw(Exporter);
+our @EXPORT = qw(new_action run_action);
+our @EXPORT_OK = @EXPORT;
 our $dir = basename $FindBin::RealBin;
 our $script = $FindBin::RealScript;
 our $action;
@@ -31,6 +30,7 @@ sub new_action{
         $args{-desc} = wrap("    ", "    ", $args{-desc});
         my $in_desc = $args{-in_desc} // $main::in_desc //
            '<infile|term> [<infile|term> ...]';
+        die "WARNING: action name was not defined!\n" unless $action;
         print <<"end_of_usage";
 
 USAGE
@@ -106,6 +106,7 @@ sub run_action{
         $subroutines{$subroutine} = 1;
     }
     close $fh;
+
     if(@main::ARGV){
         $action = shift @main::ARGV;
         die "WARNING: Invalid action name '$action!'\n"
