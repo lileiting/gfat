@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+use List::Util qw(max);
 
 #~~~~~~~~~~~~~gff data structure~~~~~~~~~~~~#
 
@@ -75,6 +76,36 @@ sub chrlist{
     print join("\t", "Chr", @types),"\n";
     for my $chr (sort {_by_number($a) <=> _by_number($b)} keys %chrs){
         print join("\t", $chr, map{$chrs{$chr}->{$_} // 0}@types),"\n";
+    }
+}
+
+sub genedensity{
+    my $args = new_action(
+        -desc => 'Print a statistics of gene density from GFF file',
+        -options => {
+            "window|w=i" => 'Window size [default: 1_000_000]'
+        }
+    );
+    my $window = $args->{options}->{window} // 1_000_000;
+    my %statistics;
+    for my $fh (@{$args->{in_fhs}}){
+        while (<$fh>) {
+            next if /^\s*$/ or /^\s*#/;
+            chomp;
+            my @F = split /\t/;
+            my ($chr, $type, $start, $end) = @F[0,2,3,4];
+            next unless $type eq 'mRNA';
+            my $middle = sprintf "%f", ($start + $end) / 2;
+            my $n = int($middle / $window) + 1;
+            $statistics{$chr}->{$n}++;
+        }
+    }
+    for my $chr (keys %statistics){
+        my $max = keys %{$statistics{$chr}};
+        for my $n (1..$max){
+            print join("\t", $chr, $n * $window / 1_000_000, 
+                $statistics{$chr}->{$n} // 0)."\n";
+        }
     }
 }
 
@@ -323,8 +354,8 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
         my($mRNA_start,$mRNA_end) = (sort {$a <=> $b} @border)[0,-1];
         my $avg_intron;
         if($no_of_exons > 1){
-            $avg_intron = ($mRNA_end - $mRNA_start + 1 - $len_exons)
-                    / ($no_of_exons - 1) ; # No. of introns
+            $avg_intron = ($mRNA_end - $mRNA_start + 1 - $len_exons) /
+                ($no_of_exons - 1) ; # No. of introns
         }else{
             $avg_intron = 0;
         }
@@ -342,6 +373,7 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
 sub main{
     my %actions = (
         chrlist  => 'Print chromosome list',
+        genedensity => 'Print gene density statistics',
         genelist => 'Print gene list (exon/intron number might not be
                    accurate for situations that intron located in UTRs)',
         getintron=> 'Get intron postions',
@@ -355,6 +387,7 @@ sub main{
 
 }
 
+our $in_desc = '<GFF> [<GFF> ...]';
 main() unless caller;
 
 __END__
