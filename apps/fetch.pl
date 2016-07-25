@@ -24,10 +24,10 @@ sub main{
     my %actions = (
         genbank => 'Fetch sequences from genbank',
     );
-    script_usage(%actions) unless @ARGV;
-    &{\&{&get_action_name}};
+    &{\&{run_action(%actions)}};
 }
 
+our $in_desc = '<term> [<term> ...]';
 main unless caller;
 
 __END__
