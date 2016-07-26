@@ -39,7 +39,6 @@ use strict;
 use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw/max/;
 use FindBin;
-use GFAT::Base qw(GetInFh GetOutFh);
 use GFAT::Config;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
@@ -48,6 +47,29 @@ use base qw(Exporter);
 
 use Text::Wrap;
 local $Text::Wrap::columns = $GFAT::Config::textwidth + 1;
+
+sub GetInFh{
+    my $file = shift;
+    my $fh;
+    if($file and $file ne '-'){
+        open $fh, "<", $file or die "$file:$!";
+    }else{
+        $fh = \*STDIN;
+    }
+    return $fh;
+}
+
+sub GetOutFh{
+    my $file = shift;
+    my $fh;
+    if($file and $file ne '-'){
+        open $fh, ">", $file or die "$file:$!";
+    }else{
+        $fh = \*STDOUT;
+    }
+    return $fh;
+}
+
 
 =head2 base_usage
 

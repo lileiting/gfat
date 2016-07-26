@@ -3,9 +3,28 @@
 use warnings;
 use strict;
 use Getopt::Long;
-use FindBin;
-use lib "$FindBin::RealBin/../lib";
-use GFAT::Base qw(GetInFh GetOutFh);
+
+sub GetInFh{
+    my $file = shift;
+    my $fh;
+    if($file and $file ne '-'){
+        open $fh, "<", $file or die "$file:$!";
+    }else{
+        $fh = \*STDIN;
+    }
+    return $fh;
+}
+
+sub GetOutFh{
+    my $file = shift;
+    my $fh;
+    if($file and $file ne '-'){
+        open $fh, ">", $file or die "$file:$!";
+    }else{
+        $fh = \*STDOUT;
+    }
+    return $fh;
+}
 
 sub usage{
     print <<usage;
