@@ -14,6 +14,7 @@ our @EXPORT_OK = @EXPORT;
 our $dir = basename $FindBin::RealBin;
 our $script = basename $FindBin::RealScript, ".pl";
 our $action;
+our $script_desc;
 
 sub new_action{
     my %args = @_;
@@ -117,16 +118,24 @@ sub run_action{
     }
     else{
         my %actions = @_;
+        if(exists $actions{-desc}){
+            $script_desc = $actions{-desc};
+            $script_desc =~ s/[\s\r\n]+/ /g;
+            $script_desc = wrap('    ', '    ', $script_desc);
+            $script_desc = "\nDESCRIPTION\n$script_desc\n";
+            delete $actions{-desc};
+        }
         map{die "CAUTION: No subroutine with the name: $_!\n"
                 unless exists $subroutines{$_};
             $subroutines{$_} = 2} keys %actions;
         map{die "CAUTION: Description for '$_' was missing!\n"
                 unless $subroutines{$_} == 2} keys %subroutines;
+
         print <<"end_of_usage";
 
 USAGE
     gfat.pl $dir $script ACTION
-
+$script_desc
 ACTIONS
 end_of_usage
         my $max_action_len = max(map{length}keys %actions);
