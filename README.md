@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/23478/lileiting/gfat.svg)](https://zenodo.org/badge/latestdoi/23478/lileiting/gfat)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.58774.svg)](http://dx.doi.org/10.5281/zenodo.58774)
 
 # Gene Families and genetic maps Analyses Tools
 
