@@ -14,7 +14,7 @@ our @EXPORT_OK = @EXPORT;
 our $dir = basename $FindBin::RealBin;
 our $script = basename $FindBin::RealScript, ".pl";
 our $action;
-our $script_desc;
+our $script_desc = '';
 
 sub new_action{
     my %args = @_;
@@ -26,7 +26,7 @@ sub new_action{
 
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
-    if($options{help} or (@ARGV == 0 and -t STDIN)){
+    if($options{help} or (scalar(@ARGV) == 0 and -t STDIN)){
         $args{-desc} =~ s/[\s\r\n]+/ /g;
         $args{-desc} = wrap("    ", "    ", $args{-desc});
         my $in_desc = $args{-in_desc} // $main::in_desc //
@@ -69,7 +69,7 @@ end_of_usage
         exit;
     }
 
-    if(@ARGV){
+    if(scalar(@ARGV)){
         for my $infile (@ARGV){
             my $in_fh;
             if($infile eq '-'){
@@ -107,7 +107,7 @@ sub run_action{
     }
     close $script_fh;
 
-    if(@main::ARGV){
+    if(scalar(@main::ARGV)){
         $action = shift @main::ARGV;
         die "WARNING: Invalid action name '$action!'\n"
             unless $action =~ /^\w+$/;

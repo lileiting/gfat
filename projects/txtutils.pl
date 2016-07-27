@@ -5,7 +5,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
-use GFAT::LoadFile;
+our $in_desc = '<tab file> [<tab file> ...]';
 
 sub fgrep {
     my $args = new_action(
@@ -18,16 +18,27 @@ sub fgrep {
                  patterns will be considered simply a set of
                  strings, instead of regular expression patterns. ',
         -options => {
-            "file|f=s" => 'A list of strings, one per line.
+            "listfile|l=s" => 'A list of strings, one per line.
                     Comments are allowed with prefix of "#"',
             "invert_match|v" => 'Selected lines are those not
                       matching any of the specified patterns.',
             "header|H" => 'Header present at the first line'
         }
     );
+    my $listfile = $args->{options}->{listfile};
     die "CAUTION: A file with a list of patterns is required!\n"
-        unless $args->{options}->{file};
-    my $pattern  = load_listfile($args->{options}->{file});
+        unless $listfile;
+    my %pattern;
+    open my $fh, $listfile or die "$!: $listfile\n";
+    while(<$fh>){
+        chomp;
+        next if /^\s*$/ or /^\s*#/;
+        my ($pattern) = split /\s+/;
+        die "Error in list file!\n" if $pattern eq '';
+        $pattern{$pattern}++;
+    }
+    close $fh;
+
     for my $in_fh (@{$args->{in_fhs}}){
         if($args->{options}->{header}){
             my $title = <$in_fh>;
@@ -37,11 +48,9 @@ sub fgrep {
             chomp;
             my @F = split /\s+/;
             next unless defined $F[0];
-            if($args->{options}->{invert_match}){
-                print "$_\n" if not $pattern->{$F[0]};
-            }else{
-                print "$_\n" if $pattern->{$F[0]}
-            }
+            my $matched = exists $pattern{$F[0]} ? 1 : 0;
+            $matched = not $matched if $args->{options}->{invert_match};
+            print "$_\n" if $matched;
         }
     }
 }
