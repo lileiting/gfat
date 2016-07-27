@@ -1,4 +1,4 @@
-# Gene family analysis tools
+# Gene Families and genetic maps Analyses Tools
 
 * Author: [Leiting Li](https://github.com/lileiting)
 * Email: lileiting@gmail.com
