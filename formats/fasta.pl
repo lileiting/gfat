@@ -10,6 +10,39 @@ use GFAT::ActionNew;
 use List::Util qw(sum max min);
 use Digest;
 use Text::Abbrev;
+our $in_desc = '<in.fasta> [<in.fasta> ...]';
+
+sub main{
+    my %actions = (
+        acclist  => 'Print a list of accession numbers',
+        comp     => 'Sequence composition, #A, #T, #C, #G, etc',
+        clean    => 'Clean irregular characters',
+        fa2phy   => 'Convert fasta format to phylip format, noninterleaved',
+        filter   => 'Filter sequences by size and Number of Ns or Xs',
+        fromtab  => 'Convert 2-column sequence to FASTA format',
+        getseq   => 'Get sequences by IDs',
+        identical=> 'Find identical records from multiple files',
+        ids      => 'Print a list of sequence IDs',
+        motif    => 'Find sequences with given sequence pattern',
+        oneline  => 'Print one sequence in one line',
+        phy2fa   => 'Convert phylip format (noninterleaved) to fasta format',
+        reformat => 'Convert sequences from different formats',
+        rename   => 'Rename sequence IDs',
+        revcom   => 'Reverse complementary',
+        rmdesc   => 'Remove sequence descriptions',
+        seqlen   => 'Print a list of sequence length, N50, etc',
+        seqsort  => 'Sort sequences by name/size',
+        ssr      => 'Find simple sequence repeats (SSR)',
+        subseq   => 'Get subsequence',
+        subseq2  => 'Get subsequences based on input file (ID, start, end,
+                     strand, new ID)',
+        totab    => 'Convert FASTA format sequence to 2-column format',
+        translate=> 'Translate CDS to protein sequences',
+    );
+    &{\&{run_action(%actions)}};
+}
+
+###########################################################
 
 sub new_seqaction{
     my %args = @_;
@@ -154,18 +187,6 @@ sub filter{
     }
     warn $report;
 }
-
-sub format{
-    my $args = new_seqaction(
-        -description => 'Read in and write out sequences'
-    );
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            $args->{out_io}->write_seq($seq);
-        }
-    }
-}
-
 
 sub fromtab{
     my $args = new_action(
@@ -464,6 +485,30 @@ sub phy2fa{
     }
 }
 
+sub reformat{
+    my $args = new_seqaction(
+        -description => 'Read in and write out sequences. "-I fsata -O tab":
+            Convert fasta format to tab format. ',
+        -options => {
+            "informat|I=s"  => 'Input sequence format [default: fasta]',
+            "outformat|O=s" => 'Output sequence format [default: fasta]'
+        }
+    );
+    my $informat = $args->{options}->{informat} // 'fasta';
+    my $outformat = $args->{options}->{outformat} // 'fasta';
+
+    my $out = Bio::SeqIO->new(-fh => $args->{out_fh},
+                              -format => $outformat);
+
+    for my $fh (@{$args->{in_fhs}}){
+        my $in = Bio::SeqIO->new(-fh => $fh,
+                                 -format => $informat);
+        while(my $seq = $in->next_seq){
+            $out->write_seq($seq);
+        }
+    }
+}
+
 sub rename{
     my $args = new_seqaction(
         -description => "Rename sequence IDs",
@@ -740,37 +785,6 @@ sub translate{
     }
 }
 
-sub main{
-    my %actions = (
-        acclist  => 'Print a list of accession numbers',
-        comp     => 'Sequence composition, #A, #T, #C, #G, etc',
-        clean    => 'Clean irregular characters',
-        fa2phy   => 'Convert fasta format to phylip format, noninterleaved',
-        filter   => 'Filter sequences by size and Number of Ns or Xs',
-        format   => 'Read in and write out sequences',
-        fromtab  => 'Convert 2-column sequence to FASTA format',
-        getseq   => 'Get sequences by IDs',
-        identical=> 'Find identical records from multiple files',
-        ids      => 'Print a list of sequence IDs',
-        motif    => 'Find sequences with given sequence pattern',
-        oneline  => 'Print one sequence in one line',
-        phy2fa   => 'Convert phylip format (noninterleaved) to fasta format',
-        rename   => 'Rename sequence IDs',
-        revcom   => 'Reverse complementary',
-        rmdesc   => 'Remove sequence descriptions',
-        seqlen   => 'Print a list of sequence length, N50, etc',
-        seqsort  => 'Sort sequences by name/size',
-        ssr      => 'Find simple sequence repeats (SSR)',
-        subseq   => 'Get subsequence',
-        subseq2  => 'Get subsequences based on input file (ID, start, end,
-                     strand, new ID)',
-        totab    => 'Convert FASTA format sequence to 2-column format',
-        translate=> 'Translate CDS to protein sequences',
-    );
-    &{\&{run_action(%actions)}};
-}
-
-our $in_desc = '<in.fasta> [<in.fasta> ...]';
 main() unless caller;
 
 __END__
