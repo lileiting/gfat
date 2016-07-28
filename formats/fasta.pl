@@ -633,9 +633,13 @@ sub seqsort{
 
 sub ssr{
     my $args = new_seqaction(
-        -description => 'Find simple sequence repeats (SSR)'
+        -description => 'Find simple sequence repeats (SSR)',
+        -options => {
+            "gff|g" => 'Output data as GFF format',
+            "length|l" => 'SSR length'
+        }
     );
-    my $options = $args->{options};
+    my $gff = $args->{options}->{gff};
     # Defination of SSR:
     # Repeat unit 2bp to 6bp, length not less than 18bp
     my ($id, $flank_seq_length) = (0, 100);
@@ -654,20 +658,35 @@ sub ssr{
                     (length($repeat_unit), length($match));
                 if($match =~ /([ATGC])\1{5}/){next;}
                 $id++;
-                print join("\t",
-                    $id,
-                    $seq_name,
-                    pos($sequence)-$SSR_length+1,
-                    pos($sequence),
-                    $match,
-                    $SSR_length,
-                    $repeat_unit,
-                    $repeat_length,
-                    $SSR_length / $repeat_length,
-                    substr($sequence,
-                        pos($sequence) - $SSR_length - $flank_seq_length,
-                        $SSR_length + $flank_seq_length * 2)
-                )."\n";
+                if($gff){
+                    print join("\t",
+                        $seq_name,
+                        "GFAT.PL",
+                        'SSR',
+                        pos($sequence)-$SSR_length+1,
+                        pos($sequence),
+                        '1',
+                        '+',
+                        '.',
+                        "ID=SSR$id"
+                    )."\n";
+                }
+                else{
+                    print join("\t",
+                        $id,
+                        $seq_name,
+                        pos($sequence)-$SSR_length+1,
+                        pos($sequence),
+                        $match,
+                        $SSR_length,
+                        $repeat_unit,
+                        $repeat_length,
+                        $SSR_length / $repeat_length,
+                        substr($sequence,
+                            pos($sequence) - $SSR_length - $flank_seq_length,
+                            $SSR_length + $flank_seq_length * 2)
+                    )."\n";
+                }
             }
         }
     }
