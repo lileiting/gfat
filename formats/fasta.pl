@@ -657,7 +657,7 @@ sub ssr{
                 my ($repeat_length, $SSR_length)=
                     (length($repeat_unit), length($match));
                 my $repetitions = $SSR_length / $repeat_length;
-                next if $match =~ /([ATGC])\1{5}/;
+                next if $match =~ /([ATGC])\1{5}/i;
                 next unless
                     ($repeat_length == 2 and $SSR_length >= 12 or
                      $repeat_length == 3 and $SSR_length >= 12 or
@@ -675,7 +675,9 @@ sub ssr{
                         '1',
                         '+',
                         '.',
-                        "ID=SSR$id;motif=$repeat_unit;repetitions=$repetitions"
+                        join(";", "ID=SSR$id", "motif=$repeat_unit",
+                            "repetitions=$repetitions",
+                            "length=$SSR_length")
                     )."\n";
                 }
                 else{

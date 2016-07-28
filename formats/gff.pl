@@ -84,11 +84,14 @@ sub genedensity{
         -desc => 'Print a statistics of gene density from GFF file',
         -options => {
             "window|w=i" => 'Window size [default: 1_000_000]',
-            "type|t=s" => 'Entry type [default: mRNA]'
+            "type|t=s" => 'Entry type [default: mRNA]',
+            "skip_tail|s" => 'Skip the last line for each chromsomoe
+                [default:disable]'
         }
     );
     my $window = $args->{options}->{window} // 1_000_000;
     my $check_type = $args->{options}->{type} // 'mRNA';
+    my $skip_tail = $args->{options}->{skip_tail};
     my %statistics;
     for my $fh (@{$args->{in_fhs}}){
         while (<$fh>) {
@@ -102,8 +105,9 @@ sub genedensity{
             $statistics{$chr}->{$n}++;
         }
     }
-    for my $chr (keys %statistics){
+    for my $chr (sort {$a cmp $b} keys %statistics){
         my $max = keys %{$statistics{$chr}};
+        $max-- if $skip_tail;
         for my $n (1..$max){
             print join("\t", $chr, $n * $window / 1_000_000,
                 $statistics{$chr}->{$n} // 0)."\n";
