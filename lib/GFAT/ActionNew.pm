@@ -76,7 +76,12 @@ end_of_usage
                 $in_fh = \*STDIN;
             }
             elsif(-e $infile){
-                open $in_fh, "<", $infile or die "$!: $infile";
+                if($infile =~ /\.gz$/){
+                    open $in_fh, "gzip -dc $infile |" or die "$!: $infile";
+                }
+                else{
+                    open $in_fh, "<", $infile or die "$!: $infile";
+                }
             }
             push @{$action{in_fhs}}, $in_fh if $in_fh;
             push @{$action{infiles}}, $infile if $infile ne '-';
