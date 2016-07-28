@@ -646,17 +646,24 @@ sub ssr{
     print join("\t",
         qw/ID          Seq_Name           Start
            End         SSR                Length
-           Repeat_Unit Repeat_Unit_Length Repeatitions
+           Repeat_Unit Repeat_Unit_Length Repetitions
            Sequence/
-        )."\n";
+        )."\n" unless $gff;
     for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
             my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
-            while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/g){
+            while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/ig){
                 my ($match, $repeat_unit) = ($1, $2);
                 my ($repeat_length, $SSR_length)=
                     (length($repeat_unit), length($match));
-                if($match =~ /([ATGC])\1{5}/){next;}
+                my $repetitions = $SSR_length / $repeat_length;
+                next if $match =~ /([ATGC])\1{5}/;
+                next unless
+                    ($repeat_length == 2 and $SSR_length >= 12 or
+                     $repeat_length == 3 and $SSR_length >= 12 or
+                     $repeat_length == 4 and $SSR_length >= 12 or
+                     $repeat_length == 5 and $SSR_length >= 15 or
+                     $repeat_length == 6 and $SSR_length >= 18);
                 $id++;
                 if($gff){
                     print join("\t",
@@ -668,7 +675,7 @@ sub ssr{
                         '1',
                         '+',
                         '.',
-                        "ID=SSR$id"
+                        "ID=SSR$id;motif=$repeat_unit;repetitions=$repetitions"
                     )."\n";
                 }
                 else{
