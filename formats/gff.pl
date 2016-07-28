@@ -83,10 +83,12 @@ sub genedensity{
     my $args = new_action(
         -desc => 'Print a statistics of gene density from GFF file',
         -options => {
-            "window|w=i" => 'Window size [default: 1_000_000]'
+            "window|w=i" => 'Window size [default: 1_000_000]',
+            "type|t=s" => 'Entry type [default: mRNA]'
         }
     );
     my $window = $args->{options}->{window} // 1_000_000;
+    my $check_type = $args->{options}->{type} // 'mRNA';
     my %statistics;
     for my $fh (@{$args->{in_fhs}}){
         while (<$fh>) {
@@ -94,7 +96,7 @@ sub genedensity{
             chomp;
             my @F = split /\t/;
             my ($chr, $type, $start, $end) = @F[0,2,3,4];
-            next unless $type eq 'mRNA';
+            next unless $type eq $check_type;
             my $middle = sprintf "%f", ($start + $end) / 2;
             my $n = int($middle / $window) + 1;
             $statistics{$chr}->{$n}++;
@@ -103,7 +105,7 @@ sub genedensity{
     for my $chr (keys %statistics){
         my $max = keys %{$statistics{$chr}};
         for my $n (1..$max){
-            print join("\t", $chr, $n * $window / 1_000_000, 
+            print join("\t", $chr, $n * $window / 1_000_000,
                 $statistics{$chr}->{$n} // 0)."\n";
         }
     }
