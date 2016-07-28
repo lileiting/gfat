@@ -21,6 +21,7 @@ sub main{
         filter   => 'Filter sequences by size and Number of Ns or Xs',
         fromtab  => 'Convert 2-column sequence to FASTA format',
         getseq   => 'Get sequences by IDs',
+        head     => 'Print first N sequences',
         identical=> 'Find identical records from multiple files',
         ids      => 'Print a list of sequence IDs',
         motif    => 'Find sequences with given sequence pattern',
@@ -294,6 +295,24 @@ sub getseq{
     return 1 if $order == 0;
     for my $seqid (@genelist, @seqnames, @pattern_matched){
         $out->write_seq($matched_seq{$seqid});
+    }
+}
+
+sub head{
+    my $args = new_seqaction(
+        -desc => 'Print first N sequences',
+        -options => {
+            "number|n=i" => 'Number of sequences wish to print'
+        }
+    );
+    my $number = $args->{options}->{number} // 1;
+    for my $in_io (@{$args->{bioseq_io}}){
+        my $count;
+        while(my $seq = $in_io->next_seq){
+            $count++;
+            last if $count > $number;
+            $args->{out_io}->write_seq($seq);
+        }
     }
 }
 
