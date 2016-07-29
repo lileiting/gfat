@@ -6,7 +6,7 @@
 * Email: lileiting@gmail.com
 * Licence: [BSD](http://opensource.org/licenses/BSD-2-Clause)
 
-This is a collection of tools for gene family and comparative 
+This is a collection of tools for gene family, genetic maps and comparative 
 genomics analyses.
 
 ## Intallation
