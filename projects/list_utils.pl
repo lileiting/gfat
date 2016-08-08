@@ -7,30 +7,13 @@ use File::Basename;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
-
-sub main_usage{
-    my $dir = basename $FindBin::RealBin;
-    print <<"end_of_usage";
-
-USAGE
-    gfat.pl $dir $FindBin::Script ACTION [OPTIONS]
-
-ACTIONS
-    list2matrix | Convert a list with three columns to a matrix
-
-end_of_usage
-    exit
-}
+our $in_desc = '<list.txt> [<list.txt> ...]';
 
 sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }
-    else{
-        die "CAUTION: action $action was not defined!\n";
-    }
+    my %actions = (
+        'list2matrix' => 'Convert a list with three columns to a matrix'
+    );
+    &{\&{run_action(%actions)}};
 }
 
 main unless caller;
@@ -44,13 +27,13 @@ main unless caller;
 # Input: An array
 # Output: An array
 
-sub is_number{
+sub _is_number{
     map{return 0 unless /^-?\d+(\.\d+)?$/}@_;
     return 1;
 }
 
-sub smart_sort{
-    return is_number(@_) ?
+sub _smart_sort{
+    return _is_number(@_) ?
        sort{$a <=> $b}@_ : sort{$a cmp $b}@_;
 }
 
@@ -87,11 +70,11 @@ sub list2matrix{
         }
     }
 
-    my @row_names = smart_sort(keys %first_column);
-    my @col_names = smart_sort(keys %second_column);
+    my @row_names = _smart_sort(keys %first_column);
+    my @col_names = _smart_sort(keys %second_column);
 
     if($symm){
-        my @names = smart_sort(keys %first_two_columns);
+        my @names = _smart_sort(keys %first_two_columns);
         print "MATRIX$field_separator",
             join("$field_separator", @names), "\n";
         for my $row (@names){
@@ -114,3 +97,5 @@ sub list2matrix{
         }
     }
 }
+
+__END__
