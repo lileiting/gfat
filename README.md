@@ -1,5 +1,3 @@
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.58774.svg)](http://dx.doi.org/10.5281/zenodo.58774)
-
 # Gene Families and genetic maps Analyses Tools
 
 * Author: [Leiting Li](https://github.com/lileiting)
@@ -65,7 +63,3 @@ utility libraries (Python based).
 The scripts were also inspired by the 
 [p5-bpwrapper](https://github.com/bioperl/p5-bpwrapper) 
 and other Perl based modules or scripts.
-
-## Citation
-
-Leiting Li. (2016). gfat: Gene Families and genetic maps Analyses Tools v0.1. Zenodo. [10.5281/zenodo.58774](https://dx.doi.org/10.5281/zenodo.58774).
