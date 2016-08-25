@@ -91,8 +91,12 @@ sub clean{
 
 sub comp{
     my $args = new_seqaction(
-        -desc => 'Print sequence composition'
+        -desc => 'Print sequence composition',
+        -options => {
+            "summary|s" => 'Print summary only'
+        }
     );
+    my $summary_only = $args->{options}->{summary};
     my %allseqs;
     warn join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', '#N', 'GC(%)')."\n";
     warn '-' x 60, "\n";
@@ -108,7 +112,7 @@ sub comp{
             map{$allseqs{$_} += $nt{$_}}qw/A T C G N/;
             print join("\t", $seqid, $seqlen, @nt{qw/A T C G N/},
                 sprintf("%.1f", sum(@nt{qw/G C/}) / sum(@nt{qw/A T C G/}) * 100)
-            )."\n";
+            )."\n" unless $summary_only;
         }
     }
     warn '-' x 60, "\n";
