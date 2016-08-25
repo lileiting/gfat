@@ -94,7 +94,7 @@ sub comp{
         -desc => 'Print sequence composition'
     );
     my %allseqs;
-    warn join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', 'GC(%)')."\n";
+    warn join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', '#N', 'GC(%)')."\n";
     warn '-' x 60, "\n";
     for my $in (@{$args->{bioseq_io}}){
         while(my $seq = $in->next_seq){
@@ -104,15 +104,15 @@ sub comp{
             my $seqstr = $seq->seq;
             my %nt;
             map{$nt{"\u$_"}++} split //, $seqstr;
-            map{$nt{$_} //= 0}qw/A T C G/;
-            map{$allseqs{$_} += $nt{$_}}qw/A T C G/;
-            print join("\t", $seqid, $seqlen, @nt{qw/A T C G/},
+            map{$nt{$_} //= 0}qw/A T C G N/;
+            map{$allseqs{$_} += $nt{$_}}qw/A T C G N/;
+            print join("\t", $seqid, $seqlen, @nt{qw/A T C G N/},
                 sprintf("%.1f", sum(@nt{qw/G C/}) / sum(@nt{qw/A T C G/}) * 100)
             )."\n";
         }
     }
     warn '-' x 60, "\n";
-    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G/},
+    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G N/},
         sprintf("%.1f",
             sum(@allseqs{qw/G C/}) / sum(@allseqs{qw/A T C G/}) * 100
         ))."\n";
