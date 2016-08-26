@@ -12,149 +12,161 @@ use Digest;
 use Text::Abbrev;
 our $in_desc = '<in.fasta> [<in.fasta> ...]';
 
-sub main{
+sub main {
     my %actions = (
-        acclist  => 'Print a list of accession numbers',
-        comp     => 'Sequence composition, #A, #T, #C, #G, etc',
-        clean    => 'Clean irregular characters',
-        fa2phy   => 'Convert fasta format to phylip format, noninterleaved',
-        filter   => 'Filter sequences by size and Number of Ns or Xs',
-        fromtab  => 'Convert 2-column sequence to FASTA format',
-        getseq   => 'Get sequences by IDs',
-        head     => 'Print first N sequences',
-        identical=> 'Find identical records from multiple files',
-        ids      => 'Print a list of sequence IDs',
-        motif    => 'Find sequences with given sequence pattern',
-        oneline  => 'Print one sequence in one line',
-        phy2fa   => 'Convert phylip format (noninterleaved) to fasta format',
-        reformat => 'Convert sequences from different formats',
-        rename   => 'Rename sequence IDs',
-        revcom   => 'Reverse complementary',
-        rmdesc   => 'Remove sequence descriptions',
-        seqlen   => 'Print a list of sequence length, N50, etc',
-        seqsort  => 'Sort sequences by name/size',
-        ssr      => 'Find simple sequence repeats (SSR)',
-        subseq   => 'Get subsequence',
-        subseq2  => 'Get subsequences based on input file (ID, start, end,
+        acclist   => 'Print a list of accession numbers',
+        comp      => 'Sequence composition, #A, #T, #C, #G, etc',
+        clean     => 'Clean irregular characters',
+        fa2phy    => 'Convert fasta format to phylip format, noninterleaved',
+        filter    => 'Filter sequences by size and Number of Ns or Xs',
+        fromtab   => 'Convert 2-column sequence to FASTA format',
+        getseq    => 'Get sequences by IDs',
+        head      => 'Print first N sequences',
+        identical => 'Find identical records from multiple files',
+        ids       => 'Print a list of sequence IDs',
+        motif     => 'Find sequences with given sequence pattern',
+        oneline   => 'Print one sequence in one line',
+        phy2fa    => 'Convert phylip format (noninterleaved) to fasta format',
+        reformat  => 'Convert sequences from different formats',
+        rename    => 'Rename sequence IDs',
+        revcom    => 'Reverse complementary',
+        rmdesc    => 'Remove sequence descriptions',
+        seqlen    => 'Print a list of sequence length, N50, etc',
+        seqsort   => 'Sort sequences by name/size',
+        ssr       => 'Find simple sequence repeats (SSR)',
+        subseq    => 'Get subsequence',
+        subseq2   => 'Get subsequences based on input file (ID, start, end,
                      strand, new ID)',
-        totab    => 'Convert FASTA format sequence to 2-column format',
-        translate=> 'Translate CDS to protein sequences',
+        totab     => 'Convert FASTA format sequence to 2-column format',
+        translate => 'Translate CDS to protein sequences',
     );
-    &{\&{run_action(%actions)}};
+    &{ \&{ run_action(%actions) } };
 }
 
 ###########################################################
 
-sub new_seqaction{
-    my %args = @_;
+sub new_seqaction {
+    my %args   = @_;
     my $format = 'fasta';
-    my $args = new_action(%args);
-    for my $fh (@{$args->{in_fhs}}){
-        my $in = Bio::SeqIO->new(-fh => $fh,
-                                 -format => $format);
-        push @{$args->{bioseq_io}}, $in;
+    my $args   = new_action(%args);
+    for my $fh ( @{ $args->{in_fhs} } ) {
+        my $in = Bio::SeqIO->new(
+            -fh     => $fh,
+            -format => $format
+        );
+        push @{ $args->{bioseq_io} }, $in;
     }
-    my $out = Bio::SeqIO->new(-fh => $args->{out_fh},
-                           -format => $format);
+    my $out = Bio::SeqIO->new(
+        -fh     => $args->{out_fh},
+        -format => $format
+    );
     $args->{out_io} = $out;
     return $args;
 }
 
 ############################################################
 
-sub acclist{
-    my $args = new_seqaction(
-        -description => "Print a list of accession numbers",
-    );
-    for my $in (@{$args->{bioseq_io}}){
-        while( my $seq = $in->next_seq){
+sub acclist {
+    my $args =
+      new_seqaction( -description => "Print a list of accession numbers", );
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             print $seq->accession_number, "\n";
         }
     }
 }
 
-sub clean{
-    my $args = new_seqaction(
-       -description => 'Clean irregular characters'
-    );
-    for my $in (@{$args->{bioseq_io}}){
-        while( my $seq = $in->next_seq){
-            my $cleaned_seq = join('',
-                grep{/[A-Za-z*]/}split(//, $seq->seq));
+sub clean {
+    my $args = new_seqaction( -description => 'Clean irregular characters' );
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $cleaned_seq =
+              join( '', grep { /[A-Za-z*]/ } split( //, $seq->seq ) );
             $args->{out_io}->write_seq(
-                Bio::PrimarySeq->new(-display_id => $seq->display_id,
-                                     -description => $seq->desc,
-                                     -seq => $cleaned_seq));
+                Bio::PrimarySeq->new(
+                    -display_id  => $seq->display_id,
+                    -description => $seq->desc,
+                    -seq         => $cleaned_seq
+                )
+            );
         }
     }
 }
 
-sub comp{
+sub comp {
     my $args = new_seqaction(
-        -desc => 'Print sequence composition',
+        -desc    => 'Print sequence composition',
         -options => {
             "summary|s" => 'Print summary only'
         }
     );
     my $summary_only = $args->{options}->{summary};
     my %allseqs;
-    warn join("\t", 'seqid', 'length', '#A', '#T', '#C', '#G', '#N', 'GC(%)')."\n";
+    warn join( "\t", 'seqid', 'length', '#A', '#T', '#C', '#G', '#N', 'GC(%)' )
+      . "\n";
     warn '-' x 60, "\n";
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $seqid = $seq->display_id;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $seqid  = $seq->display_id;
             my $seqlen = $seq->length;
             $allseqs{seqlen} += $seqlen;
             my $seqstr = $seq->seq;
             my %nt;
-            map{$nt{"\u$_"}++} split //, $seqstr;
-            map{$nt{$_} //= 0}qw/A T C G N/;
-            map{$allseqs{$_} += $nt{$_}}qw/A T C G N/;
-            print join("\t", $seqid, $seqlen, @nt{qw/A T C G N/},
-                sprintf("%.1f", sum(@nt{qw/G C/}) / sum(@nt{qw/A T C G/}) * 100)
-            )."\n" unless $summary_only;
+            map { $nt{"\u$_"}++ } split //, $seqstr;
+            map { $nt{$_} //= 0 } qw/A T C G N/;
+            map { $allseqs{$_} += $nt{$_} } qw/A T C G N/;
+            print join(
+                "\t", $seqid, $seqlen,
+                @nt{qw/A T C G N/},
+                sprintf( "%.1f",
+                    sum( @nt{qw/G C/} ) / sum( @nt{qw/A T C G/} ) * 100 )
+              )
+              . "\n"
+              unless $summary_only;
         }
     }
     warn '-' x 60, "\n";
-    warn join("\t", 'Sum', $allseqs{seqlen}, @allseqs{qw/A T C G N/},
-        sprintf("%.1f",
-            sum(@allseqs{qw/G C/}) / sum(@allseqs{qw/A T C G/}) * 100
-        ))."\n";
+    warn join(
+        "\t", 'Sum',
+        $allseqs{seqlen},
+        @allseqs{qw/A T C G N/},
+        sprintf( "%.1f",
+            sum( @allseqs{qw/G C/} ) / sum( @allseqs{qw/A T C G/} ) * 100 )
+    ) . "\n";
 }
 
-sub fa2phy{
+sub fa2phy {
     my $args = new_seqaction(
-        -desc => 'Convert fasta format to phylip format (non-interleaved)'
-    );
+        -desc => 'Convert fasta format to phylip format (non-interleaved)' );
 
     my $num_of_seq;
     my $seqlen;
     my $seqid_max_len = 0;
     my @seqdata;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $seqid = $seq->display_id;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $seqid  = $seq->display_id;
             my $seqstr = $seq->seq;
             $num_of_seq++;
-            unless($seqlen){
+            unless ($seqlen) {
                 $seqlen = length($seqstr);
             }
-            else{
+            else {
                 die "WARNING: sequence length ERROR!\n"
-                    unless $seqlen == length($seqstr);
+                  unless $seqlen == length($seqstr);
             }
             $seqid_max_len = length($seqid) if length($seqid) > $seqid_max_len;
-            push @seqdata, [$seqid, $seqstr];
+            push @seqdata, [ $seqid, $seqstr ];
         }
     }
     print "    $num_of_seq $seqlen\n";
-    for (@seqdata){
-        my ($seqid, $seqstr) = @$_;
+    for (@seqdata) {
+        my ( $seqid, $seqstr ) = @$_;
         printf "%-${seqid_max_len}s %s\n", $seqid, $seqstr;
     }
 }
 
-sub filter{
+sub filter {
     my $args = new_seqaction(
         -desc => "Filter the sequence file to contain records with
                   size >= or < certain cutoff, or filter out
@@ -162,27 +174,27 @@ sub filter{
         -options => {
             "size|s=i" => 'Minimum sequence size (default: 0, do nothing)',
             "char|c=i" => 'Maximum number of Ns or Xs (default: -1, no limit)',
-                    }
+        }
     );
 
-    my $size         = $args->{options}->{size} // 0;
-    my $char         = $args->{options}->{char} // -1;
+    my $size = $args->{options}->{size} // 0;
+    my $char = $args->{options}->{char} // -1;
 
     my $report = '';
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $seqid = $seq->display_id;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $seqid  = $seq->display_id;
             my $seqlen = $seq->length;
-            unless($seqlen >= $size){
+            unless ( $seqlen >= $size ) {
                 $report .= "$seqid\tlength=$seqlen\n";
                 next;
             }
 
-            if($char >= 0){
+            if ( $char >= 0 ) {
                 my $seqirr = 0;
                 my $seqstr = $seq->seq;
                 $seqirr++ while $seqstr =~ /[NnXx]/g;
-                unless($seqirr <= $char){
+                unless ( $seqirr <= $char ) {
                     $report .= "$seqid\tNnXx=$seqirr\n";
                     next;
                 }
@@ -193,19 +205,19 @@ sub filter{
     warn $report;
 }
 
-sub fromtab{
+sub fromtab {
     my $args = new_action(
         -desc => 'Convert 2-column sequence to FASTA format
                   [Copied function from tanghaibao\'s
                    python -m jcvi.formats.fasta fromtab]',
         -options => {
-            "sep|s=s" => 'Separator in the tabfile [default: tab]',
+            "sep|s=s"     => 'Separator in the tabfile [default: tab]',
             "replace|r=s" => 'Replace spaces in name to char
                               [default: none]',
             "length|l=i" => 'Output sequence length per line
                              [default: unlimited]',
-            "fasta|f"    => 'A shortcut for --length=60'
-                    }
+            "fasta|f" => 'A shortcut for --length=60'
+        }
     );
 
     my $options = $args->{options};
@@ -217,14 +229,14 @@ sub fromtab{
 
     $length = 60 if $fasta and not $length;
 
-    for my $fh (@{$args->{in_fhs}}){
-        while(<$fh>){
+    for my $fh ( @{ $args->{in_fhs} } ) {
+        while (<$fh>) {
             next if /^\s*$/ or /^\s*#/;
             chomp;
-            my ($id, $seq) = split /$sep/;
+            my ( $id, $seq ) = split /$sep/;
             die "ERROR in: $_" unless $seq;
             $id =~ s/ /$replace/g if $replace;
-            if($length){
+            if ($length) {
                 $seq =~ s/(.{$length})/$1\n/g;
                 chomp $seq;
             }
@@ -233,7 +245,7 @@ sub fromtab{
     }
 }
 
-sub getseq{
+sub getseq {
     my $args = new_seqaction(
         -description => 'Get a subset of sequences from input files based
                          on given sequence IDs or a name pattern',
@@ -247,72 +259,76 @@ sub getseq{
                                  1 (order in listfile/seqname/pattern)'
         }
     );
-    my $out = $args->{out_io};
-    my $pattern      = $args->{options}->{pattern};
-    my @seqnames     = $args->{options}->{seqname} ?
-        split(/,/,join(',',@{$args->{options}->{seqname}})) : ();
+    my $out     = $args->{out_io};
+    my $pattern = $args->{options}->{pattern};
+    my @seqnames =
+      $args->{options}->{seqname}
+      ? split( /,/, join( ',', @{ $args->{options}->{seqname} } ) )
+      : ();
     my $listfile     = $args->{options}->{listfile};
     my $invert_match = $args->{options}->{invert_match};
     my $order        = $args->{options}->{order} // 0;
     die "WARNING: Pattern was not defined!\n"
-        unless $pattern or @seqnames or $listfile;
+      unless $pattern
+      or @seqnames
+      or $listfile;
     die "WARNING: '-O' should be 0 or 1\n" unless $order == 0 or $order == 1;
     die "WARNING: not logical for '-v -O 1'\n" if $invert_match and $order == 1;
 
     my %seqname;
-    map{$seqname{$_}++}@seqnames;
+    map { $seqname{$_}++ } @seqnames;
 
     my @genelist;
     my %genelist;
-    if($listfile){
+    if ($listfile) {
         open my $fh, $listfile or die $!;
-        while(<$fh>){
+        while (<$fh>) {
             next if /^\s*$/ or /^\s*#/;
             chomp;
             @_ = split /\t/;
             push @genelist, $_[0];
-            $genelist{$_[0]}++;
+            $genelist{ $_[0] }++;
         }
         close $fh;
     }
 
-    my %matched_seq; # seq object as value
+    my %matched_seq;    # seq object as value
     my @pattern_matched;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             my $seqid = $seq->display_id;
-            my $s = 0b000; # matched status
-            $s = $s | 0b001 if $pattern and $seqid =~ /$pattern/;
+            my $s     = 0b000;              # matched status
+            $s = $s | 0b001 if $pattern  and $seqid =~ /$pattern/;
             $s = $s | 0b010 if @seqnames and $seqname{$seqid};
             $s = $s | 0b100 if $listfile and $genelist{$seqid};
-            $s = not $s if $invert_match;
+            $s = not $s     if $invert_match;
             next if $s == 0b000;
-            if($order == 0){
+            if ( $order == 0 ) {
                 $out->write_seq($seq);
             }
-            else{
-                $matched_seq{$seqid}  = $seq;
+            else {
+                $matched_seq{$seqid} = $seq;
                 push @pattern_matched, $seqid if $s == 0b001;
             }
         }
     }
     return 1 if $order == 0;
-    for my $seqid (@genelist, @seqnames, @pattern_matched){
-        $out->write_seq($matched_seq{$seqid});
+    for my $seqid ( @genelist, @seqnames, @pattern_matched ) {
+        $out->write_seq( $matched_seq{$seqid} );
     }
 }
 
-sub head{
+sub head {
     my $args = new_seqaction(
-        -desc => 'Print first N sequences',
+        -desc    => 'Print first N sequences',
         -options => {
             "number|n=i" => 'Number of sequences wish to print'
         }
     );
     my $number = $args->{options}->{number} // 1;
-    for my $in_io (@{$args->{bioseq_io}}){
+    for my $in_io ( @{ $args->{bioseq_io} } ) {
         my $count;
-        while(my $seq = $in_io->next_seq){
+        while ( my $seq = $in_io->next_seq ) {
             $count++;
             last if $count > $number;
             $args->{out_io}->write_seq($seq);
@@ -320,94 +336,100 @@ sub head{
     }
 }
 
-sub _first_gene_id{
-    my ($checksum, $data_ref) = @_;
-    if($data_ref->{$checksum}->[0]){
+sub _first_gene_id {
+    my ( $checksum, $data_ref ) = @_;
+    if ( $data_ref->{$checksum}->[0] ) {
         return $data_ref->{$checksum}->[0][0];
-    }else{
+    }
+    else {
         return 'undef';
     }
 }
 
-sub identical{
+sub identical {
     my $args = new_seqaction(
         -desc => 'Find identical records from multipls files,
                   based on sequence fingerprints (MD5)',
         -options => {
             "ignore_case|C" => 'Ignore case when comparing sequences
                                 (default: False)',
-            "ignore_N|N"    => 'Ignore N or X characters when
+            "ignore_N|N" => 'Ignore N or X characters when
                                 comparing sequences (default: False)',
             "ignore_stop|S" => 'Ignore stop codon (remove the last
                                 character \"*\" if present) (default:
                                 False)',
-            "checksum|M=s"  => 'Checksum method, could be MD5, SHA-1,
+            "checksum|M=s" => 'Checksum method, could be MD5, SHA-1,
                                 SHA-256, SHA-384, SHA-512, or CRC if
                                 Digest::CRC was installed',
-            "pchecksum|P"   => 'Print checksum (hexadecimal form)
+            "pchecksum|P" => 'Print checksum (hexadecimal form)
                                 string as the second column in result
                                 file',
-            "no_seqlen|L"   => 'Do not print sequence length (default:
+            "no_seqlen|L" => 'Do not print sequence length (default:
                                 print sequence length as second column)',
-            "uniq|u"        => 'Print unique sequences only',
-#            "output_uniq|U=s"=> 'Output uniq sequneces. Conflict
-#                                sequence IDs will combined as new
-#                                sequence ID'
-                    }
+            "uniq|u" => 'Print unique sequences only',
+
+            #            "output_uniq|U=s"=> 'Output uniq sequneces. Conflict
+            #                                sequence IDs will combined as new
+            #                                sequence ID'
+        }
     );
 
-    my $ignore_case = $args->{options}->{ignore_case};
-    my $ignore_N    = $args->{options}->{ignore_N};
-    my $ignore_stop = $args->{options}->{ignore_stop};
+    my $ignore_case     = $args->{options}->{ignore_case};
+    my $ignore_N        = $args->{options}->{ignore_N};
+    my $ignore_stop     = $args->{options}->{ignore_stop};
     my $checksum_method = $args->{options}->{checksum} // 'MD5';
-    my $print_checksum = $args->{options}->{pchecksum};
-    my $output_uniq = $args->{options}->{output_uniq};
-    my $no_seqlen = $args->{options}->{no_seqlen};
-    my $print_uniq = $args->{options}->{uniq};
+    my $print_checksum  = $args->{options}->{pchecksum};
+    my $output_uniq     = $args->{options}->{output_uniq};
+    my $no_seqlen       = $args->{options}->{no_seqlen};
+    my $print_uniq      = $args->{options}->{uniq};
 
     my %data;
     my %seq_length;
     my $index = -1;
-    for my $in_io (@{$args->{bioseq_io}}){
+    for my $in_io ( @{ $args->{bioseq_io} } ) {
         $index++;
         my $file = $args->{infiles}[$index];
-        while(my $seq = $in_io->next_seq){
+        while ( my $seq = $in_io->next_seq ) {
             my $seqstr = $seq->seq;
             $seqstr = "\L$seqstr\E" if $ignore_case;
             $seqstr =~ s/[NnXx]//g if $ignore_N;
-            $seqstr =~ s/\*$// if $ignore_stop;
+            $seqstr =~ s/\*$//     if $ignore_stop;
             my $ctx = Digest->new($checksum_method);
             $ctx->add($seqstr);
             my $checksum = $ctx->hexdigest;
-            push @{$data{$checksum}->[$index]}, $seq->display_id;
-            unless(exists $seq_length{$checksum}){
+            push @{ $data{$checksum}->[$index] }, $seq->display_id;
+
+            unless ( exists $seq_length{$checksum} ) {
                 $seq_length{$checksum} = length($seqstr);
             }
-            else{
-                die "ERROR: SAME CHECKSUM, DIFFERENT SEQUENCE LENGTH!!!\n".
-                    "  $checksum: ". $seq->display_id . "\n"
-                    unless length($seqstr) == $seq_length{$checksum};
+            else {
+                die "ERROR: SAME CHECKSUM, DIFFERENT SEQUENCE LENGTH!!!\n"
+                  . "  $checksum: "
+                  . $seq->display_id . "\n"
+                  unless length($seqstr) == $seq_length{$checksum};
             }
         }
     }
-#    my $uniq_fh;
-#    if($output_uniq){
-#        open $uniq_fh, ">", $output_uniq or die "$!";
-#    }
 
-    print "\t",join("\t", "SeqLength", @{$args->{infiles}}),"\n";
+    #    my $uniq_fh;
+    #    if($output_uniq){
+    #        open $uniq_fh, ">", $output_uniq or die "$!";
+    #    }
+
+    print "\t", join( "\t", "SeqLength", @{ $args->{infiles} } ), "\n";
     my $count = -1;
-    for my $checksum ( sort {_first_gene_id($a, \%data) cmp
-                             _first_gene_id($b, \%data) }keys %data){
+    for my $checksum (
+        sort { _first_gene_id( $a, \%data ) cmp _first_gene_id( $b, \%data ) }
+        keys %data )
+    {
         my $row;
         $count++;
         $row .= "t$count";
         $row .= "\t$checksum" if $print_checksum;
-        $row .= "\t".$seq_length{$checksum} unless $no_seqlen;
+        $row .= "\t" . $seq_length{$checksum} unless $no_seqlen;
         my $not_uniq = 1;
-        for my $i (0..$index){
-            my $gene_ids = join(",", @{ $data{$checksum}->[$i]
-                                     // ['na'] });
+        for my $i ( 0 .. $index ) {
+            my $gene_ids = join( ",", @{ $data{$checksum}->[$i] // ['na'] } );
             $not_uniq = 0 if $gene_ids eq 'na';
             $row .= "\t$gene_ids";
         }
@@ -417,7 +439,7 @@ sub identical{
     }
 }
 
-sub ids{
+sub ids {
     my $args = new_seqaction(
         -description => 'Print a list of sequence IDs',
         -options     => {
@@ -425,10 +447,10 @@ sub ids{
             "until|u=s"     => 'Truncate the name and description at words'
         }
     );
-    for my $in (@{$args->{bioseq_io}}){
-        while( my $seq = $in->next_seq ){
-            my $info = $seq->display_id .
-                ($args->{options}->{description} ? "\t".$seq->desc : '');
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $info = $seq->display_id
+              . ( $args->{options}->{description} ? "\t" . $seq->desc : '' );
             my $re = $args->{options}->{until};
             $info =~ s/$re.*$// if defined $re;
             print "$info\n";
@@ -436,79 +458,77 @@ sub ids{
     }
 }
 
-sub motif{
+sub motif {
     my $args = new_seqaction(
         -description => 'Find sequences with given sequence pattern',
-        -options => {
+        -options     => {
             "pattern|p=s" => 'Sequence pattern',
-            "summary|s" => 'Print summary information,
+            "summary|s"   => 'Print summary information,
                           rather than sequence only'
         }
     );
-    my $out = $args->{options}->{out_io};
-    my $pattern = $args->{options}->{pattern};
+    my $out           = $args->{options}->{out_io};
+    my $pattern       = $args->{options}->{pattern};
     my $print_summary = $args->{options}->{summary};
 
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $seqid = $seq->display_id;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $seqid  = $seq->display_id;
             my $seqstr = $seq->seq;
             next unless $seqstr =~ /$pattern/;
-            if($print_summary){
-                while($seqstr =~ /($pattern)/g){
+            if ($print_summary) {
+                while ( $seqstr =~ /($pattern)/g ) {
                     my $matched_str = $1;
-                    my $end = pos($seqstr);
-                    my $start = $end - length($matched_str) + 1;
-                    print join("\t", $seqid, $pattern, $matched_str,
-                         $start, $end
-                        )."\n";
+                    my $end         = pos($seqstr);
+                    my $start       = $end - length($matched_str) + 1;
+                    print
+                      join( "\t", $seqid, $pattern, $matched_str, $start, $end )
+                      . "\n";
                 }
             }
-            else{
+            else {
                 $out->write_seq($seq);
             }
         }
     }
 }
 
-sub oneline{
-    my $args = new_seqaction(
-        -description => 'Print one sequence in one line'
-    );
+sub oneline {
+    my $args =
+      new_seqaction( -description => 'Print one sequence in one line' );
     my $options = $args->{options};
 
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my $id = $seq->display_id;
-            my $desc = " ".$seq->desc;
-            my $seq = $seq->seq;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my $id   = $seq->display_id;
+            my $desc = " " . $seq->desc;
+            my $seq  = $seq->seq;
             print ">$id$desc\n$seq\n";
         }
     }
 }
 
-sub phy2fa{
+sub phy2fa {
     my $args = new_action(
-        -desc => 'Convert phylip format (noninterleaved) to fasta format'
-    );
-    for my $fh (@{$args->{in_fhs}}){
+        -desc => 'Convert phylip format (noninterleaved) to fasta format' );
+    for my $fh ( @{ $args->{in_fhs} } ) {
         my $first_line = <$fh>;
         die unless $first_line =~ /^\s*(\d+)\s+(\d+)\s*$/;
-        my ($num_of_seq, $seqlen) = ($1, $2);
+        my ( $num_of_seq, $seqlen ) = ( $1, $2 );
         my $n;
-        while(<$fh>){
+        while (<$fh>) {
             $n++;
             die unless /^(\S+)\s+(\S+)$/;
-            my ($seqid, $seqstr) = ($1, $2);
+            my ( $seqid, $seqstr ) = ( $1, $2 );
             print ">$seqid\n$seqstr\n";
             die "WARNING: Sequence length ERROR!\n"
-                unless $seqlen == length($seqstr);
+              unless $seqlen == length($seqstr);
         }
         die "WARNING: Sequence number ERROR!\n" unless $n == $num_of_seq;
     }
 }
 
-sub reformat{
+sub reformat {
     my $args = new_seqaction(
         -description => 'Read in and write out sequences. "-I fsata -O tab":
             Convert fasta format to tab format. ',
@@ -517,25 +537,29 @@ sub reformat{
             "outformat|O=s" => 'Output sequence format [default: fasta]'
         }
     );
-    my $informat = $args->{options}->{informat} // 'fasta';
+    my $informat  = $args->{options}->{informat}  // 'fasta';
     my $outformat = $args->{options}->{outformat} // 'fasta';
 
-    my $out = Bio::SeqIO->new(-fh => $args->{out_fh},
-                              -format => $outformat);
+    my $out = Bio::SeqIO->new(
+        -fh     => $args->{out_fh},
+        -format => $outformat
+    );
 
-    for my $fh (@{$args->{in_fhs}}){
-        my $in = Bio::SeqIO->new(-fh => $fh,
-                                 -format => $informat);
-        while(my $seq = $in->next_seq){
+    for my $fh ( @{ $args->{in_fhs} } ) {
+        my $in = Bio::SeqIO->new(
+            -fh     => $fh,
+            -format => $informat
+        );
+        while ( my $seq = $in->next_seq ) {
             $out->write_seq($seq);
         }
     }
 }
 
-sub rename{
+sub rename {
     my $args = new_seqaction(
         -description => "Rename sequence IDs",
-        -options => {
+        -options     => {
             "from|f=s" => 'From which string',
             "to|t=s"   => 'To which string'
         }
@@ -543,63 +567,65 @@ sub rename{
     my $from = $args->{options}->{from};
     my $to = $args->{options}->{to} // '';
     die "CAUTION: FROM or TO was not defined!"
-        unless defined $from and defined $to;
-    for my $in(@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+      unless defined $from and defined $to;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             my $id = $seq->display_id;
             $id =~ s/$from/$to/;
             $args->{out_io}->write_seq(
-                Bio::PrimarySeq->new(-display_id => $id,
-                                     -seq => $seq->seq));
+                Bio::PrimarySeq->new(
+                    -display_id => $id,
+                    -seq        => $seq->seq
+                )
+            );
         }
     }
 }
 
-sub revcom{
-    my $args = new_seqaction(
-        -description => 'Reverse complementary'
-    );
-    for my $in(@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            $args->{out_io}->write_seq(Bio::Perl::revcom($seq));
+sub revcom {
+    my $args = new_seqaction( -description => 'Reverse complementary' );
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            $args->{out_io}->write_seq( Bio::Perl::revcom($seq) );
         }
     }
 }
 
-sub rmdesc{
-    my $args = new_seqaction(
-        -description => 'Remove sequence descriptions'
-    );
-    for my $in(@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+sub rmdesc {
+    my $args = new_seqaction( -description => 'Remove sequence descriptions' );
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             $args->{out_io}->write_seq(
-                Bio::PrimarySeq->new(-display_id => $seq->display_id,
-                                     -seq => $seq->seq));
+                Bio::PrimarySeq->new(
+                    -display_id => $seq->display_id,
+                    -seq        => $seq->seq
+                )
+            );
         }
     }
 }
 
 sub seqlen {
-    my $args = new_seqaction(
-        -description => 'Print a list of sequence length',
-    );
+    my $args =
+      new_seqaction( -description => 'Print a list of sequence length', );
     my @lengths;
-    for my $in (@{$args->{bioseq_io}}){
-        while( my $seq = $in->next_seq ){
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             print $seq->display_id, "\t", $seq->length, "\n";
             push @lengths, $seq->length;
         }
     }
-    @lengths = sort {$b <=> $a} @lengths;
-    my $num_of_seq = scalar @lengths;
+    @lengths = sort { $b <=> $a } @lengths;
+    my $num_of_seq   = scalar @lengths;
     my $total_length = sum @lengths;
-    my $max_length = max @lengths;
-    my $min_length = min @lengths;
-    my $avg_length = sprintf "%.1f", $total_length / $num_of_seq;
-    my $sum = 0;
-    my $N50 = 0;
-    my $L50 = 0;
-    foreach my $len (@lengths){
+    my $max_length   = max @lengths;
+    my $min_length   = min @lengths;
+    my $avg_length   = sprintf "%.1f", $total_length / $num_of_seq;
+    my $sum          = 0;
+    my $N50          = 0;
+    my $L50          = 0;
+
+    foreach my $len (@lengths) {
         $N50++;
         $sum += $len;
         $L50 = $len;
@@ -616,100 +642,108 @@ sub seqlen {
     warn "# L50: $L50\n";
 }
 
-sub seqsort{
+sub seqsort {
     my $args = new_seqaction(
         -description => 'Sort sequences by name/size',
-        -options => {
+        -options     => {
             "sizes|s" => 'Sort by sizes (default by ID name)'
         }
     );
     my @seqobjs;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             push @seqobjs, $seq;
         }
     }
-    map{$args->{out_io}->write_seq($_)}( sort{ $args->{options}->{sizes} ?
-            $b->length <=> $a->length :
-            $a->display_id cmp $b->display_id
-        }@seqobjs);
+    map { $args->{out_io}->write_seq($_) } (
+        sort {
+                $args->{options}->{sizes}
+              ? $b->length <=> $a->length
+              : $a->display_id cmp $b->display_id
+        } @seqobjs
+    );
 }
 
-sub ssr{
+sub ssr {
     my $args = new_seqaction(
         -description => 'Find simple sequence repeats (SSR)',
-        -options => {
-            "gff|g" => 'Output data as GFF format',
+        -options     => {
+            "gff|g"    => 'Output data as GFF format',
             "length|l" => 'SSR length'
         }
     );
     my $gff = $args->{options}->{gff};
+
     # Defination of SSR:
     # Repeat unit 2bp to 6bp, length not less than 18bp
-    my ($id, $flank_seq_length) = (0, 100);
-    print join("\t",
+    my ( $id, $flank_seq_length ) = ( 0, 100 );
+    print join(
+        "\t",
         qw/ID          Seq_Name           Start
-           End         SSR                Length
-           Repeat_Unit Repeat_Unit_Length Repetitions
-           Sequence/
-        )."\n" unless $gff;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            my ($sequence, $seq_name) = ($seq->seq, $seq->display_id);
-            while($sequence =~ /(([ATGC]{2,6}?)\2{3,})/ig){
-                my ($match, $repeat_unit) = ($1, $2);
-                my ($repeat_length, $SSR_length)=
-                    (length($repeat_unit), length($match));
+          End         SSR                Length
+          Repeat_Unit Repeat_Unit_Length Repetitions
+          Sequence/
+      )
+      . "\n"
+      unless $gff;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            my ( $sequence, $seq_name ) = ( $seq->seq, $seq->display_id );
+            while ( $sequence =~ /(([ATGC]{2,6}?)\2{3,})/ig ) {
+                my ( $match, $repeat_unit ) = ( $1, $2 );
+                my ( $repeat_length, $SSR_length ) =
+                  ( length($repeat_unit), length($match) );
                 my $repetitions = $SSR_length / $repeat_length;
                 next if $match =~ /([ATGC])\1{5}/i;
-                next unless
-                    ($repeat_length == 2 and $SSR_length >= 12 or
-                     $repeat_length == 3 and $SSR_length >= 12 or
-                     $repeat_length == 4 and $SSR_length >= 12 or
-                     $repeat_length == 5 and $SSR_length >= 15 or
-                     $repeat_length == 6 and $SSR_length >= 18);
+                next
+                  unless ( $repeat_length == 2 and $SSR_length >= 12
+                    or $repeat_length == 3 and $SSR_length >= 12
+                    or $repeat_length == 4 and $SSR_length >= 12
+                    or $repeat_length == 5 and $SSR_length >= 15
+                    or $repeat_length == 6 and $SSR_length >= 18 );
                 $id++;
-                if($gff){
-                    print join("\t",
+                if ($gff) {
+                    print join(
+                        "\t",
                         $seq_name,
                         "GFAT.PL",
                         'SSR',
-                        pos($sequence)-$SSR_length+1,
+                        pos($sequence) - $SSR_length + 1,
                         pos($sequence),
-                        '1',
-                        '+',
-                        '.',
-                        join(";", "ID=SSR$id", "motif=$repeat_unit",
-                            "repetitions=$repetitions",
-                            "length=$SSR_length")
-                    )."\n";
+                        '1', '+', '.',
+                        join( ";",
+                            "ID=SSR$id",                "motif=$repeat_unit",
+                            "repetitions=$repetitions", "length=$SSR_length" )
+                    ) . "\n";
                 }
-                else{
-                    print join("\t",
-                        $id,
+                else {
+                    print join(
+                        "\t", $id,
                         $seq_name,
-                        pos($sequence)-$SSR_length+1,
+                        pos($sequence) - $SSR_length + 1,
                         pos($sequence),
                         $match,
                         $SSR_length,
                         $repeat_unit,
                         $repeat_length,
                         $SSR_length / $repeat_length,
-                        substr($sequence,
+                        substr(
+                            $sequence,
                             pos($sequence) - $SSR_length - $flank_seq_length,
-                            $SSR_length + $flank_seq_length * 2)
-                    )."\n";
+                            $SSR_length + $flank_seq_length * 2
+                        )
+                    ) . "\n";
                 }
             }
         }
     }
 }
 
-sub subseq{
+sub subseq {
     my $args = new_seqaction(
         -description => 'Get subsequences',
-        -options => {
-            "file|f=s"    => 'A file containing gene IDs with positions
+        -options     => {
+            "file|f=s" => 'A file containing gene IDs with positions
                               (Start and End), strand (4th column) is optional,
                               description (5th column) is optional',
             "seqname|s=s" => 'Sequence name',
@@ -718,120 +752,128 @@ sub subseq{
         }
     );
     my $options = $args->{options};
-    my $out = $args->{out_io};
-    my $infile = $options->{file};
-    my ($seqname, $start, $end) = @{$options}{qw/seqname start end/};
+    my $out     = $args->{out_io};
+    my $infile  = $options->{file};
+    my ( $seqname, $start, $end ) = @{$options}{qw/seqname start end/};
     die "ERROR in sequence name, start position and end position\n"
-        unless ($seqname and $start and $end) or $infile;
+      unless ( $seqname and $start and $end )
+      or $infile;
 
     my %seqpos;
-    if($seqname and $start and $end){
-        $seqpos{$seqname} = [$start, $end];
+    if ( $seqname and $start and $end ) {
+        $seqpos{$seqname} = [ $start, $end ];
     }
-    if($infile){
+    if ($infile) {
         open my $fh, $infile or die "$!";
-        while(<$fh>){
+        while (<$fh>) {
             chomp;
-            die "Input data ERROR in $_! Required format ".
-                "is \"ID\tStart\tEnd (and optional strand and description)\""
-                unless /^\S+\t\d+\t\d+(\t[+\-])?/;
+            die "Input data ERROR in $_! Required format "
+              . "is \"ID\tStart\tEnd (and optional strand and description)\""
+              unless /^\S+\t\d+\t\d+(\t[+\-])?/;
             @_ = split /\t/;
-            $seqpos{$_[0]} = [@_[1..$#_]];
+            $seqpos{ $_[0] } = [ @_[ 1 .. $#_ ] ];
         }
         close $fh;
     }
 
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
             my $id = $seq->display_id;
-            if($seqpos{$id}){
-                my $start = $seqpos{$id}->[0];
-                my $end   = $seqpos{$id}->[1];
+            if ( $seqpos{$id} ) {
+                my $start     = $seqpos{$id}->[0];
+                my $end       = $seqpos{$id}->[1];
                 my $subseq_id = "$id:$start-$end";
                 my $subseq;
-                if($seqpos{$id}->[2] and $seqpos{$id}->[2] eq '-'){
-                    $subseq = $seq->subseq($end, $start);
-                }else{
-                    $subseq = $seq->subseq($start, $end);
+                if ( $seqpos{$id}->[2] and $seqpos{$id}->[2] eq '-' ) {
+                    $subseq = $seq->subseq( $end, $start );
+                }
+                else {
+                    $subseq = $seq->subseq( $start, $end );
                 }
 
                 $out->write_seq(
-                    Bio::PrimarySeq->new(-display_id => $subseq_id,
-                                         -desc => $seqpos{$id}->[3] // '',
-                                         -seq => $subseq));
+                    Bio::PrimarySeq->new(
+                        -display_id => $subseq_id,
+                        -desc       => $seqpos{$id}->[3] // '',
+                        -seq        => $subseq
+                    )
+                );
             }
         }
     }
 }
 
-sub subseq2{
+sub subseq2 {
     my $args = new_seqaction(
         -desc => 'Get subsequences based an input file containing a list of
                   seuqence ID, start position, end position, strand, new ID',
         -options => {
-                     "file|f=s" => 'a list of seuqence ID, start position,
+            "file|f=s" => 'a list of seuqence ID, start position,
                                     end position, strand, new ID'
-                    }
+        }
     );
     my $listfile = $args->{options}->{file};
-    my $out = $args->{out_io};
+    my $out      = $args->{out_io};
 
     my %seqs;
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
-            $seqs{$seq->display_id} = $seq;
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+            $seqs{ $seq->display_id } = $seq;
         }
     }
 
     open my $fh, $listfile or die $!;
-    while(<$fh>){
+    while (<$fh>) {
         die "Format error: $_" unless /^(\S+)\t(-?\d+)\t(\d+)\t([+\-])\t(\S+)$/;
-        my ($chr, $start, $end, $strand, $new_id) =
-            ($1, $2, $3, $4, $5);
-        die "Start pos should be less than or equal to end pos : $_" if $start > $end;
+        my ( $chr, $start, $end, $strand, $new_id ) = ( $1, $2, $3, $4, $5 );
+        die "Start pos should be less than or equal to end pos : $_"
+          if $start > $end;
         die "$chr not found" unless $seqs{$chr};
         $start = 1 if $start < 1;
         $end = $seqs{$chr}->length if $end > $seqs{$chr}->length;
         $out->write_seq(
-              Bio::PrimarySeq->new(-display_id => $new_id,
-                                   -desc => "$chr:$start-$end|$strand",
-                                   -seq => $strand eq '+' ? $seqs{$chr}->subseq($start, $end)
-                                                           : $seqs{$chr}->subseq($end, $start)
-                                 ));
+            Bio::PrimarySeq->new(
+                -display_id => $new_id,
+                -desc       => "$chr:$start-$end|$strand",
+                -seq        => $strand eq '+'
+                ? $seqs{$chr}->subseq( $start, $end )
+                : $seqs{$chr}->subseq( $end,   $start )
+            )
+        );
     }
     close $fh;
 }
 
-sub totab{
+sub totab {
     my $args = new_seqaction(
         -desc => 'Convert FASTA format sequence to 2-column format.
                   This is a reverse action of "fromtab"',
         -options => {
             "desc|d" => 'Print description in the third column
                          [default: not]'
-                    }
+        }
     );
 
     my $print_desc = $args->{options}->{desc};
 
-    for my $in_io (@{$args->{bioseq_io}}){
-        while(my $seq = $in_io->next_seq){
+    for my $in_io ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in_io->next_seq ) {
             print $seq->display_id,
-                  "\t", $seq->seq,
-                  $print_desc ? "\t".$seq->desc : '',
-                  "\n";
+              "\t", $seq->seq,
+              $print_desc ? "\t" . $seq->desc : '',
+              "\n";
         }
     }
 }
 
-sub translate{
-    my $args = new_seqaction(
-        -description => 'Translate CDS to protein sequences'
-    );
-    for my $in (@{$args->{bioseq_io}}){
-        while(my $seq = $in->next_seq){
+sub translate {
+    my $args =
+      new_seqaction( -description => 'Translate CDS to protein sequences' );
+    for my $in ( @{ $args->{bioseq_io} } ) {
+        while ( my $seq = $in->next_seq ) {
+
             #my $pep = translate($seq);
-            $args->{out_io}->write_seq(Bio::Perl::translate($seq));
+            $args->{out_io}->write_seq( Bio::Perl::translate($seq) );
         }
     }
 }
