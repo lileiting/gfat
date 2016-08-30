@@ -81,7 +81,7 @@ sub clean {
     for my $in ( @{ $args->{bioseq_io} } ) {
         while ( my $seq = $in->next_seq ) {
             my $cleaned_seq =
-              join( '', grep { /[A-Za-z*]/ } split( //, $seq->seq ) );
+              join( '', grep { /[A-Za-z]/ } split( //, $seq->seq ) );
             $args->{out_io}->write_seq(
                 Bio::PrimarySeq->new(
                     -display_id  => $seq->display_id,
