@@ -11,7 +11,8 @@ our $in_desc = '<list.txt> [<list.txt> ...]';
 
 sub main{
     my %actions = (
-        'list2matrix' => 'Convert a list with three columns to a matrix'
+        'list2matrix' => 'Convert a three-column list to a matrix',
+        'matrix2list' => 'Convert a matrix to a three-column list'
     );
     &{\&{run_action(%actions)}};
 }
@@ -94,6 +95,31 @@ sub list2matrix{
                 $str .= $field_separator . ($data{$row}->{$col} // '-');
             }
             print "$str\n";
+        }
+    }
+}
+
+sub matrix2list{
+    my $args = new_action(
+        -desc => 'Convert a matrix to a three-column list'
+    );
+
+    for my $fh (@{$args->{in_fhs}}){
+        my %data;
+        my $title = <$fh>;
+        chomp $title;
+        my @title = split /\t/, $title;
+        while(<$fh>){
+            chomp;
+            my @f = split /\t/;
+            for(my $i = 1; $i <= $#f; $i++){
+                $data{$f[0]}->{$title[$i]} = $f[$i];
+            }
+        }
+        for my $key1 (sort {$a cmp $b} keys %data){
+            for my $key2 (sort {$a cmp $b} keys %{$data{$key1}}){
+                print join("\t", $key1, $key2, $data{$key1}->{$key2})."\n";
+            }
         }
     }
 }
