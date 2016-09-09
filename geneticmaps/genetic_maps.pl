@@ -8,7 +8,7 @@ use warnings;
 use strict;
 use FindBin;
 use List::Util qw(sum max min);
-use lib "$FindBin::RealBin/lib";
+use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use GFAT::Config;
 
