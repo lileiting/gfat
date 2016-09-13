@@ -33,6 +33,7 @@ sub main {
         rmdesc    => 'Remove sequence descriptions',
         seqlen    => 'Print a list of sequence length, N50, etc',
         seqsort   => 'Sort sequences by name/size',
+        seqsplit  => 'Split sequences by size',
         ssr       => 'Find simple sequence repeats (SSR)',
         subseq    => 'Get subsequence',
         subseq2   => 'Get subsequences based on input file (ID, start, end,
@@ -662,6 +663,30 @@ sub seqsort {
               : $a->display_id cmp $b->display_id
         } @seqobjs
     );
+}
+
+sub seqsplit{
+    my $args = new_seqaction(
+        -description => 'Split sequences by size',
+        -options => {
+            "size|s=i" => 'Sequence size [default: 1000000]'
+        }
+    );
+    my $size = $args->{options}->{size} // 1000000;
+
+    for my $in ( @{$args->{bioseq_io}}){
+        while (my $seq = $in->next_seq){
+            my $id = $seq->display_id;
+            my $len = $seq->length;
+            my $n = int($len / $size);
+            for my $i (1..$n){
+                printf "%s:%d-%d\n", $id, $size * ($i-1) + 1, $size * $i;
+            }
+            if ($size * $n != $len){
+                printf "%s:%d-%d\n", $id, $size * $n + 1, $len;
+            }
+        }
+    }
 }
 
 sub ssr {
