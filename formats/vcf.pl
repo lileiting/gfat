@@ -5,6 +5,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+our $in_desc = '<in.vcf|in.vcf.gz>';
 
 sub main{
     my %actions = (
