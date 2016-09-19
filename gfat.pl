@@ -23,7 +23,7 @@ end_of_usage
     for my $dir (glob "$FindBin::RealBin/*"){
         next unless -d $dir;
         $dir = basename $dir;
-        next if $dir =~ /^\.|dev|test|lib/i;
+        next if $dir =~ /^(\.|dev|test|lib|t)/i;
         print "    $dir\n";
     }
 
