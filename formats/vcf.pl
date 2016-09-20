@@ -12,8 +12,10 @@ our $in_desc = '<in.vcf|in.vcf.gz>';
 
 sub main{
     my %actions = (
+        chr2scaffold => 'Convert chromsome-based coordinates to scaffold-based
+            coordinates',
         filter => 'Perform chi square test, missing data filter, and add
-           genotype codes'
+            genotype codes'
     );
     &{ \&{run_action(%actions)} };
 }
@@ -23,6 +25,49 @@ main unless caller;
 ############################################################
 # Subroutines
 ############################################################
+
+sub chr2scaffold{
+    my $args = new_action(
+        -desc => 'Convert chromsome-based coordinates to scaffold-based
+            coordinates',
+        -options => {
+            "listfile|l=s" => 'chromsome-based coordinates to scaffold-based
+                coordinates mapping dictionary. Five columns required: Chr,
+                Scafold, Start on Chr, End on Chr, Strand'
+        }
+    );
+
+    my $listfile = $args->{options}->{listfile};
+    my %chr;
+    open my $list_fh, $listfile or die $!;
+    while(<$list_fh>){
+        chomp;
+        my ($chr, $scaffold, $start, $end, $strand) = split /\t/;
+        push @{$chr{$chr}}, [$scaffold, $start, $end, $strand];
+    }
+    close $list_fh;
+
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            print and next if /^#/;
+            my @f = split /\t/;
+            my ($chr, $pos) = @f[0,1];
+            for my $array (@{$chr{$chr}}){
+                my ($scaffold, $start, $end, $strand) = @$array;
+                if($pos >= $start and $pos <= $end){
+                    my $new_pos = $strand eq '-' ?
+                        $end - $pos   + 1 :
+                        $pos - $start + 1;
+                    print join("\t", $scaffold, $new_pos, @f[2..$#f]);
+                    last;
+                }
+            }
+        }
+    }
+
+}
+
+
 
 sub _determint_seg_type{
     croak "Two arguments required!" unless @_ == 2;
