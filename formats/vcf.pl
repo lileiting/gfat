@@ -194,17 +194,20 @@ sub filter{
                 # First two samples are parents
                 my @f = split /\t/;
                 $number_of_progenies = scalar(@f) - 9 - 2;
-                print '##INFO=<ID=SEGT,Number=0,Type=String,Description='.
+                print '##INFO=<ID=SEGT,Number=1,Type=String,Description='.
                       '"Segregation type: lmxll, nnxnp, hkxhk, efxeg, abxcd">'.
                       "\n";
                 print '##INFO=<ID=GTN,Number=11,Type=Integer,Description='.
-                      '"Number of genotypes for: ./., 0/0, 0/1, 1/1, 0/2, 1/2, '.
-                      '2/2, 0/3, 1/3, 2/3, 3/3">'."\n";
+                      '"Number of genotypes for: ./., 0/0, 0/1, 1/1, 0/2, '.
+                      '1/2, 2/2, 0/3, 1/3, 2/3, 3/3">'.
+                      "\n";
                 print '##INFO=<ID=PCHI,Number=1,Type=Float,Description='.
-                      '"P value of chi square test">'."\n";
+                      '"P value of chi square test">'.
+                      "\n";
                 print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='.
                       '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '.
-                      'eg, ee, fg, ac, bd, bc, bd">'."\n";
+                      'eg, ee, fg, ac, bd, bc, bd">'.
+                      "\n";
                 print;
                 next;
             }
