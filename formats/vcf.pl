@@ -10,14 +10,14 @@ use GFAT::ActionNew;
 use GFAT::Chisquare;
 our $in_desc = '<in.vcf|in.vcf.gz>';
 
-sub main{
+sub main {
     my %actions = (
         chr2scaffold => 'Convert chromsome-based coordinates to scaffold-based
             coordinates',
         filter => 'Perform chi square test, missing data filter, and add
             genotype codes'
     );
-    &{ \&{run_action(%actions)} };
+    &{ \&{ run_action(%actions) } };
 }
 
 main unless caller;
@@ -26,7 +26,7 @@ main unless caller;
 # Subroutines
 ############################################################
 
-sub chr2scaffold{
+sub chr2scaffold {
     my $args = new_action(
         -desc => 'Convert chromsome-based coordinates to scaffold-based
             coordinates',
@@ -41,19 +41,19 @@ sub chr2scaffold{
     die "List file is required!\n" unless $listfile;
     my %chr;
     open my $list_fh, $listfile or die $!;
-    while(<$list_fh>){
+    while (<$list_fh>) {
         chomp;
-        my ($chr, $scaffold, $start, $end, $strand) = split /\t/;
-        push @{$chr{$chr}}, [$scaffold, $start, $end, $strand];
+        my ( $chr, $scaffold, $start, $end, $strand ) = split /\t/;
+        push @{ $chr{$chr} }, [ $scaffold, $start, $end, $strand ];
     }
     close $list_fh;
 
-    for my $fh (@{$args->{in_fhs}}){
-        while(<$fh>){
-            if(/^##contig=<ID=(Chr\d+)/){
+    for my $fh ( @{ $args->{in_fhs} } ) {
+        while (<$fh>) {
+            if (/^##contig=<ID=(Chr\d+)/) {
                 print and next if not exists $chr{$1};
-                for my $array(@{$chr{$1}}){
-                    my ($scaffold, $start, $end, $strand) = @$array;
+                for my $array ( @{ $chr{$1} } ) {
+                    my ( $scaffold, $start, $end, $strand ) = @$array;
                     my $length = $end - $start + 1;
                     print "##contig=<ID=$scaffold,length=$length>\n";
                 }
@@ -61,15 +61,16 @@ sub chr2scaffold{
             }
             print and next if /^#/;
             my @f = split /\t/;
-            my ($chr, $pos) = @f[0,1];
+            my ( $chr, $pos ) = @f[ 0, 1 ];
             print and next if not exists $chr{$chr};
-            for my $array (@{$chr{$chr}}){
-                my ($scaffold, $start, $end, $strand) = @$array;
-                if($pos >= $start and $pos <= $end){
-                    my $new_pos = $strand eq '-' ?
-                        $end - $pos   + 1 :
-                        $pos - $start + 1;
-                    print join("\t", $scaffold, $new_pos, @f[2..$#f]);
+            for my $array ( @{ $chr{$chr} } ) {
+                my ( $scaffold, $start, $end, $strand ) = @$array;
+                if ( $pos >= $start and $pos <= $end ) {
+                    my $new_pos =
+                        $strand eq '-'
+                      ? $end - $pos + 1
+                      : $pos - $start + 1;
+                    print join( "\t", $scaffold, $new_pos, @f[ 2 .. $#f ] );
                     last;
                 }
             }
@@ -77,109 +78,109 @@ sub chr2scaffold{
     }
 }
 
-sub _determint_seg_type{
+sub _determint_seg_type {
     croak "Two arguments required!" unless @_ == 2;
-    my ($parent1, $parent2) = @_;
+    my ( $parent1, $parent2 ) = @_;
     my %hash;
-    $hash{seg_type} = 'NA';
+    $hash{seg_type}  = 'NA';
     $hash{genotypes} = [];
     my @genotypes = qw(./.
-       0/0
-       0/1 1/1
-       0/2 1/2 2/2
-       0/3 1/3 2/3 3/3);
-    map{$hash{$_} = "--"}@genotypes;
+      0/0
+      0/1 1/1
+      0/2 1/2 2/2
+      0/3 1/3 2/3 3/3);
+    map { $hash{$_} = "--" } @genotypes;
 
     # nnxnp, lmxll, hkxhk
-    if($parent1 eq '0/0' and $parent2 eq '0/1'){
-        $hash{seg_type}            = 'nnxnp';
-        $hash{genotypes}           = [qw(0/0 0/1)];
-        @hash{@{$hash{genotypes}}} =  qw(nn  np);
+    if ( $parent1 eq '0/0' and $parent2 eq '0/1' ) {
+        $hash{seg_type}                = 'nnxnp';
+        $hash{genotypes}               = [qw(0/0 0/1)];
+        @hash{ @{ $hash{genotypes} } } = qw(nn  np);
     }
-    elsif($parent1 eq '0/1' and $parent2 eq '0/0'){
-        $hash{seg_type}            = 'lmxll';
-        $hash{genotypes}           = [qw(0/1 0/0)];
-        @hash{@{$hash{genotypes}}} =  qw(lm  ll);
+    elsif ( $parent1 eq '0/1' and $parent2 eq '0/0' ) {
+        $hash{seg_type}                = 'lmxll';
+        $hash{genotypes}               = [qw(0/1 0/0)];
+        @hash{ @{ $hash{genotypes} } } = qw(lm  ll);
     }
-    elsif($parent1 eq '0/1' and $parent2 eq '0/1'){
-        $hash{seg_type}            = 'hkxhk';
-        $hash{genotypes}           = [qw(0/0 0/1 1/1)];
-        @hash{@{$hash{genotypes}}} =  qw(hh  hk  kk);
+    elsif ( $parent1 eq '0/1' and $parent2 eq '0/1' ) {
+        $hash{seg_type}                = 'hkxhk';
+        $hash{genotypes}               = [qw(0/0 0/1 1/1)];
+        @hash{ @{ $hash{genotypes} } } = qw(hh  hk  kk);
     }
 
     # efxeg, six combinations
-    elsif($parent1 eq '0/1' and $parent2 eq '0/2'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(0/1 0/2 0/0 1/2)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '0/1' and $parent2 eq '0/2' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(0/1 0/2 0/0 1/2)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
-    elsif($parent1 eq '0/1' and $parent2 eq '1/2'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(0/1 1/2 1/1 0/2)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '0/1' and $parent2 eq '1/2' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(0/1 1/2 1/1 0/2)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
-    elsif($parent1 eq '0/2' and $parent2 eq '0/1'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(0/2 0/1 0/0 1/2)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '0/2' and $parent2 eq '0/1' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(0/2 0/1 0/0 1/2)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
-    elsif($parent1 eq '0/2' and $parent2 eq '1/2'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(0/2 1/2 2/2 0/1)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '0/2' and $parent2 eq '1/2' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(0/2 1/2 2/2 0/1)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
-    elsif($parent1 eq '1/2' and $parent2 eq '0/1'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(1/2 0/1 1/1 0/2)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '1/2' and $parent2 eq '0/1' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(1/2 0/1 1/1 0/2)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
-    elsif($parent1 eq '1/2' and $parent2 eq '0/2'){
-        $hash{seg_type}            = 'efxeg';
-        $hash{genotypes}           = [qw(1/2 0/2 2/2 0/1)];
-        @hash{@{$hash{genotypes}}} =  qw(ef  eg  ee  fg);
+    elsif ( $parent1 eq '1/2' and $parent2 eq '0/2' ) {
+        $hash{seg_type}                = 'efxeg';
+        $hash{genotypes}               = [qw(1/2 0/2 2/2 0/1)];
+        @hash{ @{ $hash{genotypes} } } = qw(ef  eg  ee  fg);
     }
 
     # abxcd, six combinations
-    elsif($parent1 eq '0/1' and $parent2 eq '2/3'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/2 1/3 1/2 1/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '0/1' and $parent2 eq '2/3' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/2 1/3 1/2 1/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif($parent1 eq '0/2' and $parent2 eq '1/3'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/1 0/3 1/2 2/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '0/2' and $parent2 eq '1/3' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/1 0/3 1/2 2/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif($parent1 eq '0/3' and $parent2 eq '1/2'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/1 0/2 1/3 2/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '0/3' and $parent2 eq '1/2' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/1 0/2 1/3 2/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif($parent1 eq '1/2' and $parent2 eq '0/3'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/1 1/3 0/2 2/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '1/2' and $parent2 eq '0/3' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/1 1/3 0/2 2/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif($parent1 eq '1/3' and $parent2 eq '0/2'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/1 1/2 0/3 2/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '1/3' and $parent2 eq '0/2' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/1 1/2 0/3 2/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif($parent1 eq '2/3' and $parent1 eq '0/1'){
-        $hash{seg_type}            = 'abxcd';
-        $hash{genotypes}           = [qw(0/2 1/2 0/3 1/3)];
-        @hash{@{$hash{genotypes}}} =  qw(ac  ad  bc  bd);
+    elsif ( $parent1 eq '2/3' and $parent1 eq '0/1' ) {
+        $hash{seg_type}                = 'abxcd';
+        $hash{genotypes}               = [qw(0/2 1/2 0/3 1/3)];
+        @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    else{
+    else {
         return %hash;
     }
 
     return %hash;
 }
 
-sub filter{
+sub filter {
     my $args = new_action(
-        -desc => 'Filter VCF data',
+        -desc    => 'Filter VCF data',
         -options => {
             "missing|m=f" => 'Missing data rate.
                 Allowed missing data =
@@ -191,73 +192,73 @@ sub filter{
     );
 
     my $missing = $args->{options}->{missing} // 0.1;
-    my $pvalue = $args->{options}->{pvalue} // 0.05;
+    my $pvalue  = $args->{options}->{pvalue}  // 0.05;
 
-    for my $fh (@{$args->{in_fhs}}){
+    for my $fh ( @{ $args->{in_fhs} } ) {
         my $number_of_progenies;
-        while(<$fh>){
+        while (<$fh>) {
             print and next if /^##/;
-            if(/^#[^#]/){
+            if (/^#[^#]/) {
+
                 # First two samples are parents
                 my @f = split /\t/;
                 $number_of_progenies = scalar(@f) - 9 - 2;
-                print '##INFO=<ID=SEGT,Number=1,Type=String,Description='.
-                      '"Segregation type: lmxll, nnxnp, hkxhk, efxeg, abxcd">'.
-                      "\n";
-                print '##INFO=<ID=GTN,Number=11,Type=Integer,Description='.
-                      '"Number of genotypes for: ./., 0/0, 0/1, 1/1, 0/2, '.
-                      '1/2, 2/2, 0/3, 1/3, 2/3, 3/3">'.
-                      "\n";
-                print '##INFO=<ID=PCHI,Number=1,Type=Float,Description='.
-                      '"P value of chi square test">'.
-                      "\n";
-                print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='.
-                      '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '.
-                      'eg, ee, fg, ac, bd, bc, bd, --">'.
-                      "\n";
+                print '##INFO=<ID=SEGT,Number=1,Type=String,Description='
+                  . '"Segregation type: lmxll, nnxnp, hkxhk, efxeg, abxcd">'
+                  . "\n";
+                print '##INFO=<ID=GTN,Number=11,Type=Integer,Description='
+                  . '"Number of genotypes for: ./., 0/0, 0/1, 1/1, 0/2, '
+                  . '1/2, 2/2, 0/3, 1/3, 2/3, 3/3">' . "\n";
+                print '##INFO=<ID=PCHI,Number=1,Type=Float,Description='
+                  . '"P value of chi square test">' . "\n";
+                print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='
+                  . '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '
+                  . 'eg, ee, fg, ac, bd, bc, bd, --">' . "\n";
                 print;
                 next;
             }
             chomp;
-            my @f = split /\t/;
-            my $ALT = $f[4];
-            my @parents = @f[9,10];
-            my @progenies = @f[11..$#f];
-            my @parents_GT = map{(split /:/)[0]} @parents;
-            my @progenies_GT = map{(split /:/)[0]} @progenies;
-            my %hash = _determint_seg_type(@parents_GT);
+            my @f             = split /\t/;
+            my $ALT           = $f[4];
+            my @parents       = @f[ 9, 10 ];
+            my @progenies     = @f[ 11 .. $#f ];
+            my @parents_GT    = map { ( split /:/ )[0] } @parents;
+            my @progenies_GT  = map { ( split /:/ )[0] } @progenies;
+            my %hash          = _determint_seg_type(@parents_GT);
             my @all_genotypes = qw(./.
-                0/0
-                0/1 1/1
-                0/2 1/2 2/2
-                0/3 1/3 2/3 3/3);
-            my %progenies_GT = map{$_, 0} @all_genotypes;
-            map{$progenies_GT{$_}++}@progenies_GT;
-            my @seg_data = @progenies_GT{@{$hash{genotypes}}};
+              0/0
+              0/1 1/1
+              0/2 1/2 2/2
+              0/3 1/3 2/3 3/3);
+            my %progenies_GT = map { $_, 0 } @all_genotypes;
+            map { $progenies_GT{$_}++ } @progenies_GT;
+            my @seg_data = @progenies_GT{ @{ $hash{genotypes} } };
 
             # Filter by segregation types
             next if $hash{seg_type} eq 'NA';
 
             # Filter by missing rate
             my $valid_genotypes = sum(@seg_data);
-            next if $valid_genotypes < $number_of_progenies * (1 - $missing);
+            next if $valid_genotypes < $number_of_progenies * ( 1 - $missing );
 
             # Filter by chi square test
             my $p = chisqtest $hash{seg_type}, @seg_data;
             next if $p < $pvalue;
 
             # Print results
-            $f[7] .= ";SEGT=$hash{seg_type};GTN=".join(",",
-               @progenies_GT{@all_genotypes}).";PCHI=$p";
+            $f[7] .=
+                ";SEGT=$hash{seg_type};GTN="
+              . join( ",", @progenies_GT{@all_genotypes} )
+              . ";PCHI=$p";
             $f[8] .= ':GTCD';
             my @parents_GTCD = split /x/, $hash{seg_type};
-            $f[9] .= ":".$parents_GTCD[0];
-            $f[10] .= ":".$parents_GTCD[1];
-            for (my $i = 0; $i <= $#progenies_GT; $i++){
-                $f[$i+11] .= ":".$hash{$progenies_GT[$i]};
+            $f[9]  .= ":" . $parents_GTCD[0];
+            $f[10] .= ":" . $parents_GTCD[1];
+            for ( my $i = 0 ; $i <= $#progenies_GT ; $i++ ) {
+                $f[ $i + 11 ] .= ":" . $hash{ $progenies_GT[$i] };
             }
 
-            print join("\t", @f)."\n";
+            print join( "\t", @f ) . "\n";
         }
     }
 }
