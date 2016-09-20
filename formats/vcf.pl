@@ -38,6 +38,7 @@ sub chr2scaffold{
     );
 
     my $listfile = $args->{options}->{listfile};
+    die "List file is required!\n" unless $listfile;
     my %chr;
     open my $list_fh, $listfile or die $!;
     while(<$list_fh>){
@@ -49,9 +50,19 @@ sub chr2scaffold{
 
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
+            if(/^##contig=<ID=(Chr\d+)/){
+                print and next if not exists $chr{$1};
+                for my $array(@{$chr{$1}}){
+                    my ($scaffold, $start, $end, $strand) = @$array;
+                    my $length = $end - $start + 1;
+                    print "##contig=<ID=$scaffold,length=$length>\n";
+                }
+                next;
+            }
             print and next if /^#/;
             my @f = split /\t/;
             my ($chr, $pos) = @f[0,1];
+            print and next if not exists $chr{$chr};
             for my $array (@{$chr{$chr}}){
                 my ($scaffold, $start, $end, $strand) = @$array;
                 if($pos >= $start and $pos <= $end){
@@ -64,10 +75,7 @@ sub chr2scaffold{
             }
         }
     }
-
 }
-
-
 
 sub _determint_seg_type{
     croak "Two arguments required!" unless @_ == 2;
@@ -81,7 +89,6 @@ sub _determint_seg_type{
        0/2 1/2 2/2
        0/3 1/3 2/3 3/3);
     map{$hash{$_} = "--"}@genotypes;
-
 
     # nnxnp, lmxll, hkxhk
     if($parent1 eq '0/0' and $parent2 eq '0/1'){
@@ -206,7 +213,7 @@ sub filter{
                       "\n";
                 print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='.
                       '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '.
-                      'eg, ee, fg, ac, bd, bc, bd">'.
+                      'eg, ee, fg, ac, bd, bc, bd, --">'.
                       "\n";
                 print;
                 next;
@@ -216,13 +223,6 @@ sub filter{
             my $ALT = $f[4];
             my @parents = @f[9,10];
             my @progenies = @f[11..$#f];
-            # Do not allow missing data in parents
-            # next if $parents[0] =~ m{\./\.} or $parents[1] =~ m{\./\.};
-            #my $number_of_missing = 0;
-            #for my $progeny (@progenies){
-            #   $number_of_missing++ if $progeny =~ m{\./\.};
-            #}
-            #$number_of_missing > $number_of_progenies * $missing ? next : print;
             my @parents_GT = map{(split /:/)[0]} @parents;
             my @progenies_GT = map{(split /:/)[0]} @progenies;
             my %hash = _determint_seg_type(@parents_GT);
@@ -261,7 +261,5 @@ sub filter{
         }
     }
 }
-
-
 
 __END__
