@@ -187,12 +187,23 @@ sub filter {
                 total number of progenies *
                 missing data rate [default: 0.1]',
             "pvalue|p=f" => 'P-value cutoff for Chi square test
-                [default: 0.05]'
+                [default: 0.05]',
+            "no_codes|C" => 'Do not add genotype codes, like lm,
+                ll, nn, np, hh, hk, kk, etc  
+                [default: add genotype codes]',
+            "no_stats|S" => 'Do not add statistics to the INFO,
+                including SEGT (segregation type), 
+                GTN (genotype number), and PCHI (p-value of 
+                chi square test) [default: add statistics to 
+                the INFO]'
         }
     );
 
     my $missing = $args->{options}->{missing} // 0.1;
     my $pvalue  = $args->{options}->{pvalue}  // 0.05;
+    my $no_codes = $args->{options}->{no_codes};
+    my $no_stats = $args->{options}->{no_stats};
+
     die "Missing data rate should be in the range of [0, 1]"
         unless $missing >= 0 and $missing <= 1;
     die "P value should be in the range of [0, 1]"
@@ -250,16 +261,21 @@ sub filter {
             next if $p < $pvalue;
 
             # Print results
-            $f[7] .=
-                ";SEGT=$hash{seg_type};GTN="
-              . join( ",", @progenies_GT{@all_genotypes} )
-              . ";PCHI=$p";
-            $f[8] .= ':GTCD';
-            my @parents_GTCD = split /x/, $hash{seg_type};
-            $f[9]  .= ":" . $parents_GTCD[0];
-            $f[10] .= ":" . $parents_GTCD[1];
-            for ( my $i = 0 ; $i <= $#progenies_GT ; $i++ ) {
-                $f[ $i + 11 ] .= ":" . $hash{ $progenies_GT[$i] };
+            if( not $no_stats){
+                $f[7] .=
+                    ";SEGT=$hash{seg_type};GTN="
+                  . join( ",", @progenies_GT{@all_genotypes} )
+                  . ";PCHI=$p";
+            }
+
+            if( not $no_codes ){
+                $f[8] .= ':GTCD';
+                my @parents_GTCD = split /x/, $hash{seg_type};
+                $f[9]  .= ":" . $parents_GTCD[0];
+                $f[10] .= ":" . $parents_GTCD[1];
+                for ( my $i = 0 ; $i <= $#progenies_GT ; $i++ ) {
+                    $f[ $i + 11 ] .= ":" . $hash{ $progenies_GT[$i] };
+               }
             }
 
             print join( "\t", @f ) . "\n";
