@@ -693,8 +693,7 @@ sub ssr {
     my $args = new_seqaction(
         -description => 'Find simple sequence repeats (SSR)',
         -options     => {
-            "gff|g"    => 'Output data as GFF format',
-            "length|l" => 'SSR length'
+            "gff|g"    => 'Output data as GFF format'
         }
     );
     my $gff = $args->{options}->{gff};

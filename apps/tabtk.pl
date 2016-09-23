@@ -2,9 +2,12 @@
 
 use warnings;
 use strict;
+use Text::Abbrev;
 
 sub main{
+    my %subcmd = abbrev qw(cut num isct grep);
     if(`which tabtk`){
+        $ARGV[0] = $subcmd{$ARGV[0]} if @ARGV > 0;
         system("tabtk @ARGV");
     }
     else{

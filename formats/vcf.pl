@@ -193,6 +193,10 @@ sub filter {
 
     my $missing = $args->{options}->{missing} // 0.1;
     my $pvalue  = $args->{options}->{pvalue}  // 0.05;
+    die "Missing data rate should be in the range of [0, 1]"
+        unless $missing >= 0 and $missing <= 1;
+    die "P value should be in the range of [0, 1]"
+        unless $pvalue >= 0 and $pvalue <= 1;
 
     for my $fh ( @{ $args->{in_fhs} } ) {
         my $number_of_progenies;
