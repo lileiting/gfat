@@ -472,6 +472,8 @@ sub motif {
     my $pattern       = $args->{options}->{pattern};
     my $print_summary = $args->{options}->{summary};
 
+    die "CAUTION: A pattern should be given with -p!" unless $pattern;
+
     for my $in ( @{ $args->{bioseq_io} } ) {
         while ( my $seq = $in->next_seq ) {
             my $seqid  = $seq->display_id;
