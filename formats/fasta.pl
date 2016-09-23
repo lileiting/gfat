@@ -468,7 +468,7 @@ sub motif {
                           rather than sequence only'
         }
     );
-    my $out           = $args->{options}->{out_io};
+    my $out           = $args->{out_io};
     my $pattern       = $args->{options}->{pattern};
     my $print_summary = $args->{options}->{summary};
 
