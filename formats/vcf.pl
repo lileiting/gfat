@@ -178,6 +178,25 @@ sub _determint_seg_type {
     return %hash;
 }
 
+sub _filter_by_mindepth{
+    my ($mindepth, $f) = @_;
+    my @format = split(/:/, $f->[8]);
+    my %index = map{$format[$_], $_}(0..$#format);
+    croak "DP tag is missing!" if not exists $index{DP};
+    my @samples_GT;
+    for my $i (9..$#{$f}){
+        my @tags = split /:/, $f->[$i];
+        my $depth = $tags[$index{DP}];
+        if($tags[0] ne './.' and $depth < $mindepth){
+            push @samples_GT, './.';
+        }
+        else{
+            push @samples_GT, $tags[0];
+        }
+    }
+    return @samples_GT;
+}
+
 sub filter {
     my $args = new_action(
         -desc    => 'Filter VCF data',
@@ -188,6 +207,8 @@ sub filter {
                 missing data rate [default: 0.1]',
             "pvalue|p=f" => 'P-value cutoff for Chi square test
                 [default: 0.05]',
+            "mindepth|I=i" => 'Minimum depth for trusted 
+                genotype calls, 0: disable, [default: 3]',
             "no_codes|C" => 'Do not add genotype codes, like lm,
                 ll, nn, np, hh, hk, kk, etc  
                 [default: add genotype codes]',
@@ -201,6 +222,7 @@ sub filter {
 
     my $missing = $args->{options}->{missing} // 0.1;
     my $pvalue  = $args->{options}->{pvalue}  // 0.05;
+    my $mindepth = $args->{options}->{mindepth} // 3;
     my $no_codes = $args->{options}->{no_codes};
     my $no_stats = $args->{options}->{no_stats};
 
@@ -208,6 +230,8 @@ sub filter {
         unless $missing >= 0 and $missing <= 1;
     die "P value should be in the range of [0, 1]"
         unless $pvalue >= 0 and $pvalue <= 1;
+    die "Depth should be integer and >= 0"
+        unless $mindepth =~ /\d+/;
 
     for my $fh ( @{ $args->{in_fhs} } ) {
         my $number_of_progenies;
@@ -235,10 +259,11 @@ sub filter {
             chomp;
             my @f             = split /\t/;
             my $ALT           = $f[4];
-            my @parents       = @f[ 9, 10 ];
-            my @progenies     = @f[ 11 .. $#f ];
-            my @parents_GT    = map { ( split /:/ )[0] } @parents;
-            my @progenies_GT  = map { ( split /:/ )[0] } @progenies;
+            my @samples_GT    = $mindepth > 0
+                 ? _filter_by_mindepth($mindepth, \@f)
+                 : map { ( split /:/ )[0] } @f[9..$#f];
+            my @parents_GT    = @samples_GT[0,1];
+            my @progenies_GT  = @samples_GT[2..$#samples_GT];
             my %hash          = _determint_seg_type(@parents_GT);
             my @all_genotypes = qw(./.
               0/0
