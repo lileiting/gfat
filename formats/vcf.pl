@@ -166,7 +166,7 @@ sub _determint_seg_type {
         $hash{genotypes}               = [qw(0/1 1/2 0/3 2/3)];
         @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    elsif ( $parent1 eq '2/3' and $parent1 eq '0/1' ) {
+    elsif ( $parent1 eq '2/3' and $parent2 eq '0/1' ) {
         $hash{seg_type}                = 'abxcd';
         $hash{genotypes}               = [qw(0/2 1/2 0/3 1/3)];
         @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
