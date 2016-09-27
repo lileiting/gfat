@@ -250,6 +250,8 @@ sub filter {
                   . '1/2, 2/2, 0/3, 1/3, 2/3, 3/3">' . "\n";
                 print '##INFO=<ID=PCHI,Number=1,Type=Float,Description='
                   . '"P value of chi square test">' . "\n";
+                print '##INFO=<ID=MISS,Number=1,Type=Integer,Description='
+                  . '"Number of missing data">';
                 print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='
                   . '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '
                   . 'eg, ee, fg, ac, bd, bc, bd, --">' . "\n";
@@ -278,8 +280,8 @@ sub filter {
             next if $hash{seg_type} eq 'NA';
 
             # Filter by missing rate
-            my $valid_genotypes = sum(@seg_data);
-            next if $valid_genotypes < $number_of_progenies * ( 1 - $missing );
+            my $missing_genotypes = $number_of_progenies - sum(@seg_data);
+            next if $missing_genotypes > $number_of_progenies * $missing;
 
             # Filter by chi square test
             my $p = chisqtest $hash{seg_type}, @seg_data;
@@ -290,7 +292,7 @@ sub filter {
                 $f[7] .=
                     ";SEGT=$hash{seg_type};GTN="
                   . join( ",", @progenies_GT{@all_genotypes} )
-                  . ";PCHI=$p";
+                  . ";PCHI=$p;MISS=$missing_genotypes";
             }
 
             if( not $no_codes ){
