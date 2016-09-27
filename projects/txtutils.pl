@@ -7,6 +7,20 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 our $in_desc = '<tab file> [<tab file> ...]';
 
+sub main{
+    my %actions = (
+        fgrep  => 'Exactly match a column, rather than match by
+            regular expression',
+        uniq   => 'Print uniq lines without preprocessing by
+            sort',
+        -desc  => 'A set of Perl version codes try to reproduce the
+            function of some basic shell tools, like fgrep,
+            uniq, etc. Here each tool possess some features
+            that its corresponding shell version might not have.'
+    );
+    &{\&{run_action(%actions)}};
+}
+
 sub fgrep {
     my $args = new_action(
         -desc => 'Get a subset of lines from a file based on a list
@@ -100,20 +114,6 @@ sub uniq{
                   "\t".$lines{$line} : '',
               "\n";
     }
-}
-
-sub main{
-    my %actions = (
-        fgrep  => 'Exactly match a column, rather than match by
-            regular expression',
-        uniq   => 'Print uniq lines without preprocessing by
-            sort',
-        -desc  => 'A set of Perl version codes try to reproduce the
-            function of some basic shell tools, like fgrep,
-            uniq, etc. Here each tool possess some features
-            that its corresponding shell version might not have.'
-    );
-    &{\&{run_action(%actions)}};
 }
 
 main() unless caller;
