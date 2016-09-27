@@ -251,7 +251,7 @@ sub filter {
                 print '##INFO=<ID=PCHI,Number=1,Type=Float,Description='
                   . '"P value of chi square test">' . "\n";
                 print '##INFO=<ID=MISS,Number=1,Type=Integer,Description='
-                  . '"Number of missing data">';
+                  . '"Number of missing data">' . "\n";
                 print '##FORMAT=<ID=GTCD,Number=1,Type=String,Description='
                   . '"Genotype codes: lm, ll, nn, np, hh, hk, kk, ef, '
                   . 'eg, ee, fg, ac, bd, bc, bd, --">' . "\n";
