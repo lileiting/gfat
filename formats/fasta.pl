@@ -618,6 +618,10 @@ sub seqlen {
             push @lengths, $seq->length;
         }
     }
+    die "ERROR: No sequences were found! Possibly the "
+      . "input sequence file was empty, or wrong path.\n" 
+      if @lengths == 0;
+
     @lengths = sort { $b <=> $a } @lengths;
     my $num_of_seq   = scalar @lengths;
     my $total_length = sum @lengths;
