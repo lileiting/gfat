@@ -14,8 +14,9 @@ sub main {
     my %actions = (
         chr2scaffold => 'Convert chromsome-based coordinates to scaffold-based
             coordinates',
-        filter => 'Perform chi square test, missing data filter, and add
-            genotype codes'
+        clean => 'Clean information added by the filter action',
+        filter => 'Perform chi square test, missing data filter, depth filter
+            and add genotype codes'
     );
     &{ \&{ run_action(%actions) } };
 }
@@ -73,6 +74,47 @@ sub chr2scaffold {
                     print join( "\t", $scaffold, $new_pos, @f[ 2 .. $#f ] );
                     last;
                 }
+            }
+        }
+    }
+}
+
+sub clean {
+    my $args = new_action (
+        -desc => 'Clean information added by the filter action'
+    );
+
+    for my $fh ( @{ $args->{in_fhs} } ) {
+        while (<$fh>) {
+            if(/^#/){
+                print if not ( /^##INFO=<ID=(SEGT|GTN|PCHI|MISS)/
+                    or /^##FORMAT=<ID=GTCD/ );
+            }
+            else{
+                chomp;
+                my @f = split /\t/;
+
+                my @info = map { [ split /=/ ] } ( split /;/, $f[7] );
+                my %info_ex = map{$_, 1} qw(SEGT GTN PCHI MISS);
+                my @kept_index = grep {not exists $info_ex{$info[$_]->[0]}}
+                    (0..$#info);
+                $f[7] = join( ";", map{ join( "=", @{ $info[$_] } ) }
+                    @kept_index );
+
+                my @formats = split /:/, $f[8];
+                my $index;
+                for(my $i = 0; $i <= $#formats; $i++){
+                    $index = $i and last if $formats[$i] eq 'GTCD';
+                }
+                print and next if not defined $index;
+                splice @formats, $index, 1;
+                $f[8] = join(":", @formats);
+                for my $i (9..$#f){
+                    my @tags = split /:/, $f[$i];
+                    splice @tags, $index, 1;
+                    $f[$i] = join(":", @tags);
+                }
+                print join("\t", @f) . "\n";
             }
         }
     }
@@ -207,15 +249,15 @@ sub filter {
                 missing data rate [default: 0.1]',
             "pvalue|p=f" => 'P-value cutoff for Chi square test
                 [default: 0.05]',
-            "mindepth|I=i" => 'Minimum depth for trusted 
+            "mindepth|I=i" => 'Minimum depth for trusted
                 genotype calls, 0: disable, [default: 3]',
             "no_codes|C" => 'Do not add genotype codes, like lm,
-                ll, nn, np, hh, hk, kk, etc  
+                ll, nn, np, hh, hk, kk, etc
                 [default: add genotype codes]',
             "no_stats|S" => 'Do not add statistics to the INFO,
-                including SEGT (segregation type), 
-                GTN (genotype number), and PCHI (p-value of 
-                chi square test) [default: add statistics to 
+                including SEGT (segregation type),
+                GTN (genotype number), and PCHI (p-value of
+                chi square test) [default: add statistics to
                 the INFO]'
         }
     );
