@@ -8,52 +8,32 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use Math::GSL::Statistics qw/gsl_stats_correlation/;
 use Math::GSL::CDF qw/gsl_cdf_tdist_P/;
-
-sub main_usage{
-    print <<"usage";
-
-Usage
-    $FindBin::Script ACTION [OPTIONS]
-
-Description
-    Input is a data matrix, which defined as,
-    1) frist row is sample names
-    2) first column is observation names
-    3) one row per observation
-    4) one column per sample
-
-Available Actions
-    pcor   | calculate pairwise correlation
-    filter | Filter the results from pcor
-
-    p1     | A shortcut for running both pcor and filter
-
-    sifinfo| Print information for sif format files (number
-             of nodes and edges)
-    cor2sif| Convert *.cor format to *.sif format
-
-usage
-    exit;
-}
+our $in_desc = "<matrix.txt>";
 
 sub main{
-    main_usage unless @ARGV;
-    my $action = shift @ARGV;
-    if(defined &{\&{$action}}){
-        &{\&{$action}};
-    }
-    else{
-        die "CAUTION: action $action was not defined!\n";
-    }
-}
+    my %actions = (
+        pcor   => 'calculate pairwise correlation',
+        filter => 'Filter the results from pcor',
+        p1     => 'A shortcut for running both pcor and filter',
 
-main unless caller;
+        sifinfo=> 'Print information for sif format files (number
+             of nodes and edges)',
+        cor2sif=> 'Convert *.cor format to *.sif format',
+        -desc  => 'Description
+            Input is a data matrix, which defined as,
+            1) frist row is sample names
+            2) first column is observation names
+            3) one row per observation
+            4) one column per sample'
+    );
+    &{\&{run_action(%actions)}};
+}
 
 ###################
 # Define Actions #
 ###################
 
-sub load_matrix{
+sub _load_matrix{
     my $fh = shift;
     my @matrix;
     while(<$fh>){
@@ -63,7 +43,7 @@ sub load_matrix{
     return \@matrix;
 }
 
-sub remove_missing_data{
+sub _remove_missing_data{
     my ($data1, $data2) = @_;
     my $n1 = scalar(@$data1);
     my $n2 = scalar(@$data2);
@@ -81,14 +61,14 @@ sub remove_missing_data{
     return ($data1, $data2, $n);
 }
 
-sub cal_cor{
+sub _cal_cor{
     my ($matrix, $i, $j) = @_;
     my ($id1, @vector1) = @{$matrix->[$i]};
     my ($id2, @vector2) = @{$matrix->[$j]};
     my $data1 = [@vector1];
     my $data2 = [@vector2];
     my $n;
-    ($data1, $data2, $n) = remove_missing_data($data1, $data2);
+    ($data1, $data2, $n) = _remove_missing_data($data1, $data2);
     return($id1, $id2, 'nan', 1, $n, 'nan') if $n < 3;
     my $cor = gsl_stats_correlation($data1, 1, $data2, 1, $n);
     return($id1, $id2, 1,     0, $n, 'nan') if $cor >= 1;
@@ -105,11 +85,11 @@ sub pcor{
     );
 
     my $fh = $args->{in_fhs}->[0];
-    my $matrix = load_matrix($fh);
+    my $matrix = _load_matrix($fh);
 
     for(my $i = 1; $i <= $#{$matrix} - 1; $i++){
         for (my $j = $i + 1; $j <= $#{$matrix}; $j++){
-            my ($id1, $id2, $cor, $pvalue, $n, $t) = cal_cor($matrix, $i, $j);
+            my ($id1, $id2, $cor, $pvalue, $n, $t) = _cal_cor($matrix, $i, $j);
             print join("\t", $id1, $id2, $cor, $pvalue, $n, $t)."\n";
         }
     }
@@ -214,5 +194,7 @@ sub cor2sif{
         }
     }
 }
+
+main unless caller;
 
 __END__
