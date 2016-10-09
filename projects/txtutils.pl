@@ -11,6 +11,7 @@ sub main{
     my %actions = (
         fgrep  => 'Exactly match a column, rather than match by
             regular expression',
+        linesep => 'Fix line seperator, convert \r\n or \r to \n',
         uniq   => 'Print uniq lines without preprocessing by
             sort',
         -desc  => 'A set of Perl version codes try to reproduce the
@@ -66,6 +67,26 @@ sub fgrep {
             $matched = not $matched if $args->{options}->{invert_match};
             print "$_\n" if $matched;
         }
+    }
+}
+
+sub linesep {
+    my $args = new_action(
+        -desc => 'Fix line seperator, \r\n or \r to \n'
+    );
+
+    for (my $i = 0; $i <= $#{ $args->{infiles} }; $i++){
+        my $infile = $args->{infiles}->[$i];
+        my $fh = $args->{in_fhs}->[$i];
+        open my $out_fh, ">$infile.bak2" or die $!;
+        while(<$fh>){
+            s/\r(\n)?/\n/g;
+            print $out_fh $_;
+        }
+        close $out_fh;
+        close $fh;
+        rename $infile, "$infile.bak";
+        rename "$infile.bak2", "$infile";
     }
 }
 
