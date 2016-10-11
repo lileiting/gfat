@@ -213,9 +213,11 @@ sub _determint_seg_type {
         $hash{genotypes}               = [qw(0/2 1/2 0/3 1/3)];
         @hash{ @{ $hash{genotypes} } } = qw(ac  ad  bc  bd);
     }
-    else {
-        return %hash;
-    }
+
+    for my $key (keys %hash){
+        my $r = join('/', reverse (split '/', $key));
+        $hash{$r} = $hash{$key};
+    }    
 
     return %hash;
 }
@@ -343,6 +345,7 @@ sub filter {
                 $f[9]  .= ":" . $parents_GTCD[0];
                 $f[10] .= ":" . $parents_GTCD[1];
                 for ( my $i = 0 ; $i <= $#progenies_GT ; $i++ ) {
+                    $hash{ $progenies_GT[$i] } //= '--';
                     $f[ $i + 11 ] .= ":" . $hash{ $progenies_GT[$i] };
                }
             }
