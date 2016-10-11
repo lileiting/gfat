@@ -420,17 +420,11 @@ sub sample {
                 _sample_markers_from_a_scaffold(\%data);
             }
             my @format = split /:/, $f[8];
-            my $GTCD_index;
-            for(my $i = 0; $i <= $#format; $i++){
-                if($format[$i] eq 'GTCD'){
-                    $GTCD_index = $i;
-                    last;
-                }
-            }
+            my %index = map{$format[$_], $_}(0..$#format);
             die "WARNING! Line $.: Could not locate GTCD in $_!\n"
-                if not defined $GTCD_index;
+                unless exists $index{GTCD};
 
-            my @gtcd = map { ( split /:/ )[$GTCD_index]} @f[9..$#f];
+            my @gtcd = map { ( split /:/ )[ $index{GTCD} ] } @f[9..$#f];
             $data{$scaffold}->{$pos} = [ @gtcd ];
         }
     }
