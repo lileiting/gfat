@@ -16,7 +16,8 @@ sub main {
             coordinates',
         clean => 'Clean information added by the filter action',
         filter => 'Perform chi square test, missing data filter, depth filter
-            and add genotype codes'
+            and add genotype codes',
+        sample => 'Sample 3 markers per scaffold'
     );
     &{ \&{ run_action(%actions) } };
 }
