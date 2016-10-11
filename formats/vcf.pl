@@ -355,4 +355,86 @@ sub filter {
     }
 }
 
+sub _print_markers{
+    my ($data_ref, $scaffold, @positions) = @_;
+    for my $pos (@positions){
+        print join ("\t", $scaffold . '-' .$pos, 
+                          @{$data_ref->{$scaffold}->{$pos}} ) 
+          . "\n";
+    }
+}
+
+sub _sample_markers_from_a_scaffold{
+    my $data_ref = shift;
+    my @scaffolds = keys %$data_ref;
+    die unless @scaffolds == 1;
+    my $scaffold = shift @scaffolds;
+    my @positions = sort {$a <=> $b} keys %{$data_ref->{$scaffold}};
+
+    if(@positions <= 3){
+        _print_markers($data_ref, $scaffold, @positions);
+    }
+    else{
+        my %missing;
+        my %count;
+        for my $pos (@positions){
+            my %codes = ('--' => 0);
+            die unless exists $data_ref->{$scaffold}->{$pos};
+            map{ die unless $_;$codes{$_}++ }@{$data_ref->{$scaffold}->{$pos}};
+            $missing{$pos} = $codes{'--'};
+            $count{$codes{'--'}}++;
+        }
+        my %allowed = (0 => 1);
+        my $sum;
+        for my $n (sort{$a <=> $b}keys %count){
+            $sum += $count{$n};
+            $allowed{$n}++;
+            last if $sum > 3;
+        }
+
+        my @allowed_positions = grep { exists $allowed{ $missing{$_} } } @positions;
+
+        _print_markers($data_ref, $scaffold, 
+            @allowed_positions[ 0, int($#allowed_positions / 2), 
+                                $#allowed_positions ] );
+    }
+
+    delete $data_ref->{$scaffold};
+
+}
+
+sub sample {
+    my $args = new_action(
+        -desc => 'Sample 3 markers from each scaffolds. Assume 
+            the VCF data was sorted based on position',
+    );
+
+    my %data;
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            next if /^#/;
+            chomp;
+            my @f = split /\t/;
+            my ($scaffold, $pos) = @f[0,1];
+            if (keys %data > 0 and not exists $data{$scaffold}){
+                _sample_markers_from_a_scaffold(\%data);
+            }
+            my @format = split /:/, $f[8];
+            my $GTCD_index;
+            for(my $i = 0; $i <= $#format; $i++){
+                if($format[$i] eq 'GTCD'){
+                    $GTCD_index = $i;
+                    last;
+                }
+            }
+            die "WARNING! Line $.: Could not locate GTCD in $_!\n"
+                if not defined $GTCD_index;
+
+            my @gtcd = map { ( split /:/ )[$GTCD_index]} @f[9..$#f];
+            $data{$scaffold}->{$pos} = [ @gtcd ];
+        }
+    }
+
+}
+
 __END__
