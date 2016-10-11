@@ -408,15 +408,31 @@ sub sample {
     my $args = new_action(
         -desc => 'Sample 3 markers from each scaffolds. Assume 
             the VCF data was sorted based on position',
+        -options => {
+            "INDEL|I" => 'Include INDEL data [default: disable]',
+            "type|t=s@" => 'Only process specified types: lmxll, nnxnp,
+                hkxhk, efxeg, abxcd. Multiple types are allowed.
+                [default: lmxll]'
+        }
     );
+
+    my $indel = $args->{options}->{indel};
+    my @types = split(/,/, join(",", @{$args->{options}->{type}}));
+    @types = qw(lmxll) if @types == 0;
+    my $type = join('|', @types);
 
     my %data;
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
             next if /^#/;
+            next if /INDEL/ and not $indel;
+
             chomp;
             my @f = split /\t/;
             my ($scaffold, $pos) = @f[0,1];
+            my $info = $f[7];
+            next unless $info =~ /$type/;
+
             if (keys %data > 0 and not exists $data{$scaffold}){
                 _sample_markers_from_a_scaffold(\%data);
             }
