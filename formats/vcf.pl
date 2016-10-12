@@ -417,8 +417,9 @@ sub sample {
     );
 
     my $indel = $args->{options}->{indel};
-    my @types = split(/,/, join(",", @{$args->{options}->{type}}));
-    @types = qw(lmxll) if @types == 0;
+    my @types = $args->{options}->{type}
+        ? split(/,/, join(",", @{$args->{options}->{type}}))
+        : qw(lmxll);
     my $type = join('|', @types);
 
     my %data;
