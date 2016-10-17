@@ -37,22 +37,30 @@ sub fgrep {
                     Comments are allowed with prefix of "#"',
             "invert_match|v" => 'Selected lines are those not
                       matching any of the specified patterns.',
-            "header|H" => 'Header present at the first line'
+            "header|H" => 'Header present at the first line',
+            "pattern|p=s@" => 'Additional patterns besides which in
+                    the list file [could be multiple]'
         }
     );
     my $listfile = $args->{options}->{listfile};
+    my @patterns = $args->{options}->{pattern} ? 
+        @{$args->{options}->{pattern}} : ();
+
     die "CAUTION: A file with a list of patterns is required!\n"
-        unless $listfile;
+        unless $listfile or $args->{options}->{pattern};
     my %pattern;
-    open my $fh, $listfile or die "$!: $listfile\n";
-    while(<$fh>){
-        chomp;
-        next if /^\s*$/ or /^\s*#/;
-        my ($pattern) = split /\s+/;
-        die "Error in list file!\n" if $pattern eq '';
-        $pattern{$pattern}++;
+    if($listfile){
+        open my $fh, $listfile or die "$!: $listfile\n";
+        while(<$fh>){
+            chomp;
+            next if /^\s*$/ or /^\s*#/;
+            my ($pattern) = split /\s+/;
+            die "Error in list file!\n" if $pattern eq '';
+            $pattern{$pattern}++;
+        }
+        close $fh;
     }
-    close $fh;
+    map{ $pattern{$_}++ }@patterns;
 
     for my $in_fh (@{$args->{in_fhs}}){
         if($args->{options}->{header}){
