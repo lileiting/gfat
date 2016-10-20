@@ -31,40 +31,34 @@ sub chi_squared_test {
 
 sub chisqtest {
     my $seg_type = shift;
-    my @obs = @_;
-    croak q(Two numbers required for lmxll and nnxnp) 
-        if ($seg_type eq 'lmxll' or $seg_type eq 'nnxnp') and not @obs == 2;
-    croak q(Three numbers required for hkxhk) 
-        if $seg_type eq 'hkxhk' and not @obs == 3;
-    croak q(Four numbers required for efxeg and abxcd) 
-        if ($seg_type eq 'efxeg' or $seg_type eq 'abxcd') and not @obs == 4;
+    my @observed = @_;
 
-    my $half = sum(@obs) / 2;
-    my $quarter = $half / 2;
+    # lmxll, nnxnp, hkxhk, efxeg, abxcd
+    my %known_types = (
+        lmxll => '1:1',
+        nnxnp => '1:1',
+        hkxhk => '1:2:1',
+        efxeg => '1:1:1:1',
+        abxcd => '1:1:1:1'
+    );
 
-    if($seg_type eq 'lmxll' or $seg_type eq 'nnxnp'){
-        return chi_squared_test(
-            observed => [@obs],
-            expected => [$half, $half]
-        );
-    }
-    elsif($seg_type eq 'hkxhk'){
-        return chi_squared_test(
-            observed => [@obs],
-            expected => [$quarter, $half, $quarter]
-        );
-    }
-    elsif($seg_type eq 'efxeg' or $seg_type eq 'abxcd'){
-        return chi_squared_test(
-            observed => [@obs],
-            expected => [$quarter, $quarter, $quarter, $quarter]
-        );
-    }
-    else{
-        croak qq(Wrong segregation type: $seg_type! 
-            Supported segregation types are lmxll, 
-            nnxnp, hkxhk, efxeg and abxcd);
-    }
+    $seg_type = $known_types{$seg_type} if exists $known_types{$seg_type};
+    croak "Wrong segration ratio/type: `$seg_type`! Allowed segregation ratio format: NUM(:NUM)+, or known types(" .
+        join(",", sort {$a cmp $b} keys %known_types). ")"
+        unless $seg_type =~ /^\d+(\.\d+)?(:\d+(\.\d+)?)+$/;
+
+    my @ratio = split /:/, $seg_type;
+    croak qq(Number of observations were not consistent with $seg_type)
+        unless scalar( @ratio ) == scalar( @observed );
+    map{croak qq(Ratio must be a positive number) 
+        unless /^\d+(\.\d+)?$/ }@ratio;
+    my $sum_of_ratio = sum( @ratio );
+    my $sum_of_obs   = sum( @observed   );
+    my @expected = map{ $_ / $sum_of_ratio * $sum_of_obs } @ratio;
+    return chi_squared_test(
+        observed => [ @observed ],
+        expected => [ @expected ]
+    );
 }
 
 1;
