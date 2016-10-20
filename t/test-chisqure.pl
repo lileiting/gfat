@@ -21,4 +21,5 @@ print chisqtest('lmxll', 30, 100), "\n";
 print chisqtest('efxeg', 40, 50, 60, 30), "\n";
 print chisqtest('abxcd', 30, 50, 20, 55), "\n";
 
+print chisqtest('abxcde', 30, 50, 20, 55), "\n";
 
