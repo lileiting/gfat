@@ -218,7 +218,7 @@ sub _determint_seg_type {
     for my $key (keys %hash){
         my $r = join('/', reverse (split '/', $key));
         $hash{$r} = $hash{$key};
-    }    
+    }
 
     return %hash;
 }
@@ -357,33 +357,56 @@ sub filter {
 }
 
 sub _print_markers{
-    my ($data_ref, $scaffold, @positions) = @_;
-    for my $pos (@positions){
-        print join ("\t", $scaffold . '-' .$pos, 
-                          @{$data_ref->{$scaffold}->{$pos}} ) 
-          . "\n";
+    my ($outformat, $data_ref, $scaffold, @positions) = @_;
+    if($outformat =~ /joinmap/i){
+        for my $pos (@positions){
+            my @f = @{$data_ref->{$scaffold}->{$pos}};
+            print join ("\t", $scaffold . '-' .$pos,
+                    map{my @tmp = split /:/; $tmp[-1]}
+                    @f[9..$#f])
+                    . "\n";
+        }
+    }
+    elsif($outformat =~ /vcf/i){
+        for my $pos (@positions){
+            print join("\t",  @{$data_ref->{$scaffold}->{$pos}}) . "\n";
+        }
+    }
+    elsif($outformat =~ /tassel/){
+        for my $pos (@positions){
+            my @f = @{$data_ref->{$scaffold}->{$pos}};
+            print join("\t", @f[0..7],
+                map{my @tmp = split /:/; $tmp[0]}
+                @f[8..$#f]) . "\n";
+        }
+    }
+    else{
+        die;
     }
 }
 
 sub _sample_markers_from_a_scaffold{
-    my $data_ref = shift;
+    my $outformat = shift;
+    my $data_ref  = shift;
     my @scaffolds = keys %$data_ref;
     die unless @scaffolds == 1;
     my $scaffold = shift @scaffolds;
     my @positions = sort {$a <=> $b} keys %{$data_ref->{$scaffold}};
 
     if(@positions <= 3){
-        _print_markers($data_ref, $scaffold, @positions);
+        _print_markers($outformat, $data_ref, $scaffold, @positions);
     }
     else{
         my %missing;
         my %count;
         for my $pos (@positions){
-            my %codes = ('--' => 0);
             die unless exists $data_ref->{$scaffold}->{$pos};
-            map{ die unless $_;$codes{$_}++ }@{$data_ref->{$scaffold}->{$pos}};
-            $missing{$pos} = $codes{'--'};
-            $count{$codes{'--'}}++;
+            my @f = @{$data_ref->{$scaffold}->{$pos}};
+            my %info = map{split /=/} split /;/, $f[7];
+            die "CAUTION: Could not locate the MISS tag! -- $f[7]"
+                unless exists $info{MISS};
+            $missing{$pos} = $info{MISS};
+            $count{$info{MISS}}++;
         }
         my %allowed = (0 => 1);
         my $sum;
@@ -393,10 +416,11 @@ sub _sample_markers_from_a_scaffold{
             last if $sum > 3;
         }
 
-        my @allowed_positions = grep { exists $allowed{ $missing{$_} } } @positions;
+        my @allowed_positions = grep
+            { exists $allowed{ $missing{$_} } } @positions;
 
-        _print_markers($data_ref, $scaffold, 
-            @allowed_positions[ 0, int($#allowed_positions / 2), 
+        _print_markers($outformat, $data_ref, $scaffold,
+            @allowed_positions[ 0, int($#allowed_positions / 2),
                                 $#allowed_positions ] );
     }
 
@@ -406,13 +430,15 @@ sub _sample_markers_from_a_scaffold{
 
 sub sample {
     my $args = new_action(
-        -desc => 'Sample 3 markers from each scaffolds. Assume 
+        -desc => 'Sample 3 markers from each scaffolds. Assume
             the VCF data was sorted based on position',
         -options => {
             "INDEL|I" => 'Include INDEL data [default: disable]',
             "type|t=s@" => 'Only process specified types: lmxll, nnxnp,
                 hkxhk, efxeg, abxcd. Multiple types are allowed.
-                [default: lmxll]'
+                [default: lmxll]',
+            "outformat|O=s" => 'Output format: VCF, joinmap, TASSEL
+                [default: joinmap]'
         }
     );
 
@@ -421,11 +447,27 @@ sub sample {
         ? split(/,/, join(",", @{$args->{options}->{type}}))
         : qw(lmxll);
     my $type = join('|', @types);
+    my $outformat = $args->{options}->{outformat} // 'joinmap';
+    die "CAUTION: Output format is unsupported: $outformat"
+        unless $outformat =~ /joinmap|vcf|tassel/i;
 
     my %data;
     for my $fh (@{$args->{in_fhs}}){
         while(<$fh>){
-            next if /^#/;
+            # Print header if the outformat is VCF or TASSEL
+            if(/^#/){
+                if($outformat =~ /vcf|tassel/i){
+                    print $_;
+                    next;
+                }
+                elsif($outformat =~ /joinmap/){
+                    next;
+                }
+                else{
+                    die;
+                }
+            }
+
             next if /INDEL/ and not $indel;
 
             chomp;
@@ -435,15 +477,12 @@ sub sample {
             next unless $info =~ /$type/;
 
             if (keys %data > 0 and not exists $data{$scaffold}){
-                _sample_markers_from_a_scaffold(\%data);
+                _sample_markers_from_a_scaffold($outformat, \%data);
             }
-            my @format = split /:/, $f[8];
-            my %index = map{$format[$_], $_}(0..$#format);
-            die "WARNING! Line $.: Could not locate GTCD in $_!\n"
-                unless exists $index{GTCD};
 
-            my @gtcd = map { ( split /:/ )[ $index{GTCD} ] } @f[9..$#f];
-            $data{$scaffold}->{$pos} = [ @gtcd ];
+            die "CAUTION: GTCD is expected in the end of $f[8]"
+                unless $f[8] =~ /GTCD$/;
+            $data{$scaffold}->{$pos} = [@f];
         }
     }
 
