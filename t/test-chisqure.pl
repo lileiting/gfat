@@ -12,6 +12,13 @@ use GFAT::Chisquare;
 
 #print GFAT::Chisquare->chi_squared_test(observed => [60,80], expected => [70,70]),"\n";
 
+print chisqtest('1:1', 1, 4), "\n";
+print chisqtest('1:1', 1, 5), "\n";
+print chisqtest('1:1', 1, 6), "\n";
+print chisqtest('1:1', 1, 7), "\n";
+print chisqtest('1:1', 2, 6), "\n";
+
+
 print chisqtest('lmxll', 60, 80), "\n";
 print chisqtest('nnxnp', 60, 80), "\n";
 print chisqtest('hkxhk', 30, 80, 40), "\n";
@@ -22,4 +29,6 @@ print chisqtest('efxeg', 40, 50, 60, 30), "\n";
 print chisqtest('abxcd', 30, 50, 20, 55), "\n";
 
 print chisqtest('abxcde', 30, 50, 20, 55), "\n";
+
+
 
