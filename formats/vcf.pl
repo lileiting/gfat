@@ -28,6 +28,10 @@ main unless caller;
 # Subroutines
 ############################################################
 
+#
+# Convert chromsome-based coordinated to scaffold-based coordinates
+#
+
 sub chr2scaffold {
     my $args = new_action(
         -desc => 'Convert chromsome-based coordinates to scaffold-based
@@ -80,6 +84,10 @@ sub chr2scaffold {
     }
 }
 
+#
+# Clean information added by the filter action
+#
+
 sub clean {
     my $args = new_action (
         -desc => 'Clean information added by the filter action'
@@ -120,6 +128,10 @@ sub clean {
         }
     }
 }
+
+#
+# Determine segregation genotypes for a diploid hybrid population
+#
 
 sub _determint_seg_type {
     croak "Two arguments required!" unless @_ == 2;
@@ -223,36 +235,61 @@ sub _determint_seg_type {
     return %hash;
 }
 
-sub _filter_by_depth{
-    my ($f, $mindepth, $maxdepth, $pvalue) = @_;
+sub _filter_by_depth_and_gt_chisqtest{
+    my ($f, $mindepth, $maxdepth, $pvalue, $stats) = @_;
     my @format = split /:/, $f->[8];
     my %index = map{$format[$_], $_}(0..$#format);
     croak "DP tag is missing!" if not exists $index{DP};
     croak "GT tag is missing!" if not exists $index{GT};
     croak "AD tag is missing!" if not exists $index{AD};
-    my @samtpls_GT;
+    my @samples_GT;
     for my $i (9..$#{$f}){
         my @tags = split /:/, $f->[$i];
         my $depth = $tags[$index{DP}];
         my $gt = $tags[$index{GT}];
+        if($gt eq './.'){
+            push @samples_GT, $gt;
+            next;
+        }
         my %ad_index = map{$_, 1} split /\//, $gt;
         my @ad = (split /,/, $tags[$index{AD}])[keys %ad_index];
         my $status = 0b000;
-        if($gt ne './.'){
-            if($mindepth > 0 and $depth < $mindepth){
-                $status |= 0b100;
-            }
-            if( $maxdepth > 0 and $depth > $maxdepth){
-                $status |= 0b010;
-            }
-            if( @ad == 2 and chisqtest('1:1', @ad) < $pvalue ){
-                $status |= 0b001;
-            }
+        if($mindepth > 0 and $depth < $mindepth){
+            $status |= 0b100;
+            $stats->{gt2miss_mindepth}++;
         }
-        $gt = './.' if $status > 0;
+        if( $maxdepth > 0 and $depth > $maxdepth){
+            $status |= 0b010;
+            $stats->{gt2miss_maxdepth}++;
+        }
+        if( sum(@ad) > 0 and @ad == 2 and chisqtest('1:1', @ad) < $pvalue ){
+            $status |= 0b001;
+            $stats->{gt2miss_chisqtest}++;
+        }
+        if($status > 0){
+            $gt = './.';
+            $stats->{gt2miss_all}++;
+        }
         push @samples_GT, $gt;
     }
     return @samples_GT;
+}
+
+sub _nt_ratio_test{
+    my ($info, @gt) = @_;
+
+    my %info = split /[;=]/, $info;
+    die "AD tag is missing in `$info`" if not exists $info{AD};
+    my @ad = split /,/, $info{AD};
+
+    my %index;
+    @gt = map {split /\//, $_} @gt;
+    map{ $index{$_}++ }@gt;
+
+    my @index = sort {$a <=> $b} keys %index;
+    my @ratio = map{ $index{$_} }@index;
+
+    return chisqtest(join(":", @ratio), @ad[@index]);
 }
 
 sub filter {
@@ -265,13 +302,13 @@ sub filter {
                 missing data rate [default: 0.05]',
             "pvalue|p=f" => 'P-value cutoff for Chi square test.
                 This script will test segregation ratio,
-                allele depth in individual genotypes and
-                whole depth
-                [default: 0.05]',
+                nucleotide depth ratio in individual genotypes and
+                all samples [default: 0.05]',
             "mindepth|I=i" => 'Minimum depth for trusted
                 genotype calls, 0: disable, [default: 4]',
             "maxdepth|X=i" => 'Maximum depth, 0: disable
                 [default: 200]',
+            "stats|s=s" => 'Statistics file [default: STDERR]',
             "no_codes|C" => 'Do not add genotype codes, like lm,
                 ll, nn, np, hh, hk, kk, etc
                 [default: add genotype codes]',
@@ -289,6 +326,8 @@ sub filter {
     my $maxdepth = $args->{options}->{maxdepth} // 200;
     my $no_codes = $args->{options}->{no_codes};
     my $no_stats = $args->{options}->{no_stats};
+    my $stats    = $args->{options}->{stats};
+
 
     die "Missing data rate should be in the range of [0, 1]"
         unless $missing >= 0 and $missing <= 1;
@@ -296,6 +335,10 @@ sub filter {
         unless $pvalue >= 0 and $pvalue <= 1;
     die "Depth should be integer and >=0"
         unless $mindepth >= 0 and $maxdepth >= 0;
+
+    my $stats_fh = \*STDERR;
+    if($stats){ open $stats_fh, "> $stats" or die $! }
+    my %stats;
 
     for my $fh ( @{ $args->{in_fhs} } ) {
         my $number_of_progenies;
@@ -323,13 +366,34 @@ sub filter {
                 next;
             }
             chomp;
+            $stats{num_of_markers}++;
+
+            # Exclude INDELs
+            if(/INDEL/){
+                $stats{next_by_indel}++;
+                next;
+            }
+
             my @f             = split /\t/;
             my $ALT           = $f[4];
             my @samples_GT    = _filter_by_depth_and_gt_chisqtest(
-                \@f, $mindepth, $maxdepth, $pvalue);
+                \@f, $mindepth, $maxdepth, $pvalue, \%stats);
             my @parents_GT    = @samples_GT[0,1];
-            my @progenies_GT  = @samples_GT[2..$#samples_GT];
             my %hash          = _determint_seg_type(@parents_GT);
+
+            # Filter by segregation types
+            if($hash{seg_type} eq 'NA'){
+                $stats{next_by_seg_type}++;
+                next;
+            }
+
+            # Filter by nucleotide depth ratio chi squared test
+            if(_nt_ratio_test($f[7], @parents_GT) < $pvalue){
+                $stats{next_by_nt_ratio_test}++;
+                next;
+            }
+
+            my @progenies_GT  = @samples_GT[2..$#samples_GT];
             my @all_genotypes = qw(./.
               0/0
               0/1 1/1
@@ -339,16 +403,19 @@ sub filter {
             map { $progenies_GT{$_}++ } @progenies_GT;
             my @seg_data = @progenies_GT{ @{ $hash{genotypes} } };
 
-            # Filter by segregation types
-            next if $hash{seg_type} eq 'NA';
-
             # Filter by missing rate
             my $missing_genotypes = $number_of_progenies - sum(@seg_data);
-            next if $missing_genotypes > $number_of_progenies * $missing;
+            if($missing_genotypes > $number_of_progenies * $missing){
+                $stats{next_by_missing_rate}++;
+                next;
+            }
 
             # Filter by chi square test
-            my $p = chisqtest $hash{seg_type}, @seg_data;
-            next if $p < $pvalue;
+            my $p = chisqtest($hash{seg_type}, @seg_data);
+            if($p < $pvalue){
+                $stats{next_by_seg_ratio}++;
+                next;
+            }
 
             # Print results
             if( not $no_stats){
@@ -368,11 +435,31 @@ sub filter {
                     $f[ $i + 11 ] .= ":" . $hash{ $progenies_GT[$i] };
                }
             }
-
+            $stats{num_of_good_markers}++;
             print join( "\t", @f ) . "\n";
         }
     }
+    printf STDERR "Number of total markers: %d\n"
+      . "Number of low quality genotypes: %d\n"
+      . "  Number of low quality genotypes with lower depth: %d\n"
+      . "  Number of low quality genotypes with higher depth: %d\n"
+      . "  Number of low quality genotypes with biased nt ratio: %d\n"
+      . "Excluded INDELs: %d\n"
+      . "Markers filtered by segregation type: %d\n"
+      . "Markers filtered by nt ratio test: %d\n"
+      . "Markers filtered by missing rate: %d\n"
+      . "Markers filtered by segregation ratio: %d\n"
+      . "Final good markers: %d\n" ,
+      map{$_ // 0} @stats{qw/num_of_markers
+          gt2miss_all gt2miss_mindepth gt2miss_maxdepth gt2miss_chisqtest
+          next_by_indel next_by_seg_type next_by_nt_ratio_test
+          next_by_missing_rate next_by_seg_ratio
+          num_of_good_markers/};
 }
+
+#
+# Sample markers
+#
 
 sub _print_markers{
     my ($outformat, $data_ref, $scaffold, @positions) = @_;
