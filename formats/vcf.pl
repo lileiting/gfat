@@ -223,21 +223,34 @@ sub _determint_seg_type {
     return %hash;
 }
 
-sub _filter_by_mindepth{
-    my ($mindepth, $f) = @_;
-    my @format = split(/:/, $f->[8]);
+sub _filter_by_depth{
+    my ($f, $mindepth, $maxdepth, $pvalue) = @_;
+    my @format = split /:/, $f->[8];
     my %index = map{$format[$_], $_}(0..$#format);
     croak "DP tag is missing!" if not exists $index{DP};
-    my @samples_GT;
+    croak "GT tag is missing!" if not exists $index{GT};
+    croak "AD tag is missing!" if not exists $index{AD};
+    my @samtpls_GT;
     for my $i (9..$#{$f}){
         my @tags = split /:/, $f->[$i];
         my $depth = $tags[$index{DP}];
-        if($tags[0] ne './.' and $depth < $mindepth){
-            push @samples_GT, './.';
+        my $gt = $tags[$index{GT}];
+        my %ad_index = map{$_, 1} split /\//, $gt;
+        my @ad = (split /,/, $tags[$index{AD}])[keys %ad_index];
+        my $status = 0b000;
+        if($gt ne './.'){
+            if($mindepth > 0 and $depth < $mindepth){
+                $status |= 0b100;
+            }
+            if( $maxdepth > 0 and $depth > $maxdepth){
+                $status |= 0b010;
+            }
+            if( @ad == 2 and chisqtest('1:1', @ad) < $pvalue ){
+                $status |= 0b001;
+            }
         }
-        else{
-            push @samples_GT, $tags[0];
-        }
+        $gt = './.' if $status > 0;
+        push @samples_GT, $gt;
     }
     return @samples_GT;
 }
@@ -249,11 +262,16 @@ sub filter {
             "missing|m=f" => 'Missing data rate.
                 Allowed missing data =
                 total number of progenies *
-                missing data rate [default: 0.1]',
-            "pvalue|p=f" => 'P-value cutoff for Chi square test
+                missing data rate [default: 0.05]',
+            "pvalue|p=f" => 'P-value cutoff for Chi square test.
+                This script will test segregation ratio,
+                allele depth in individual genotypes and
+                whole depth
                 [default: 0.05]',
             "mindepth|I=i" => 'Minimum depth for trusted
-                genotype calls, 0: disable, [default: 3]',
+                genotype calls, 0: disable, [default: 4]',
+            "maxdepth|X=i" => 'Maximum depth, 0: disable
+                [default: 200]',
             "no_codes|C" => 'Do not add genotype codes, like lm,
                 ll, nn, np, hh, hk, kk, etc
                 [default: add genotype codes]',
@@ -265,9 +283,10 @@ sub filter {
         }
     );
 
-    my $missing = $args->{options}->{missing} // 0.1;
+    my $missing = $args->{options}->{missing} // 0.05;
     my $pvalue  = $args->{options}->{pvalue}  // 0.05;
-    my $mindepth = $args->{options}->{mindepth} // 3;
+    my $mindepth = $args->{options}->{mindepth} // 4;
+    my $maxdepth = $args->{options}->{maxdepth} // 200;
     my $no_codes = $args->{options}->{no_codes};
     my $no_stats = $args->{options}->{no_stats};
 
@@ -275,8 +294,8 @@ sub filter {
         unless $missing >= 0 and $missing <= 1;
     die "P value should be in the range of [0, 1]"
         unless $pvalue >= 0 and $pvalue <= 1;
-    die "Depth should be integer and >= 0"
-        unless $mindepth =~ /\d+/;
+    die "Depth should be integer and >=0"
+        unless $mindepth >= 0 and $maxdepth >= 0;
 
     for my $fh ( @{ $args->{in_fhs} } ) {
         my $number_of_progenies;
@@ -306,9 +325,8 @@ sub filter {
             chomp;
             my @f             = split /\t/;
             my $ALT           = $f[4];
-            my @samples_GT    = $mindepth > 0
-                 ? _filter_by_mindepth($mindepth, \@f)
-                 : map { ( split /:/ )[0] } @f[9..$#f];
+            my @samples_GT    = _filter_by_depth_and_gt_chisqtest(
+                \@f, $mindepth, $maxdepth, $pvalue);
             my @parents_GT    = @samples_GT[0,1];
             my @progenies_GT  = @samples_GT[2..$#samples_GT];
             my %hash          = _determint_seg_type(@parents_GT);
@@ -485,7 +503,6 @@ sub sample {
             $data{$scaffold}->{$pos} = [@f];
         }
     }
-
 }
 
 __END__
