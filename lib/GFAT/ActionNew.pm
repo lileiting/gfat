@@ -22,7 +22,7 @@ sub new_action{
     $args{-desc} = $args{-description} if exists $args{-description};
     die "Action descriptions were not given!" unless exists $args{-desc};
     $args{-options}->{"help|h"} //= "Print help";
-    $args{-options}->{"outfile|o=s"}  //= "Output file name";
+    $args{-options}->{"outfile|o=s"}  //= "Output file name [default: STDOUT]";
 
     my %options;
     GetOptions(\%options, keys %{$args{-options}});

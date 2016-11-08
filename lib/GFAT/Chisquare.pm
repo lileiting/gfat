@@ -17,6 +17,7 @@ sub chi_squared_test {
     my $expected = delete $args{expected} // croak q(Argument "expected" required);
     @$observed == @$expected or croak q(Input arrays must have same length);
 
+    map{ croak q(Illegal division by zero: ).join(",", @$expected) if $_ == 0 }@$expected;
     my $chi_squared = sum map {
        ($observed->[$_] - $expected->[$_])**2 / $expected->[$_];
     } 0 .. $#$observed;
