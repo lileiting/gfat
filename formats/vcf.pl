@@ -17,6 +17,9 @@ sub main {
         clean => 'Clean information added by the filter action',
         filter => 'Perform chi square test, missing data filter, depth filter
             and add genotype codes',
+        recalculateAD => 'Re-calculate the INFO/AD tag based on the FORMAT/AD
+            tag, because `bcftools merge` do not update INFO/AD by default
+            (if you have no oppportunity to rerun the `bcftools merge step`).',
         sample => 'Sample 3 markers per scaffold'
     );
     &{ \&{ run_action(%actions) } };
@@ -103,7 +106,7 @@ sub clean {
                 chomp;
                 my @f = split /\t/;
 
-                my @info = map { [ split /=/ ] } ( split /;/, $f[7] );
+                my @info = _parse_info( $f[7] );
                 my %info_ex = map{$_, 1} qw(SEGT GTN PCHI MISS);
                 my @kept_index = grep {not exists $info_ex{$info[$_]->[0]}}
                     (0..$#info);
@@ -278,7 +281,7 @@ sub _filter_by_depth_and_gt_chisqtest{
 sub _nt_ratio_test{
     my ($info, @gt) = @_;
 
-    my %info = split /[;=]/, $info;
+    my %info = _parse_info($info);
     die "AD tag is missing in `$info`" if not exists $info{AD};
     my @ad = split /,/, $info{AD};
 
@@ -303,9 +306,9 @@ sub filter {
             "seg_ratio|P=f" => 'P-value cutoff for Chi squared
                 test for segregation ratio [default: 0.05]',
             "ind_nt_ratio|M=f" => 'P-value cutoff for Chi squared
-                test for nucleotide ratio of heterozygous 
-                genotypes, i.e. nucleotide ratio for a 0/1 
-                genotype must be 1:1. Recommendation: 0.05 
+                test for nucleotide ratio of heterozygous
+                genotypes, i.e. nucleotide ratio for a 0/1
+                genotype must be 1:1. Recommendation: 0.05
                 [default: disable]',
             "all_nt_ratio|N=f" => 'P-value cutoff for Chi squared
                 test for nucleotide ratio of the locus in all
@@ -516,7 +519,7 @@ sub _sample_markers_from_a_scaffold{
         for my $pos (@positions){
             die unless exists $data_ref->{$scaffold}->{$pos};
             my @f = @{$data_ref->{$scaffold}->{$pos}};
-            my %info = map{split /=/} split /;/, $f[7];
+            my %info = _parse_info( $f[7] );
             die "CAUTION: Could not locate the MISS tag! -- $f[7]"
                 unless exists $info{MISS};
             $missing{$pos} = $info{MISS};
@@ -597,6 +600,80 @@ sub sample {
             die "CAUTION: GTCD is expected in the end of $f[8]"
                 unless $f[8] =~ /GTCD$/;
             $data{$scaffold}->{$pos} = [@f];
+        }
+    }
+}
+
+#----------------------------------------------------------#
+
+sub _parse_info{
+    my $info = shift;
+    my %hash;
+    my @fields = split /;/;
+    for my $field (@fields){
+        if($field =~ /^(\S+)=(\S+)$/){
+            $hash{$1} = $2;
+        }
+        else{
+            $hash{$field} = undef;
+        }
+    }
+    return %hash;
+}
+
+sub _tag_index_in_format{
+    my $format = shift;
+    my $tag = shift;
+    croak "Tag format incorrect!" unless $tag =~ /[A-Z0-9]/;
+    my @tags = split /:/, $format;
+    for my $i (0..$#tags){
+        return $i if $tags[$i] eq $tag;
+    }
+    die "CAUTION: Could not locate `$tag` in `$format`!";
+}
+
+sub _retrieve_tag_by_index{
+    my ($sample, $i) = @_;
+    my @tags = split(/:/, $sample);
+    my $tag = $tags[$i];
+    return () if $tag eq '.';
+    if($tag =~ /,/){
+        return map{$_ eq '.' ? 0 : $_} split(/,/, $tag);
+    }
+    else{
+        return ($tag);
+    }
+}
+
+sub recalculateAD{
+    my $args = new_action(
+        -desc => 'Re-calculate the INFO/AD tag based on the FORMAT/AD
+            tag, because `bcftools merge` do not update INFO/AD by default
+            (if you do not want to rerun the `bcftools merge step`).'
+    );
+
+    for my $fh (@{$args->{in_fhs}}){
+        while(<$fh>){
+            print and next if /^#/;
+            chomp;
+            my @f = split(/\t/);
+            my %info = _parse_info( $f[7] );
+            my $i = _tag_index_in_format( $f[8], 'AD' );
+            my @info_AD;
+            for my $sample (@f[9..$#f]){
+                my @AD = _retrieve_tag_by_index($sample, $i);
+                next if @AD == 0;
+                for my $j (0..$#AD){
+                    $info_AD[$j] += $AD[$j];
+                }
+            }
+            if(@info_AD){
+                my $new_AD = join(",", @info_AD);
+                unless($f[7] =~ s/AD=[^=;]+/AD=$new_AD/){
+                    $f[7] .= "AD=$new_AD";
+                }
+            }
+            print join("\t", @f) . "\n";
         }
     }
 }
