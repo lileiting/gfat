@@ -262,7 +262,7 @@ sub _filter_by_depth_and_gt_chisqtest{
             $status |= 0b010;
             $stats->{gt2miss_maxdepth}++;
         }
-        if( sum(@ad) > 0 and @ad == 2 and chisqtest('1:1', @ad) < $pvalue ){
+        if( defined $pvalue and sum(@ad) > 0 and @ad == 2 and chisqtest('1:1', @ad) < $pvalue ){
             $status |= 0b001;
             $stats->{gt2miss_chisqtest}++;
         }
@@ -300,10 +300,18 @@ sub filter {
                 Allowed missing data =
                 total number of progenies *
                 missing data rate [default: 0.05]',
-            "pvalue|p=f" => 'P-value cutoff for Chi square test.
-                This script will test segregation ratio,
-                nucleotide depth ratio in individual genotypes and
-                all samples [default: 0.05]',
+            "seg_ratio|P=f" => 'P-value cutoff for Chi squared
+                test for segregation ratio [default: 0.05]',
+            "ind_nt_ratio|M=f" => 'P-value cutoff for Chi squared
+                test for nucleotide ratio of heterozygous 
+                genotypes, i.e. nucleotide ratio for a 0/1 
+                genotype must be 1:1. Recommendation: 0.05 
+                [default: disable]',
+            "all_nt_ratio|N=f" => 'P-value cutoff for Chi squared
+                test for nucleotide ratio of the locus in all
+                samples, i.e. for a locus with parents genotypes
+                0/0 and 0/1, nucleotide ratio for REF:ALT must be
+                1:1. Recommendation: 0.05 [default: disable]',
             "mindepth|I=i" => 'Minimum depth for trusted
                 genotype calls, 0: disable, [default: 4]',
             "maxdepth|X=i" => 'Maximum depth, 0: disable
@@ -321,18 +329,19 @@ sub filter {
     );
 
     my $missing = $args->{options}->{missing} // 0.05;
-    my $pvalue  = $args->{options}->{pvalue}  // 0.05;
+    #my $pvalue  = $args->{options}->{pvalue}  // 0.05;
     my $mindepth = $args->{options}->{mindepth} // 4;
     my $maxdepth = $args->{options}->{maxdepth} // 200;
     my $no_codes = $args->{options}->{no_codes};
     my $no_stats = $args->{options}->{no_stats};
     my $stats    = $args->{options}->{stats};
 
+    my $seg_ratio = $args->{options}->{seg_ratio} // 0.05;
+    my $ind_nt_ratio = $args->{options}->{ind_nt_ratio};
+    my $all_nt_ratio = $args->{options}->{all_nt_ratio};
 
     die "Missing data rate should be in the range of [0, 1]"
         unless $missing >= 0 and $missing <= 1;
-    die "P value should be in the range of [0, 1]"
-        unless $pvalue >= 0 and $pvalue <= 1;
     die "Depth should be integer and >=0"
         unless $mindepth >= 0 and $maxdepth >= 0;
 
@@ -377,7 +386,7 @@ sub filter {
             my @f             = split /\t/;
             my $ALT           = $f[4];
             my @samples_GT    = _filter_by_depth_and_gt_chisqtest(
-                \@f, $mindepth, $maxdepth, $pvalue, \%stats);
+                \@f, $mindepth, $maxdepth, $ind_nt_ratio, \%stats);
             my @parents_GT    = @samples_GT[0,1];
             my %hash          = _determint_seg_type(@parents_GT);
 
@@ -388,7 +397,7 @@ sub filter {
             }
 
             # Filter by nucleotide depth ratio chi squared test
-            if(_nt_ratio_test($f[7], @parents_GT) < $pvalue){
+            if(defined $all_nt_ratio and _nt_ratio_test($f[7], @parents_GT) < $all_nt_ratio){
                 $stats{next_by_nt_ratio_test}++;
                 next;
             }
@@ -410,9 +419,9 @@ sub filter {
                 next;
             }
 
-            # Filter by chi square test
+            # Filter by segregation ratio chi squared test
             my $p = chisqtest($hash{seg_type}, @seg_data);
-            if($p < $pvalue){
+            if($p < $seg_ratio){
                 $stats{next_by_seg_ratio}++;
                 next;
             }
