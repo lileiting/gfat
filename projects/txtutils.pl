@@ -3,15 +3,18 @@
 use warnings;
 use strict;
 use FindBin;
+use List::Util qw(min max sum);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 our $in_desc = '<tab file> [<tab file> ...]';
 
 sub main{
     my %actions = (
+        cc     => 'Character count',
         fgrep  => 'Exactly match a column, rather than match by
             regular expression',
         linesep => 'Fix line seperator, convert \r\n or \r to \n',
+        linelen => 'Print length of each line and statistics',
         uniq   => 'Print uniq lines without preprocessing by
             sort',
         -desc  => 'A set of Perl version codes try to reproduce the
@@ -20,6 +23,26 @@ sub main{
             that its corresponding shell version might not have.'
     );
     &{\&{run_action(%actions)}};
+}
+
+sub cc{
+    my $args = new_action(
+        -desc => 'Character count'
+    );
+
+    my %char;
+    for my $fh (@{$args->{in_fhs}}){
+        my $char = '';
+        while(read($fh, $char, 1)){
+            $char{ord($char)}++;
+        }
+    }
+
+    for my $ord (sort {$a <=> $b} keys %char){
+        my $count = $char{$ord};
+        my $char = $ord >= 33 && $ord <= 126 ? chr($ord) : "chr($ord)";
+        print "$ord\t$char\t$count\n";
+    }
 }
 
 sub fgrep {
@@ -76,6 +99,37 @@ sub fgrep {
             print "$_\n" if $matched;
         }
     }
+}
+
+sub linelen {
+    my $args = new_action(
+        -desc => 'Print length of each line and statistics'
+    );
+
+    my @stats;
+    my $line_count = 0;
+    for my $fh (@{$args->{in_fhs}}){
+        while(my $line = <$fh>){
+            $line_count++;
+            chomp($line);
+            my $len = length($line);
+            print "$line_count\t$.\t$len\n";
+            push @stats, $len;
+        }
+    }
+
+    my $num = scalar(@stats);
+    my $min = min(@stats);
+    my $max = max(@stats);
+    my $sum = sum(@stats);
+    my $avg = $num > 0 ? $sum / $num : 0;
+    warn "#--- Statistics ---#\n";
+    warn "Num\t$num\n";
+    warn "Min\t$min\n";
+    warn "Max\t$max\n";
+    warn "Sum\t$sum\n";
+    warn "Avg\t$avg\n";
+    warn "#-----------------#\n";
 }
 
 sub linesep {
