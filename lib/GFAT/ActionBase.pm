@@ -293,36 +293,4 @@ sub close_fh{
     }
 }
 
-=head2 load_listfile
-
-  Title   : load_listfile
-  Usage   : my %list = load_listfile($listfile);
-            my %list = load_listfile(@listfiles);
-
-  Function: Load names in a list file into a hash.
-            Comments start with # will be ignored.
-            Blank lines will be ignored
-
-  Returns : A hash reference
-
-  Args    : A file name
-
-=cut
-
-sub load_listfile{
-    my @files = @_;
-    my %listid;
-    for my $file (@files){
-        open my $fh, "<", $file or die "$file: $!";
-        while(<$fh>){
-            next if /^\s*#/ or /^\s*$/;
-            s/\s//g;
-            chomp;
-            $listid{$_}++;
-        }
-        close $fh;
-    }
-    return \%listid;
-}
-
 1;
