@@ -13,7 +13,7 @@ our $in_desc = '<in.vcf|in.vcf.gz>';
 sub main {
     my %actions = (
         chr2scaffold => 'Convert chromsome-based coordinates to scaffold-based
-            coordinates',
+            coordinates, or reverse',
         clean => 'Clean information added by the filter action',
         filter => 'Perform chi square test, missing data filter, depth filter
             and add genotype codes',
@@ -38,28 +38,32 @@ main unless caller;
 sub chr2scaffold {
     my $args = new_action(
         -desc => 'Convert chromsome-based coordinates to scaffold-based
-            coordinates',
+            coordinates, or reverse',
         -options => {
             "listfile|l=s" => 'chromsome-based coordinates to scaffold-based
                 coordinates mapping dictionary. Five columns required: Chr,
-                Scafold, Start on Chr, End on Chr, Strand'
+                Scafold, Start on Chr, End on Chr, Strand',
+            "reverse|v" => 'Reverse the convertion'
         }
     );
 
     my $listfile = $args->{options}->{listfile};
+    my $reverse = $args->{options}->{reverse};
     die "List file is required!\n" unless $listfile;
     my %chr;
+    my %scf;
     open my $list_fh, $listfile or die $!;
     while (<$list_fh>) {
         chomp;
         my ( $chr, $scaffold, $start, $end, $strand ) = split /\t/;
         push @{ $chr{$chr} }, [ $scaffold, $start, $end, $strand ];
+        $scf{$scaffold} = [$chr, $start, $end, $strand] if $reverse;
     }
     close $list_fh;
 
     for my $fh ( @{ $args->{in_fhs} } ) {
         while (<$fh>) {
-            if (/^##contig=<ID=(Chr\d+)/) {
+            if (not $reverse and /^##contig=<ID=(Chr\d+)/) {
                 print and next if not exists $chr{$1};
                 for my $array ( @{ $chr{$1} } ) {
                     my ( $scaffold, $start, $end, $strand ) = @$array;
@@ -71,6 +75,18 @@ sub chr2scaffold {
             print and next if /^#/;
             my @f = split /\t/;
             my ( $chr, $pos ) = @f[ 0, 1 ];
+            if($reverse){
+                $chr = "\L$chr\E";
+                die "CAUTION: Chromosome posoition for $chr was not defined!\n"
+                    unless exists $scf{$chr};
+                my ($n_chr, $n_start, $n_end, $n_strand) = @{$scf{$chr}};
+                my $new_pos = $n_strand eq '-'
+                  ? $n_end - $pos + 1
+                  : $n_start + $pos - 1;
+                print join("\t", $n_chr, $new_pos, @f[2 .. $#f]);
+                next;
+            }
+
             print and next if not exists $chr{$chr};
             for my $array ( @{ $chr{$chr} } ) {
                 my ( $scaffold, $start, $end, $strand ) = @$array;
@@ -86,6 +102,7 @@ sub chr2scaffold {
         }
     }
 }
+
 
 #
 # Clean information added by the filter action
