@@ -15,7 +15,7 @@ sub main{
 }
 
 sub config {
-    system(q{R CMD config | grep '^  [A-Z_]' | awk '{print $1}' | perl -pe 'chomp; s/^/echo $_=\$(R CMD config /;s/$/\)\n/' | sh});
+    system(q{R CMD config | grep '^  [A-Z_]' | perl -pe 's/^\s+(\w+)(, (\w+))?.*$/$1\n$3\n/' | grep -v '^$' | perl -pe 'chomp; s/^/echo $_=\$(R CMD config /;s/$/\)\n/' | sh});
 
 }
 
