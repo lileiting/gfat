@@ -62,7 +62,7 @@ sub list2matrix{
         while(<$fh>){
             chomp;
             @_ = split /$field_separator/;
-            die "CAUTION: Three columns are required!\n" unless @_ == 3;
+            die "CAUTION: Three columns are required!\n  $.:$_\n" unless @_ == 3;
             $data{$_[0]}->{$_[1]} = $_[2];
             $first_column{$_[0]}++;
             $second_column{$_[1]}++;
