@@ -4,11 +4,13 @@ use warnings;
 use strict;
 use Carp;
 use FindBin;
-use List::Util qw(sum);
+use List::Util qw(sum max);
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use GFAT::Chisquare;
 our $in_desc = '<in.vcf|in.vcf.gz>';
+use constant TRUE  => 1;
+use constant FALSE => 0;
 
 sub main {
     my %actions = (
@@ -61,16 +63,35 @@ sub chr2scaffold {
     }
     close $list_fh;
 
+    my %print_chr_length;
     for my $fh ( @{ $args->{in_fhs} } ) {
         while (<$fh>) {
-            if (not $reverse and /^##contig=<ID=(Chr\d+)/) {
-                print and next if not exists $chr{$1};
-                for my $array ( @{ $chr{$1} } ) {
-                    my ( $scaffold, $start, $end, $strand ) = @$array;
-                    my $length = $end - $start + 1;
-                    print "##contig=<ID=$scaffold,length=$length>\n";
+            if(/^##contig=<ID=(.+),length=\d+>/){
+                if($reverse){
+                    if(exists $scf{$1}){
+                        my $chr = $scf{$1}->[0];
+                        if(not exists $print_chr_length{$chr}){
+                            my @positions;
+                            map{push @positions, @$_[1,2]}@{$chr{$chr}};
+                            my $chr_len = max(@positions);
+                            print "##contig=<ID=$chr,length=$chr_len>\n";
+                            $print_chr_length{$chr} = TRUE;
+                        }
+                    }
+                    else{
+                        print;
+                    }
+                    next;
                 }
-                next;
+                else{
+                    print and next if not exists $chr{$1};
+                    for my $array ( @{ $chr{$1} } ) {
+                        my ( $scaffold, $start, $end, $strand ) = @$array;
+                        my $length = $end - $start + 1;
+                        print "##contig=<ID=$scaffold,length=$length>\n";
+                    }
+                    next;
+                }
             }
             print and next if /^#/;
             my @f = split /\t/;
