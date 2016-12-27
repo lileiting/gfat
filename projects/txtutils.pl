@@ -149,6 +149,8 @@ sub linesep {
         close $fh;
         rename $infile, "$infile.bak";
         rename "$infile.bak2", "$infile";
+        warn "$infile ... fixed\n";
+        warn "Backup file: $infile.bak\n";
     }
 }
 
