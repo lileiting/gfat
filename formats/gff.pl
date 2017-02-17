@@ -433,8 +433,8 @@ sub gff2bed {
 		#             strand, thickStart, thickEnd, itemRgb, blockCount
 		#             blockSizes, blockStarts
 		my $chrom = $f[0];
-		my $chromStart = $f[3];
-		my $chromEnd = $f[4];
+		my $chromStart = $f[3] - 1; # 0-based 
+		my $chromEnd = $f[4]; # 1-based
 		my $name = $gffdata{$mRNA_ID}->{name};
 		my $score = 0;
 		my $strand = $f[6];
@@ -443,7 +443,7 @@ sub gff2bed {
 		my $itemRgb = 0;
 		my $blockCount = scalar(@exons);
 		my $blockSizes = join(",", map{abs($_->[3] - $_->[4]) + 1}@exons) . ",";
-		my $blockStarts = join(",", map{$_->[3] - $chromStart}@exons) . ",";
+		my $blockStarts = join(",", map{$_->[3] - 1 - $chromStart}@exons) . ",";
 		
 		print join("\t", $chrom, $chromStart, $chromEnd, $name, $score, $strand, 
 		                $thickStart, $thickEnd, $itemRgb, $blockCount,
