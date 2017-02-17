@@ -410,7 +410,7 @@ sub gff2bed {
 	);
 
 	my %gffdata;
-    for my $fh (@{$args->{in_fhs}){
+    for my $fh (@{$args->{in_fhs}}){
 	    while(<$fh>){
 		    next if /^#/ or /^\s*$/;
 		    chomp;
