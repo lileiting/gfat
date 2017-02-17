@@ -7,6 +7,29 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use List::Util qw(max);
 
+sub main{
+    my %actions = (
+        chrlist  => 'Print chromosome list',
+        genedensity => 'Print gene density statistics',
+        genelist => 'Print gene list (exon/intron number might not be
+                   accurate for situations that intron located in UTRs)',
+        getintron=> 'Get intron postions',
+        getseq   => 'Get sequences',
+        gff2info => 'Convert gff to a gene information as Gene_ID Chromosome
+                    Length_of_gene No_of_exons Avg_exons Avg_introns',
+        groups   => 'Get a subset of GFF based on a two columns files
+                   (gene ID and their groups)',
+		gff2bed  => 'Convert GFF format v3.0 file to bed format 
+		             <http://genome.ucsc.edu/FAQ/FAQformat.html#format1>'
+    );
+    &{\&{run_action(%actions)}};
+
+}
+
+our $in_desc = '<GFF> [<GFF> ...]';
+main() unless caller;
+
+
 #~~~~~~~~~~~~~gff data structure~~~~~~~~~~~~#
 
 # Data structure
@@ -376,24 +399,56 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
     }
 }
 
-sub main{
-    my %actions = (
-        chrlist  => 'Print chromosome list',
-        genedensity => 'Print gene density statistics',
-        genelist => 'Print gene list (exon/intron number might not be
-                   accurate for situations that intron located in UTRs)',
-        getintron=> 'Get intron postions',
-        getseq   => 'Get sequences',
-        gff2info => 'Convert gff to a gene information as Gene_ID Chromosome
-                    Length_of_gene No_of_exons Avg_exons Avg_introns',
-        groups   => 'Get a subset of GFF based on a two columns files
-                   (gene ID and their groups)',
-    );
-    &{\&{run_action(%actions)}};
+#~~~~~~~~~~~~~~~~~~~~~~~~~ gff2bed ~~~~~~~~~~~~~~~~~~~~#
 
+sub gff2bed {
+    my $args = new_action(
+	    -desc => 'Convert GFF format to BED format 
+		          <http://genome.ucsc.edu/FAQ/FAQformat.html#format1>.
+				  Tested on `Athaliana_167_TAIR10.gene_exons.gff3` 
+				  (downloaded from Phytozome)'
+	);
+
+	my %gffdata;
+    for my $fh (@{$args->{in_fhs}){
+	    while(<$fh>){
+		    next if /^#/ or /^\s*$/;
+		    chomp;
+		    my @f = split /\t/;
+			my %hash = split /[;=]/, $f[8];
+		    if($f[2] eq 'mRNA'){
+			    $gffdata{$hash{ID}}->{name} = $hash{Name};
+				$gffdata{$hash{ID}}->{fields} = \@f;
+			}
+			elsif($f[2] eq 'exon'){
+			    push @{$gffdata{$hash{Parent}}->{exons}}, \@f;
+			}
+		}
+	}
+	
+	for my $mRNA_ID (sort {$a cmp $b} keys %gffdata){
+		my @f = @{$gffdata{$mRNA_ID}->{fields}};
+		my @exons = @{$gffdata{$mRNA_ID}->{exons}};
+		# BED format: chrom, chromStart, chromEnd, name, score, 
+		#             strand, thickStart, thickEnd, itemRgb, blockCount
+		#             blockSizes, blockStarts
+		my $chrom = $f[0];
+		my $chromStart = $f[3];
+		my $chromEnd = $f[4];
+		my $name = $gffdata{$mRNA_ID}->{name};
+		my $score = 0;
+		my $strand = $f[6];
+		my $thickStart = $chromStart;
+		my $thickEnd = $chromEnd;
+		my $itemRgb = 0;
+		my $blockCount = scalar(@exons);
+		my $blockSizes = join(",", map{abs($_->[3] - $_->[4]) + 1}@exons) . ",";
+		my $blockStarts = join(",", map{$_->[3] - $chromStart}@exons) . ",";
+		
+		print join(",", $chrom, $chromStart, $chromEnd, $name, $score, $strand, 
+		                $thickStart, $thickEnd, $itemRgb, $blockCount,
+						$blockSizes, $blockStarts), "\n";
+	}
 }
-
-our $in_desc = '<GFF> [<GFF> ...]';
-main() unless caller;
 
 __END__
