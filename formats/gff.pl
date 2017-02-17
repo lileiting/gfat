@@ -445,7 +445,7 @@ sub gff2bed {
 		my $blockSizes = join(",", map{abs($_->[3] - $_->[4]) + 1}@exons) . ",";
 		my $blockStarts = join(",", map{$_->[3] - $chromStart}@exons) . ",";
 		
-		print join(",", $chrom, $chromStart, $chromEnd, $name, $score, $strand, 
+		print join("\t", $chrom, $chromStart, $chromEnd, $name, $score, $strand, 
 		                $thickStart, $thickEnd, $itemRgb, $blockCount,
 						$blockSizes, $blockStarts), "\n";
 	}
