@@ -19,7 +19,7 @@ sub main{
                     Length_of_gene No_of_exons Avg_exons Avg_introns',
         groups   => 'Get a subset of GFF based on a two columns files
                    (gene ID and their groups)',
-		gff2bed  => 'Convert GFF format v3.0 file to bed format 
+		gff2bed  => 'Convert GFF format v3.0 file to bed format
 		             <http://genome.ucsc.edu/FAQ/FAQformat.html#format1>'
     );
     &{\&{run_action(%actions)}};
@@ -403,9 +403,9 @@ Gene_ID\tChromosome\tLength_of_gene\tNo_of_exons\tAvg_exons\tAvg_introns',
 
 sub gff2bed {
     my $args = new_action(
-	    -desc => 'Convert GFF format to BED format 
+	    -desc => 'Convert GFF format to BED format
 		          <http://genome.ucsc.edu/FAQ/FAQformat.html#format1>.
-				  Tested on `Athaliana_167_TAIR10.gene_exons.gff3` 
+				  Tested on `Athaliana_167_TAIR10.gene_exons.gff3`
 				  (downloaded from Phytozome)'
 	);
 
@@ -425,15 +425,15 @@ sub gff2bed {
 			}
 		}
 	}
-	
+
 	for my $mRNA_ID (sort {$a cmp $b} keys %gffdata){
 		my @f = @{$gffdata{$mRNA_ID}->{fields}};
 		my @exons = @{$gffdata{$mRNA_ID}->{exons}};
-		# BED format: chrom, chromStart, chromEnd, name, score, 
+		# BED format: chrom, chromStart, chromEnd, name, score,
 		#             strand, thickStart, thickEnd, itemRgb, blockCount
 		#             blockSizes, blockStarts
 		my $chrom = $f[0];
-		my $chromStart = $f[3] - 1; # 0-based 
+		my $chromStart = $f[3] - 1; # 0-based
 		my $chromEnd = $f[4]; # 1-based
 		my $name = $gffdata{$mRNA_ID}->{name};
 		my $score = 0;
@@ -442,10 +442,24 @@ sub gff2bed {
 		my $thickEnd = $chromEnd;
 		my $itemRgb = 0;
 		my $blockCount = scalar(@exons);
-		my $blockSizes = join(",", map{abs($_->[3] - $_->[4]) + 1}@exons) . ",";
-		my $blockStarts = join(",", map{$_->[3] - 1 - $chromStart}@exons) . ",";
-		
-		print join("\t", $chrom, $chromStart, $chromEnd, $name, $score, $strand, 
+		#my $blockSizes = join(",", map{abs($_->[3] - $_->[4]) + 1}@exons) . ",";
+		#my $blockStarts = join(",", map{$_->[3] - 1 - $chromStart}@exons) . ",";
+
+        my %hash;
+        for my $exon (@exons){
+            my $start = $exon->[3];
+            my $end = $exon->[4];
+            my $blockSize = abs($start - $end) + 1;
+            my $blockStart = $start - $chromStart - 1;
+            $hash{$blockStart} = $blockSize;
+        }
+        my @blockStarts = sort{$a <=> $b}keys %hash;
+        my @blockSizes  = map {$hash{$_}} @blockStarts;
+
+        my $blockStarts = join(",", @blockStarts) . ",";
+        my $blockSizes  = join(",", @blockSizes) . ",";
+
+		print join("\t", $chrom, $chromStart, $chromEnd, $name, $score, $strand,
 		                $thickStart, $thickEnd, $itemRgb, $blockCount,
 						$blockSizes, $blockStarts), "\n";
 	}
