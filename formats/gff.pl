@@ -416,7 +416,7 @@ sub gff2bed {
 		    chomp;
 		    my @f = split /\t/;
 			my %hash = split /[;=]/, $f[8];
-		    if($f[2] eq 'mRNA'){
+		    if($f[2] eq 'mRNA' or $f[2] eq 'rRNA'){
 			    $gffdata{$hash{ID}}->{name} = $hash{Name};
 				$gffdata{$hash{ID}}->{fields} = \@f;
 			}
