@@ -34,6 +34,9 @@ sub splitfq {
     );
 
     my $n = $args->{options}->{number};
+    die "WARNING: -n,--number is required to define number of fastq pieces"
+        unless defined $n;
+
     for my $i (0 .. $#{$args->{infiles}}) {
         my $file = $args->{infiles}->[$i];
         my $fh   = $args->{in_fhs}->[$i];
