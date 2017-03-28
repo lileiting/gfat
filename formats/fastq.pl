@@ -14,6 +14,7 @@ our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 sub main {
     my %actions = (
         polyA => 'Detect polyA',
+        splitfq => 'Split fastq files'
         trimT => 'trim poly T',
         Tlength => 'length of poly T'
     );
@@ -22,6 +23,46 @@ sub main {
 }
 
 ############################################################
+
+sub splitfq {
+    my $args = new_action (
+        -desc => 'Split fastq files',
+        -options => {
+            "number|n=i" => 'Number of pieces you want to split',
+        }
+    );
+
+    my $n = $args{number};
+    for my $i (0 .. $#{$args->{infiles}}) {
+        my $file = $args->{infiles}->[$i];
+        my $fh   = $args->{in_fhs}->[$i];
+
+        my @out_fh;
+        for my $j (1 .. $n){
+            my $fh_index = $j - 1;
+            my $out_prefix = $file;
+            $out_prefix =~ s/(f(ast)?q(\.(gz|bz2))?)$//i;
+            $suffix = $1 // "fastq.gz";
+            my $outfile = $out_prefix . ".p$j.$suffix";
+            open $out_fh[$fh_index], "| gzip > $outfile" or die;
+        }
+        my $read_count;
+        while( my $fq_line1 = <$fh>){
+            my $fq_line2 = <$fh>;
+            my $fq_line3 = <$fh>;
+            my $fq_line4 = <$fh>;
+            $read_count++;
+            my $file_number = $read_count % $n;
+            print $out_fh[$file_number] $fq_line1, $fq_line2,
+                                        $fq_line3, $fq_line4;
+        }
+        map{ close $_ } @out_fh;
+        close $fh;
+    }
+
+
+}
+
 
 sub trimT {
     my $args = new_action(
