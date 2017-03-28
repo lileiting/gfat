@@ -53,14 +53,12 @@ sub splitfq {
             my $fq_line4 = <$fh>;
             $read_count++;
             my $file_number = $read_count % $n;
-            print $out_fh[$file_number] $fq_line1, $fq_line2,
-                                        $fq_line3, $fq_line4;
+            print { $out_fh[$file_number] } $fq_line1, $fq_line2,
+                                            $fq_line3, $fq_line4;
         }
         map{ close $_ } @out_fh;
         close $fh;
     }
-
-
 }
 
 
