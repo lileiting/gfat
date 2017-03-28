@@ -25,18 +25,16 @@ sub main {
 
 sub trimT {
     my $args = new_action(
-        -desc => 'Trim T nucleotides',
+        -desc => 'Trim 5\'end poly T nucleotides',
         -options => {
-            "trimA|A" => 'Trim A, instead of T',
             "min_length|I=i" => 'Minimum length of trimmed sequences
                               [default: 16]',
-            "trim3|3" => "Additionally trim 3'-end nucleotides"
+            "prefix|p=s" => "Set 5' end adapter sequences before PolyT_5prime
+                            [default: ]"
         }
     );
 
-    my $trimA = $args->{options}->{trimA};
     my $min_length = $args->{options}->{min_length} // 16;
-    my $trim3 = $args->{options}->{trim3};
 
     for my $i (0 .. $#{$args->{infiles}} ){
         my $infile = $args->{infiles}->[$i];
