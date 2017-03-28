@@ -8,13 +8,12 @@ use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 
-
 our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 
 sub main {
     my %actions = (
         polyA => 'Detect polyA',
-        splitfq => 'Split fastq files'
+        splitfq => 'Split fastq files',
         trimT => 'trim poly T',
         Tlength => 'length of poly T'
     );
@@ -22,17 +21,19 @@ sub main {
     &{ \&{ run_action( %actions )} };
 }
 
+main unless caller;
+
 ############################################################
 
 sub splitfq {
     my $args = new_action (
         -desc => 'Split fastq files',
         -options => {
-            "number|n=i" => 'Number of pieces you want to split',
+            "number|n=i" => 'Number of pieces you want to split'
         }
     );
 
-    my $n = $args{number};
+    my $n = $args->{options}->{number};
     for my $i (0 .. $#{$args->{infiles}}) {
         my $file = $args->{infiles}->[$i];
         my $fh   = $args->{in_fhs}->[$i];
@@ -42,7 +43,7 @@ sub splitfq {
             my $fh_index = $j - 1;
             my $out_prefix = $file;
             $out_prefix =~ s/(f(ast)?q(\.(gz|bz2))?)$//i;
-            $suffix = $1 // "fastq.gz";
+            my $suffix = $1 // "fastq.gz";
             my $outfile = $out_prefix . ".p$j.$suffix";
             open $out_fh[$fh_index], "| gzip > $outfile" or die;
         }
@@ -74,6 +75,8 @@ sub trimT {
     );
 
     my $min_length = $args->{options}->{min_length} // 16;
+    my $trimA = 0;
+    my $trim3 = 0;
 
     for my $i (0 .. $#{$args->{infiles}} ){
         my $infile = $args->{infiles}->[$i];
@@ -232,6 +235,6 @@ sub polyA {
     }
 }
 
-main unless caller;
+
 
 __END__
