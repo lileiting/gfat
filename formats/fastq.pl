@@ -34,6 +34,7 @@ sub splitfq {
     );
 
     my $n = $args->{options}->{number};
+    my $l = length($n);
     die "WARNING: -n,--number is required to define number of fastq pieces"
         unless defined $n;
 
@@ -47,7 +48,8 @@ sub splitfq {
             my $out_prefix = $file;
             $out_prefix =~ s/(f(ast)?q(\.(gz|bz2))?)$//i;
             my $suffix = $1 // "fastq.gz";
-            my $outfile = $out_prefix . ".p$j.$suffix";
+
+            my $outfile = $out_prefix . (sprintf "p%0${l}d.$suffix", $j);
             open $out_fh[$fh_index], "| gzip > $outfile" or die;
         }
         my $read_count;
