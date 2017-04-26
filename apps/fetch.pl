@@ -7,6 +7,17 @@ use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
 use Bio::Perl;
 use Text::Abbrev;
+our $in_desc = '<term> [<term> ...]';
+
+sub main{
+    my %actions = (
+        getsequence => 'Fetch sequences from genbank',
+    );
+    &{\&{run_action(%actions)}};
+}
+
+main unless caller;
+
 
 sub getsequence{
     my $args = new_action(
@@ -43,15 +54,5 @@ sub getsequence{
     }
 
 }
-
-sub main{
-    my %actions = (
-        getsequence => 'Fetch sequences from genbank',
-    );
-    &{\&{run_action(%actions)}};
-}
-
-our $in_desc = '<term> [<term> ...]';
-main unless caller;
 
 __END__
