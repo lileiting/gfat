@@ -42,7 +42,7 @@ sub grepfq {
         my $in = Bio::SeqIO->new(-fh => $fh, -format => 'fastq');
         my $out = Bio::SeqIO->new(-fh => $args->{out_fh}, -format => 'fastq');
         while(my $seq = $in->next_seq){
-            my $id = $seq->seq_id;
+            my $id = $seq->display_id;
             my $desc = $seq->desc;
             my $matched = 0;
             if($by_desc){
