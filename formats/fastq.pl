@@ -7,7 +7,7 @@ use List::Util qw(max);
 use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
-use 
+use Bio::Perl;
 
 our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 
