@@ -13,7 +13,7 @@ our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 
 sub main {
     my %actions = (
-        grepfq => 'Grep fastq sequences'
+        grepfq => 'Grep fastq sequences',
         polyA => 'Detect polyA',
         splitfq => 'Split fastq files',
         trimT => 'trim poly T',
