@@ -7,6 +7,7 @@ use List::Util qw(max);
 use File::Basename;
 use lib "$FindBin::RealBin/../lib";
 use GFAT::ActionNew;
+use 
 
 our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 
@@ -24,6 +25,35 @@ sub main {
 main unless caller;
 
 ############################################################
+
+sub grep {
+    my $args = new_action(
+        -desc => 'Grep sequences',
+        -options => {
+            "desc|D" => 'Grep by description [default by ID]',
+            "pattern|p=s" => 'Pattern'
+        }
+    );
+    my $by_desc = $options{desc};
+    my $pattern = $options{pattern};
+    die "ERROR: pattern is required with -p or --pattern" unless $pattern;
+    for my $fh (@{$args->{in_fhs}}){
+        my $in = Bio::SeqIO->new(-fh => $fh, -format => 'fastq');
+        my $out = Bio::SeqIO->new(-fh => $args{out_fh}, -format => 'fastq')
+        while(my $seq = $in->next_seq){
+            my $id = $seq->seq_id;
+            my $desc = $seq->desc;
+            my $matched = 0;
+            if($by_desc){
+                $matched = 1 if $desc =~ m/$pattern/;
+            }
+            else{
+                $matched = 1 if $id =~ m/$pattern/;
+            }
+            $out->write_seq($seq) if $matched;
+        }
+    }
+}
 
 sub splitfq {
     my $args = new_action (
