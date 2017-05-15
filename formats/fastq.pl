@@ -34,8 +34,8 @@ sub grep {
             "pattern|p=s" => 'Pattern'
         }
     );
-    my $by_desc = $options{desc};
-    my $pattern = $options{pattern};
+    my $by_desc = $args->{options}->{desc};
+    my $pattern = $args->{options}->{pattern};
     die "ERROR: pattern is required with -p or --pattern" unless $pattern;
     for my $fh (@{$args->{in_fhs}}){
         my $in = Bio::SeqIO->new(-fh => $fh, -format => 'fastq');
