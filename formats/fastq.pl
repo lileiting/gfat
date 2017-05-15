@@ -13,6 +13,7 @@ our $in_desc = '<fastq|fastq.gz> [<fastq|fastq.gz> ...]';
 
 sub main {
     my %actions = (
+        grepfq => 'Grep fastq sequences'
         polyA => 'Detect polyA',
         splitfq => 'Split fastq files',
         trimT => 'trim poly T',
@@ -26,7 +27,7 @@ main unless caller;
 
 ############################################################
 
-sub grep {
+sub grepfq {
     my $args = new_action(
         -desc => 'Grep sequences',
         -options => {
