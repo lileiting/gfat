@@ -8,6 +8,7 @@ use Getopt::Long qw(:config gnu_getopt);
 use List::Util qw(max);
 use Text::Wrap;
 use Text::Abbrev;
+use Parallel::ForkManager;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(new_action run_action);
 our @EXPORT_OK = @EXPORT;
@@ -23,6 +24,7 @@ sub new_action{
     die "Action descriptions were not given!" unless exists $args{-desc};
     $args{-options}->{"help|h"} //= "Print help";
     $args{-options}->{"outfile|o=s"}  //= "Output file name [default: STDOUT]";
+    $args{-options}->{"threads|T=i"} //= "Number of threads [Default 1]";
 
     my %options;
     GetOptions(\%options, keys %{$args{-options}});
@@ -97,6 +99,12 @@ end_of_usage
         open $out_fh, ">", $outfile or die "$!";
     }
     $action{out_fh} = $out_fh;
+
+    if( $options{threads} > 1) {
+        my $pm = Parallel::ForkManager->new($options{threads});
+        $action{pm} = $pm;
+    }
+
     $action{options} = \%options;
     return \%action;
 }

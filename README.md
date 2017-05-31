@@ -4,7 +4,7 @@
 * Email: lileiting@gmail.com
 * Licence: [BSD](http://opensource.org/licenses/BSD-2-Clause)
 
-This is a collection of tools for gene family, genetic maps and comparative 
+This is a collection of tools for gene family, genetic maps and comparative
 genomics analyses.
 
 ## Intallation
@@ -56,10 +56,10 @@ Get sequences based on sequence name
 
 ## Acknowledgements
 
-The scripts, functions and usage styles are largely inspired 
+The scripts, functions and usage styles are largely inspired
 by Haibao Tang's [JCVI](https://github.com/tanghaibao/jcvi)
-utility libraries (Python based). 
+utility libraries (Python based).
 
-The scripts were also inspired by the 
-[p5-bpwrapper](https://github.com/bioperl/p5-bpwrapper) 
+The scripts were also inspired by the
+[p5-bpwrapper](https://github.com/bioperl/p5-bpwrapper)
 and other Perl based modules or scripts.
