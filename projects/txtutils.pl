@@ -60,14 +60,18 @@ sub fgrep {
                     Comments are allowed with prefix of "#"',
             "invert_match|v" => 'Selected lines are those not
                       matching any of the specified patterns.',
+            "column_list|C=i" => "Column in the list file that treat as patterns [default: 1]",
+            "column|c=i" => 'Column in files used for test the patterns [default: 1]',
             "header|H" => 'Header present at the first line',
             "pattern|p=s@" => 'Additional patterns besides which in
                     the list file [could be multiple]'
         }
     );
     my $listfile = $args->{options}->{listfile};
-    my @patterns = $args->{options}->{pattern} ? 
+    my @patterns = $args->{options}->{pattern} ?
         @{$args->{options}->{pattern}} : ();
+    my $column_list = $args->{options}->{column_list} // 1;
+    my $column = $args->{options}->{column} // 1;
 
     die "CAUTION: A file with a list of patterns is required!\n"
         unless $listfile or $args->{options}->{pattern};
@@ -77,7 +81,8 @@ sub fgrep {
         while(<$fh>){
             chomp;
             next if /^\s*$/ or /^\s*#/;
-            my ($pattern) = split /\s+/;
+            my @F = split /\s+/;
+            my $pattern = $F[$column_list - 1];
             die "Error in list file!\n" if $pattern eq '';
             $pattern{$pattern}++;
         }
@@ -93,7 +98,7 @@ sub fgrep {
         while(<$in_fh>){
             chomp;
             my @F = split /\s+/;
-            next unless defined $F[0];
+            next unless defined $F[$column - 1];
             my $matched = exists $pattern{$F[0]} ? 1 : 0;
             $matched = not $matched if $args->{options}->{invert_match};
             print "$_\n" if $matched;
