@@ -100,7 +100,7 @@ end_of_usage
     }
     $action{out_fh} = $out_fh;
 
-    if( $options{threads} > 1) {
+    if( exists $options{threads} and $options{threads} > 1) {
         my $pm = Parallel::ForkManager->new($options{threads});
         $action{pm} = $pm;
     }
